@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Navbar } from '@/components/Navbar';
@@ -8,243 +8,259 @@ import { ProductCard } from '@/components/ProductCard';
 import { useApp } from '@/app/context/AppContext';
 import { 
   FaBagShopping, 
-  FaTags, 
-  FaTruckFast, 
+  FaComments, 
+  FaSliders, 
+  FaMagnifyingGlass, 
+  FaFire, 
   FaShieldHalved, 
+  FaTruckFast, 
   FaArrowRight, 
-  FaUserTie, 
-  FaImage, 
-  FaPlus,
-  FaCheck
+  FaUserTie,
+  FaImage,
+  FaArrowTrendUp,
+  FaPlus
 } from 'react-icons/fa6';
-import { FaFacebookMessenger } from 'react-icons/fa';
+import { FaWhatsapp } from 'react-icons/fa';
 
 export default function Home() {
   const router = useRouter();
-  const {
-    products,
-    openDetailModal,
-    openShareModal,
-    openChatWithProduct,
-    copyClientLink,
-    copiedId
+  const { 
+    products, 
+    openDetailModal, 
+    openShareModal, 
+    openChatWithProduct, 
+    copyClientLink, 
+    copiedId,
+    openChat
   } = useApp();
 
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
-  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [sortBy, setSortBy] = useState<'featured' | 'priceLow' | 'priceHigh' | 'rating'>('featured');
+  const [directCode, setDirectCode] = useState('');
+  const [directError, setDirectError] = useState('');
 
-  const categories = [
-    'All',
-    'Smart Gadgets',
-    'Mobile Accessories',
-    'Fashion & Lifestyle',
-    'Lifestyle',
-    'Electronics'
-  ];
+  // Extract unique categories
+  const categories = useMemo(() => {
+    const set = new Set<string>();
+    products.forEach((p) => {
+      if (p.category) set.add(p.category);
+    });
+    return ['All', ...Array.from(set)];
+  }, [products]);
 
-  const filteredProducts = products.filter((prod) => {
-    const matchesCategory =
-      selectedCategory === 'All' || prod.category === selectedCategory;
-    const matchesSearch =
-      searchQuery === '' ||
-      prod.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      prod.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      prod.description.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  // Filter & sort products
+  const filteredProducts = useMemo(() => {
+    return products
+      .filter((p) => {
+        const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
+        const q = searchQuery.toLowerCase().trim();
+        const matchesSearch = !q || 
+          p.title.toLowerCase().includes(q) || 
+          p.description.toLowerCase().includes(q) ||
+          p.category.toLowerCase().includes(q);
+        return matchesCategory && matchesSearch;
+      })
+      .sort((a, b) => {
+        if (sortBy === 'priceLow') return a.price - b.price;
+        if (sortBy === 'priceHigh') return b.price - a.price;
+        if (sortBy === 'rating') return b.rating - a.rating;
+        return 0; // featured / default order
+      });
+  }, [products, selectedCategory, searchQuery, sortBy]);
+
+  // Handle direct code / link lookup
+  const handleOpenDirect = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = directCode.trim();
+    if (!trimmed) {
+      setDirectError('Please enter a product ID or code.');
+      return;
+    }
+
+    let prodId = trimmed;
+    if (prodId.includes('/p/')) {
+      prodId = prodId.split('/p/')[1]?.split(/[?#]/)[0] || trimmed;
+    } else if (prodId.includes('/client/')) {
+      prodId = prodId.split('/client/')[1]?.split(/[?#]/)[0] || trimmed;
+    }
+
+    const found = products.find((p) => p.id.toLowerCase() === prodId.toLowerCase());
+    if (found) {
+      setDirectError('');
+      router.push(`/p/${found.id}`);
+    } else {
+      router.push(`/p/${prodId}`);
+    }
+  };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 selection:bg-[#ccff00] selection:text-slate-950">
-      {/* Top Navbar with ByteSpace Cobalt & Lime */}
-      <Navbar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 selection:bg-[#ccff00] selection:text-slate-950 font-sans">
+      {/* Top Navigation */}
+      <Navbar />
 
-      <main className="flex-1 pb-16">
+      {/* Hero Showcase Banner */}
+      <section className="bg-[#0d5bff] text-white relative overflow-hidden border-b border-blue-600">
+        {/* Ambient Glow Orbs */}
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#ccff00]/15 rounded-full blur-3xl pointer-events-none -mr-40 -mt-40"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-white/10 rounded-full blur-2xl pointer-events-none -ml-20 -mb-20"></div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 relative z-10">
+          <div className="max-w-3xl space-y-5">
+            {/* Top pill badge */}
+            <div className="inline-flex items-center gap-2 bg-[#ccff00] text-slate-950 font-black px-4 py-1.5 rounded-full text-xs shadow-md">
+              <FaFire className="w-3.5 h-3.5 text-rose-600" />
+              <span>Public Storefront • Live Admin Catalog</span>
+            </div>
+
+            {/* Main Headline */}
+            <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-white leading-tight">
+              Explore Trending Products. <br />
+              <span className="text-[#ccff00]">Click for Details & Chat with Admin.</span>
+            </h1>
+
+            {/* Subtitle */}
+            <p className="text-sm sm:text-base text-blue-100 font-medium leading-relaxed max-w-2xl">
+              All items and photos uploaded by the admin are public. Click any product to inspect high-resolution images and specifications, or send a live message to the admin directly.
+            </p>
+
+            {/* Quick Action Badges */}
+            <div className="flex flex-wrap items-center gap-3 pt-2">
+              <button
+                onClick={openChat}
+                className="flex items-center gap-2 bg-[#ccff00] hover:bg-[#b8e600] active:scale-95 text-slate-950 px-5 py-3 rounded-2xl font-black text-xs sm:text-sm shadow-lg transition-all cursor-pointer"
+              >
+                <FaComments className="w-4 h-4 text-slate-900" />
+                <span>Message Admin Live</span>
+              </button>
+
+              <Link
+                href="/admin"
+                className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-5 py-3 rounded-2xl font-bold text-xs sm:text-sm border border-white/20 transition-all cursor-pointer"
+              >
+                <FaUserTie className="w-4 h-4 text-[#ccff00]" />
+                <span>Admin Studio (Upload Products)</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Main Public Catalog Content */}
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 w-full space-y-8">
         
-        {/* ByteSpace Signature Cobalt Blue Hero Banner */}
-        <div className="bg-[#0d5bff] text-white relative overflow-hidden border-b border-blue-700">
+        {/* Search, Category Filter & Sorting Controls */}
+        <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-sm space-y-4">
           
-          {/* Playful ByteSpace Decorative Geometric Elements */}
-          <div className="absolute top-0 right-0 w-96 h-96 bg-[#ccff00]/15 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
-          <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
-
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 relative z-10">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-              
-              {/* Left Hero Text */}
-              <div className="lg:col-span-7 space-y-5">
-                <div className="inline-flex items-center gap-2 bg-[#ccff00] text-slate-950 font-black px-3.5 py-1 rounded-full text-xs shadow-md">
-                  <FaUserTie className="w-3.5 h-3.5" />
-                  <span>ByteSpace Client & Affiliate Architecture</span>
-                </div>
-
-                <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-tight">
-                  Upload Image, Share to Client & <span className="text-[#ccff00]">Preview on Messenger</span>
-                </h1>
-
-                <p className="text-sm sm:text-base text-blue-100 font-medium leading-relaxed max-w-2xl">
-                  A private system built exclusively for <strong className="text-white font-bold">you and your client</strong>. Each item has its own dedicated route <code className="bg-blue-900/60 px-2 py-0.5 rounded text-[#ccff00] text-xs font-bold">/client/[id]</code>. When shared on Messenger, clients see the exact shared photo in high resolution with a direct private chat desk.
-                </p>
-
-                <div className="pt-2 flex flex-wrap items-center gap-3">
-                  {/* Primary CTA (ByteSpace Electric Lime) */}
-                  <Link
-                    href="/admin"
-                    className="flex items-center gap-2 bg-[#ccff00] hover:bg-[#b8e600] active:scale-95 text-slate-950 font-black text-xs sm:text-sm px-6 py-3.5 rounded-2xl shadow-xl shadow-black/10 transition-all cursor-pointer"
-                  >
-                    <FaPlus className="w-3.5 h-3.5" />
-                    <span>Upload New Item for Client</span>
-                  </Link>
-
-                  {/* Secondary Outline Button */}
-                  {products.length > 0 && (
-                    <Link
-                      href={`/client/${products[0].id}`}
-                      className="flex items-center gap-2 bg-white/10 hover:bg-white/20 active:scale-95 text-white font-bold text-xs sm:text-sm px-6 py-3.5 rounded-2xl border border-white/25 transition-all cursor-pointer backdrop-blur-xs"
-                    >
-                      <FaImage className="w-3.5 h-3.5 text-[#ccff00]" />
-                      <span>Preview Client Route (/client/{products[0].id})</span>
-                    </Link>
-                  )}
-                </div>
-              </div>
-
-              {/* Right Hero Info Card (ByteSpace Card Style) */}
-              <div className="lg:col-span-5">
-                <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-6 border border-white/20 shadow-2xl space-y-4">
-                  <div className="flex items-center justify-between border-b border-white/20 pb-3.5">
-                    <span className="text-xs font-black text-white flex items-center gap-2">
-                      <FaFacebookMessenger className="w-4 h-4 text-[#ccff00]" />
-                      ByteSpace Routing Architecture
-                    </span>
-                    <span className="text-[10px] bg-[#ccff00] text-slate-950 px-2.5 py-0.5 rounded-full font-black">
-                      App Router Ready
-                    </span>
-                  </div>
-
-                  <div className="space-y-3.5 text-xs text-blue-100 font-medium">
-                    <div className="flex items-start gap-2.5">
-                      <span className="w-5 h-5 rounded-full bg-[#ccff00] text-slate-950 flex items-center justify-center font-black text-[11px] shrink-0 mt-0.5 shadow-xs">
-                        1
-                      </span>
-                      <p><strong className="text-white font-bold">/admin</strong>: Owner Studio to upload images, set deal prices, and reply to client inquiries.</p>
-                    </div>
-
-                    <div className="flex items-start gap-2.5">
-                      <span className="w-5 h-5 rounded-full bg-[#ccff00] text-slate-950 flex items-center justify-center font-black text-[11px] shrink-0 mt-0.5 shadow-xs">
-                        2
-                      </span>
-                      <p><strong className="text-[#ccff00] font-bold">/client/[id]</strong>: Dedicated client landing route with dynamic Open Graph tags for automatic Messenger photo preview.</p>
-                    </div>
-
-                    <div className="flex items-start gap-2.5">
-                      <span className="w-5 h-5 rounded-full bg-[#ccff00] text-slate-950 flex items-center justify-center font-black text-[11px] shrink-0 mt-0.5 shadow-xs">
-                        3
-                      </span>
-                      <p><strong className="text-white font-bold">1-on-1 Chat</strong>: Client messages and attached photos sync directly to your Owner Studio inbox.</p>
-                    </div>
-                  </div>
-
-                  <div className="pt-3 border-t border-white/15 flex items-center justify-between text-[11px] text-blue-100 font-semibold">
-                    <span>✓ Clean Next.js Dynamic Routing</span>
-                    <Link 
-                      href="/admin"
-                      className="text-[#ccff00] hover:underline font-black cursor-pointer flex items-center gap-1.5"
-                    >
-                      <span>Manage in Studio</span>
-                      <FaArrowRight className="w-2.5 h-2.5" />
-                    </Link>
-                  </div>
-                </div>
-              </div>
-
+          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+            
+            {/* Search Input */}
+            <div className="relative flex-1">
+              <FaMagnifyingGlass className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+              <input
+                type="text"
+                placeholder="Search products by title, category, or features..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-11 pr-4 py-3 bg-slate-50 text-slate-900 rounded-2xl text-xs sm:text-sm font-medium border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0d5bff]/20 focus:border-[#0d5bff] placeholder:text-slate-400"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 hover:text-slate-700 bg-slate-200/80 px-2 py-0.5 rounded-lg"
+                >
+                  Clear
+                </button>
+              )}
             </div>
+
+            {/* Sorting Dropdown */}
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-xs font-bold text-slate-500 whitespace-nowrap">Sort By:</span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="bg-slate-50 text-slate-900 border border-slate-200 text-xs sm:text-sm font-bold px-3.5 py-3 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#0d5bff]/20 cursor-pointer"
+              >
+                <option value="featured">Featured / Newest</option>
+                <option value="priceLow">Price: Low to High ($)</option>
+                <option value="priceHigh">Price: High to Low ($)</option>
+                <option value="rating">Top Rated</option>
+              </select>
+            </div>
+
           </div>
+
+          {/* Category Chips */}
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pt-2 border-t border-slate-100">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+                  selectedCategory === cat
+                    ? 'bg-[#0d5bff] text-white shadow-sm'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80 hover:text-slate-900'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
         </div>
 
-        {/* Trust Guarantees Bar (Clean White with ByteSpace Cobalt & Lime Accents) */}
-        <div className="border-b border-slate-200 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs text-slate-800 font-semibold">
-              <div className="flex items-center gap-2.5 justify-center sm:justify-start">
-                <div className="w-7 h-7 rounded-lg bg-blue-50 text-[#0d5bff] flex items-center justify-center">
-                  <FaTruckFast className="w-3.5 h-3.5" />
-                </div>
-                <span>Cash on Delivery Available</span>
-              </div>
-              <div className="flex items-center gap-2.5 justify-center sm:justify-start">
-                <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                  <FaShieldHalved className="w-3.5 h-3.5" />
-                </div>
-                <span>100% Genuine Guaranteed</span>
-              </div>
-              <div className="flex items-center gap-2.5 justify-center sm:justify-start">
-                <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
-                  <FaTags className="w-3.5 h-3.5" />
-                </div>
-                <span>Special Client Pricing</span>
-              </div>
-              <div className="flex items-center gap-2.5 justify-center sm:justify-start">
-                <div className="w-7 h-7 rounded-lg bg-[#ccff00]/30 text-slate-900 flex items-center justify-center">
-                  <FaUserTie className="w-3.5 h-3.5" />
-                </div>
-                <span>Direct 1-on-1 Messaging</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Items Catalog Section */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">
-          
-          {/* Header & Categories */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        {/* Public Products Grid */}
+        <div>
+          <div className="flex items-center justify-between mb-5">
             <div>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-950 tracking-tight flex items-center gap-2">
-                <FaBagShopping className="w-5 h-5 text-[#0d5bff]" />
-                <span>Your Curated Client Collection</span>
-                <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-[#ccff00] text-slate-950">
-                  {filteredProducts.length} Items
+              <h2 className="text-xl sm:text-2xl font-black text-slate-950 flex items-center gap-2">
+                <span>Public Catalog</span>
+                <span className="text-xs bg-[#ccff00] text-slate-950 font-black px-2.5 py-0.5 rounded-full">
+                  {filteredProducts.length} Available
                 </span>
               </h2>
-              <p className="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">
-                Click "Client View" to open the client route <code className="bg-slate-200 px-1.5 py-0.5 rounded text-[11px] font-bold text-slate-800">/client/[id]</code> or "Share Preview" for Messenger
+              <p className="text-xs text-slate-500 font-medium">
+                Click any product to inspect full details, or click &ldquo;Message Admin&rdquo; to send a direct message.
               </p>
             </div>
 
-            {/* Category Pills */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 no-scrollbar">
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
-                    selectedCategory === cat
-                      ? 'bg-[#0d5bff] text-white shadow-md shadow-blue-600/20'
-                      : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
+            {/* Direct Admin Upload Shortcut */}
+            <Link
+              href="/admin"
+              className="hidden sm:flex items-center gap-1.5 text-xs text-[#0d5bff] font-bold hover:underline cursor-pointer bg-blue-50 px-3 py-1.5 rounded-xl border border-blue-200"
+            >
+              <FaPlus className="w-3 h-3" />
+              <span>Admin: Upload New Product</span>
+            </Link>
           </div>
 
-          {/* Product Grid */}
           {filteredProducts.length === 0 ? (
-            <div className="text-center py-16 bg-white rounded-3xl border border-slate-200 p-8">
-              <FaBagShopping className="w-12 h-12 mx-auto text-slate-300 mb-3" />
-              <h3 className="text-base font-bold text-slate-800">
-                No matching items found
-              </h3>
-              <button
-                onClick={() => {
-                  setSearchQuery('');
-                  setSelectedCategory('All');
-                }}
-                className="mt-4 px-5 py-2.5 bg-[#0d5bff] text-white text-xs font-bold rounded-xl hover:bg-[#0045d8] transition-colors cursor-pointer"
-              >
-                Clear Filters
-              </button>
+            <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 shadow-sm space-y-4">
+              <div className="w-16 h-16 rounded-3xl bg-blue-50 text-[#0d5bff] flex items-center justify-center mx-auto font-black text-xl">
+                <FaBagShopping className="w-8 h-8" />
+              </div>
+              <h3 className="text-lg font-black text-slate-900">No Products Found</h3>
+              <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">
+                No products matched your search or category filter. Try clearing filters or open Admin Studio to upload new products.
+              </p>
+              <div className="flex items-center justify-center gap-3 pt-2">
+                <button
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSelectedCategory('All');
+                  }}
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold px-4 py-2.5 rounded-xl transition-colors cursor-pointer"
+                >
+                  Reset Filters
+                </button>
+                <Link
+                  href="/admin"
+                  className="bg-[#0d5bff] hover:bg-[#0045d8] text-white text-xs font-black px-5 py-2.5 rounded-xl shadow-xs transition-colors cursor-pointer"
+                >
+                  Enter Admin Studio
+                </Link>
+              </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -256,34 +272,123 @@ export default function Home() {
                   onOpenShare={openShareModal}
                   onInquire={openChatWithProduct}
                   onCopyLink={copyClientLink}
-                  onOpenClientView={(p) => router.push(`/client/${p.id}`)}
+                  onOpenClientView={(p) => router.push(`/p/${p.id}`)}
                   copiedId={copiedId}
                 />
               ))}
             </div>
           )}
+        </div>
 
+        {/* Feature Highlights Banner */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
+          
+          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#0d5bff] flex items-center justify-center font-black">
+              <FaImage className="w-5 h-5" />
+            </div>
+            <h3 className="font-black text-slate-900 text-base">
+              Admin Uploaded & Public
+            </h3>
+            <p className="text-xs text-slate-600 font-medium leading-relaxed">
+              Every image uploaded by the admin is immediately public. Visitors can browse high-resolution photos and specifications.
+            </p>
+          </div>
+
+          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-black">
+              <FaComments className="w-5 h-5" />
+            </div>
+            <h3 className="font-black text-slate-900 text-base">
+              Direct Live Chat with Admin
+            </h3>
+            <p className="text-xs text-slate-600 font-medium leading-relaxed">
+              Click &ldquo;Message Admin&rdquo; on any product card to start a 1-on-1 live chat with product photo attached.
+            </p>
+          </div>
+
+          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-black">
+              <FaTruckFast className="w-5 h-5" />
+            </div>
+            <h3 className="font-black text-slate-900 text-base">
+              Dollar ($) Pricing & Fast Order
+            </h3>
+            <p className="text-xs text-slate-600 font-medium leading-relaxed">
+              Clear international dollar pricing on all items. Inquire via live chat or WhatsApp with one single click.
+            </p>
+          </div>
+
+        </div>
+
+        {/* Direct Link Resolver Box (for clients who have a specific link / code) */}
+        <div className="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-xl space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <span className="text-xs font-black uppercase text-[#ccff00] tracking-wider">
+                Direct Code Lookup
+              </span>
+              <h3 className="text-lg sm:text-xl font-black text-white mt-1">
+                Have a specific product share link or code?
+              </h3>
+              <p className="text-xs text-slate-400 font-medium">
+                Enter the product ID (e.g. prod-101) or paste the link to jump straight to that product page.
+              </p>
+            </div>
+
+            <form
+              onSubmit={handleOpenDirect}
+              className="flex items-center gap-2 sm:max-w-md w-full"
+            >
+              <input
+                type="text"
+                value={directCode}
+                onChange={(e) => {
+                  setDirectCode(e.target.value);
+                  if (directError) setDirectError('');
+                }}
+                placeholder="e.g. prod-101 or /p/prod-101"
+                className="flex-1 bg-slate-800 text-white px-4 py-3 rounded-2xl text-xs sm:text-sm font-medium border border-slate-700 focus:outline-none focus:ring-2 focus:ring-[#ccff00] placeholder:text-slate-500"
+              />
+              <button
+                type="submit"
+                className="bg-[#ccff00] hover:bg-[#b8e600] active:scale-95 text-slate-950 font-black text-xs sm:text-sm px-5 py-3 rounded-2xl shadow-md transition-all cursor-pointer shrink-0 flex items-center gap-1.5"
+              >
+                <span>Open</span>
+                <FaArrowRight className="w-3 h-3" />
+              </button>
+            </form>
+          </div>
+
+          {directError && (
+            <p className="text-xs font-bold text-rose-400">
+              {directError}
+            </p>
+          )}
         </div>
 
       </main>
 
-      {/* ByteSpace Dark Blue Footer */}
-      <footer className="bg-[#0a2e8c] text-slate-300 text-xs py-10 border-t border-blue-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#ccff00] text-slate-950 flex items-center justify-center font-black text-sm">
-              <FaBagShopping className="w-4 h-4" />
+      {/* Footer */}
+      <footer className="bg-white border-t border-slate-200 py-6 text-xs text-slate-500 text-center">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-2 font-bold text-slate-800">
+            <div className="w-6 h-6 rounded-lg bg-[#0d5bff] text-white flex items-center justify-center text-xs">
+              <FaBagShopping className="w-3 h-3" />
             </div>
-            <span className="font-black text-white text-base">ByteDesk</span>
-            <span className="text-slate-400">• Private Client Showcase & Messenger Direct Share</span>
+            <span>ByteDesk • Public Storefront & Admin Live Desk</span>
           </div>
 
-          <div className="flex items-center gap-4 text-xs font-semibold">
-            <Link
-              href="/admin"
-              className="text-[#ccff00] hover:underline cursor-pointer"
+          <div className="flex items-center gap-4 font-semibold text-slate-600">
+            <button
+              onClick={openChat}
+              className="hover:text-[#0d5bff] transition-colors cursor-pointer"
             >
-              Owner Studio (/admin)
+              Live Chat Desk
+            </button>
+            <span>•</span>
+            <Link href="/admin" className="hover:text-[#0d5bff] transition-colors">
+              Admin Studio
             </Link>
           </div>
         </div>

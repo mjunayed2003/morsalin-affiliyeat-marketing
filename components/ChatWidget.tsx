@@ -188,7 +188,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
                   {inquiryProduct.title}
                 </p>
                 <p className="text-xs font-bold text-blue-700">
-                  ৳{inquiryProduct.price.toLocaleString()}
+                  ${inquiryProduct.price.toLocaleString()}
                 </p>
               </div>
               <button
@@ -236,7 +236,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
                             {msg.productInfo.title}
                           </p>
                           <p className="font-bold text-[11px] opacity-90">
-                            ৳{msg.productInfo.price.toLocaleString()}
+                            ${msg.productInfo.price.toLocaleString()}
                           </p>
                         </div>
                       </div>

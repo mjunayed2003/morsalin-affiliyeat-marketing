@@ -35,9 +35,9 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 
   if (!isOpen || !product) return null;
 
-  // Compute shareable link directly pointing to dedicated /client/[id] route
+  // Compute shareable link directly pointing to dedicated /p/[id] route
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://affilihub.com';
-  const shareableUrl = `${origin}/client/${product.id}`;
+  const shareableUrl = `${origin}/p/${product.id}`;
   
   // Active preview image (either custom uploaded or original product image)
   const activeImage = customImage || product.image;
@@ -72,7 +72,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 
   // Copy Formatted Post (Caption + Link)
   const handleCopyFormattedPost = () => {
-    const text = `🔥 ${product.title}\n\n💰 Deal Price: ৳${product.price.toLocaleString()} (Regular: ৳${product.originalPrice.toLocaleString()})\n✨ Highlights: ${product.features.join(', ')}\n\n👉 Order or view full details here:\n${shareableUrl}`;
+    const text = `🔥 ${product.title}\n\n💰 Deal Price: $${product.price.toLocaleString()} (Regular: $${product.originalPrice.toLocaleString()})\n✨ Highlights: ${product.features.join(', ')}\n\n👉 Order or view full details here:\n${shareableUrl}`;
     navigator.clipboard.writeText(text);
     onShowToast('Caption and link copied! Paste into Messenger or WhatsApp.');
   };
@@ -89,7 +89,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
           if (navigator.canShare({ files: [file] })) {
             await navigator.share({
               title: product.title,
-              text: `Special Offer: ৳${product.price} - ${product.title}`,
+              text: `Special Offer: $${product.price} - ${product.title}`,
               url: shareableUrl,
               files: [file]
             });
@@ -100,7 +100,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 
         await navigator.share({
           title: product.title,
-          text: `🔥 ${product.title} - Deal Price: ৳${product.price}`,
+          text: `🔥 ${product.title} - Deal Price: $${product.price}`,
           url: shareableUrl
         });
         onShowToast('Shared successfully!');
@@ -122,7 +122,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 
   // Open WhatsApp Share
   const handleWhatsAppShare = () => {
-    const text = `🔥 *${product.title}*\nPrice: ৳${product.price}\nView details: ${shareableUrl}`;
+    const text = `🔥 *${product.title}*\nPrice: $${product.price}\nView details: ${shareableUrl}`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
   };
 
@@ -196,7 +196,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                     {product.title}
                   </h4>
                   <p className="text-xs text-slate-600 line-clamp-1 mt-1">
-                    Special Price: ৳{product.price.toLocaleString()} • Regular: ৳{product.originalPrice.toLocaleString()} • Cash on Delivery
+                    Special Price: ${product.price.toLocaleString()} • Regular: ${product.originalPrice.toLocaleString()} • Cash on Delivery
                   </p>
                 </div>
               </div>

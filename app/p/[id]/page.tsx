@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import { ClientProductView } from '@/app/p/[id]/ClientProductView';
-import { INITIAL_PRODUCTS } from '@/app/data/initialProducts';
+import { ClientProductView } from './ClientProductView';
+import { INITIAL_PRODUCTS } from '../../data/initialProducts';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -12,17 +12,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!product) {
     return {
-      title: 'Shared Item - ByteDesk',
-      description: 'Exclusive product shared directly with you.'
+      title: 'Product - Private Client View',
+      description: 'Private product share link.'
     };
   }
 
   return {
     title: `${product.title} - $${product.price.toLocaleString()} | ByteDesk`,
-    description: `Price: $${product.price.toLocaleString()} (Regular: $${product.originalPrice.toLocaleString()}). Tap to view full product photo and order directly via chat.`,
+    description: `Price: $${product.price.toLocaleString()} (Regular: $${product.originalPrice.toLocaleString()}). Tap to view full product details and chat live with admin.`,
     openGraph: {
       title: `${product.title} - $${product.price.toLocaleString()}`,
-      description: `Special Offer: $${product.price.toLocaleString()} • Cash on Delivery & Live Chat Available`,
+      description: `Price: $${product.price.toLocaleString()} • Live 1-on-1 Chat with Admin & Direct Order`,
       url: `https://affilihub.com/p/${product.id}`,
       siteName: 'ByteDesk Store',
       images: [
@@ -38,13 +38,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     twitter: {
       card: 'summary_large_image',
       title: product.title,
-      description: `Special Offer: $${product.price.toLocaleString()}`,
+      description: `Price: $${product.price.toLocaleString()}`,
       images: [product.image]
     }
   };
 }
 
-export default async function ClientPageRoute({ params }: PageProps) {
+export default async function ProductPageRoute({ params }: PageProps) {
   const { id } = await params;
   return <ClientProductView productId={id} />;
 }

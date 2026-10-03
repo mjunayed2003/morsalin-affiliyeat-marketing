@@ -69,10 +69,12 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 alt={product.title}
                 className="w-full h-full object-cover"
               />
-              <div className="absolute bottom-3 left-3 bg-emerald-600 text-white text-xs font-semibold px-3 py-1 rounded-xl shadow-md flex items-center gap-1.5 backdrop-blur-xs">
-                <FaTag className="w-3 h-3 text-emerald-200" />
-                <span>Affiliate Commission: {product.commission}</span>
-              </div>
+              {product.commission && (
+                <div className="absolute bottom-3 left-3 bg-emerald-600 text-white text-xs font-semibold px-3 py-1 rounded-xl shadow-md flex items-center gap-1.5 backdrop-blur-xs">
+                  <FaTag className="w-3 h-3 text-emerald-200" />
+                  <span>Bonus: {product.commission.replace(/৳/g, '$')}</span>
+                </div>
+              )}
             </div>
 
             {/* Product Meta */}
@@ -92,16 +94,16 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
                 <div className="flex items-baseline gap-2">
                   <span className="text-2xl font-black text-slate-950">
-                    ৳{product.price.toLocaleString()}
+                    ${product.price.toLocaleString()}
                   </span>
                   {product.originalPrice > product.price && (
                     <span className="text-sm text-slate-400 line-through">
-                      ৳{product.originalPrice.toLocaleString()}
+                      ${product.originalPrice.toLocaleString()}
                     </span>
                   )}
                   {discountAmount > 0 && (
                     <span className="ml-auto text-xs bg-rose-100 text-rose-700 font-bold px-2 py-0.5 rounded-full">
-                      Save ৳{discountAmount.toLocaleString()}
+                      Save ${discountAmount.toLocaleString()}
                     </span>
                   )}
                 </div>
@@ -141,7 +143,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           {/* Trust Guarantees */}
           <div className="grid grid-cols-3 gap-3 p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-center text-xs">
             <div className="flex flex-col items-center gap-1 text-slate-700">
-              <FaTruckFast className="w-4 h-4 text-blue-600" />
+              <FaTruckFast className="w-4 h-4 text-[#0d5bff]" />
               <span className="font-semibold">Fast Delivery</span>
               <span className="text-[10px] text-slate-500">Nationwide Shipping</span>
             </div>
@@ -153,7 +155,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             <div className="flex flex-col items-center gap-1 text-slate-700">
               <FaClock className="w-4 h-4 text-amber-600" />
               <span className="font-semibold">Live Support</span>
-              <span className="text-[10px] text-slate-500">Direct Chat Desk</span>
+              <span className="text-[10px] text-slate-500">Direct Chat with Admin</span>
             </div>
           </div>
 
@@ -161,16 +163,26 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
         {/* Footer Actions */}
         <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
-          <button
-            onClick={() => {
-              onClose();
-              onOpenShare(product);
-            }}
-            className="flex items-center gap-2 bg-sky-500 hover:bg-sky-600 text-white px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer shadow-xs"
-          >
-            <FaFacebookMessenger className="w-4 h-4" />
-            <span>Messenger Share Preview</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                onClose();
+                onOpenShare(product);
+              }}
+              className="flex items-center gap-2 bg-sky-500 hover:bg-sky-600 text-white px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer shadow-xs"
+            >
+              <FaFacebookMessenger className="w-4 h-4" />
+              <span>Messenger Share</span>
+            </button>
+            <a
+              href={`/p/${product.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-slate-600 hover:text-slate-900 font-bold px-3 py-2.5 rounded-xl hover:bg-slate-200/70 transition-colors"
+            >
+              Dedicated Page ↗
+            </a>
+          </div>
 
           <div className="flex items-center gap-2">
             <button
@@ -178,10 +190,10 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 onClose();
                 onInquire(product);
               }}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold shadow-md shadow-blue-600/20 transition-all cursor-pointer"
+              className="flex items-center gap-2 bg-[#0d5bff] hover:bg-[#0045d8] active:scale-95 text-white px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black shadow-md shadow-blue-600/20 transition-all cursor-pointer"
             >
               <FaComments className="w-4 h-4" />
-              <span>Inquire via Chat</span>
+              <span>Message Admin Now</span>
             </button>
           </div>
         </div>

@@ -49,11 +49,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Initialize from LocalStorage
   useEffect(() => {
     try {
-      const storedProds = localStorage.getItem('personal_desk_products_v3');
+      const storedProds = localStorage.getItem('personal_desk_products_v4');
       if (storedProds) {
-        setProducts(JSON.parse(storedProds));
+        const parsed = JSON.parse(storedProds);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // If previous version had old Taka numbers (e.g. price > 500 or commission with ৳)
+          const needsDollarFix = parsed.some((p: any) => p.commission?.includes('৳') || p.price > 500);
+          if (needsDollarFix) {
+            setProducts(INITIAL_PRODUCTS);
+            localStorage.setItem('personal_desk_products_v4', JSON.stringify(INITIAL_PRODUCTS));
+          } else {
+            setProducts(parsed);
+          }
+        }
       }
-      const storedMsgs = localStorage.getItem('personal_desk_messages_v3');
+      const storedMsgs = localStorage.getItem('personal_desk_messages_v4');
       if (storedMsgs) {
         setMessages(JSON.parse(storedMsgs));
       }
@@ -65,13 +75,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Save to LocalStorage
   useEffect(() => {
     try {
-      localStorage.setItem('personal_desk_products_v3', JSON.stringify(products));
+      localStorage.setItem('personal_desk_products_v4', JSON.stringify(products));
     } catch (e) {}
   }, [products]);
 
   useEffect(() => {
     try {
-      localStorage.setItem('personal_desk_messages_v3', JSON.stringify(messages));
+      localStorage.setItem('personal_desk_messages_v4', JSON.stringify(messages));
     } catch (e) {}
   }, [messages]);
 
@@ -115,10 +125,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const copyClientLink = (prod: Product) => {
     const origin = typeof window !== 'undefined' ? window.location.origin : 'https://affilihub.com';
-    const link = `${origin}/client/${prod.id}`;
+    const link = `${origin}/p/${prod.id}`;
     navigator.clipboard.writeText(link);
     setCopiedId(prod.id);
-    showToast(`Client link copied: /client/${prod.id}`);
+    showToast(`Client link copied: /p/${prod.id}`);
     setTimeout(() => setCopiedId(null), 2500);
   };
 
