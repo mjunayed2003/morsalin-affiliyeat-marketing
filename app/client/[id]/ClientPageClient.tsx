@@ -2,8 +2,8 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { useApp } from '../../context/AppContext';
-import { ClientSharedView } from '../../components/ClientSharedView';
+import { useApp } from '@/app/context/AppContext';
+import { ClientSharedView } from '@/components/ClientSharedView';
 import { FaBagShopping, FaArrowLeft } from 'react-icons/fa6';
 
 interface ClientPageClientProps {

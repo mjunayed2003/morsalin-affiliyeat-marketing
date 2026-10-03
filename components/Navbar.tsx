@@ -1,9 +1,10 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import { 
   FaBagShopping, 
-  FaTags, 
   FaSliders, 
   FaComments, 
   FaMagnifyingGlass,
@@ -11,30 +12,26 @@ import {
   FaUserTie
 } from 'react-icons/fa6';
 import { FiX } from 'react-icons/fi';
-import { ViewMode } from '../types';
+import { useApp } from '@/app/context/AppContext';
 
 interface NavbarProps {
-  viewMode: ViewMode;
-  setViewMode: (mode: ViewMode) => void;
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
-  unreadCount: number;
-  openChat: () => void;
-  productsCount: number;
+  searchQuery?: string;
+  setSearchQuery?: (query: string) => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
-  viewMode,
-  setViewMode,
-  searchQuery,
-  setSearchQuery,
-  unreadCount,
-  openChat,
-  productsCount
+  searchQuery = '',
+  setSearchQuery
 }) => {
+  const pathname = usePathname();
+  const router = useRouter();
+  const { unreadCount, openChat, products } = useApp();
+
+  const isAdmin = pathname.startsWith('/admin');
+
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs">
-      {/* Top Personal Affiliate Micro-bar */}
+      {/* Top Personal Workspace Micro-bar */}
       <div className="bg-slate-900 text-slate-200 text-xs py-1.5 px-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -50,13 +47,13 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           <div className="flex items-center gap-3 text-[11px]">
-            <button 
-              onClick={() => setViewMode(viewMode === 'admin' ? 'store' : 'admin')}
+            <Link 
+              href={isAdmin ? '/' : '/admin'}
               className="text-amber-400 hover:text-amber-300 font-semibold cursor-pointer flex items-center gap-1"
             >
               <FaArrowRightArrowLeft className="w-2.5 h-2.5" />
-              <span>{viewMode === 'admin' ? 'Switch to Store' : 'Open Admin Studio'}</span>
-            </button>
+              <span>{isAdmin ? 'Back to Overview' : 'Open Owner Studio'}</span>
+            </Link>
           </div>
         </div>
       </div>
@@ -66,8 +63,8 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex items-center justify-between gap-3 sm:gap-6">
           
           {/* Brand Logo */}
-          <div 
-            onClick={() => setViewMode('store')}
+          <Link 
+            href="/"
             className="flex items-center gap-2.5 cursor-pointer group shrink-0"
           >
             <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-600/20 group-hover:bg-blue-700 transition-colors">
@@ -84,10 +81,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
               <p className="text-[11px] text-slate-500 hidden sm:block">Private Showcase & Direct Order Desk</p>
             </div>
-          </div>
+          </Link>
 
-          {/* Search Box (Store Mode Only) */}
-          {viewMode === 'store' && (
+          {/* Search Box (Show only if setSearchQuery is provided) */}
+          {setSearchQuery && (
             <div className="flex-1 max-w-md mx-2 hidden sm:block">
               <div className="relative">
                 <FaMagnifyingGlass className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-3.5 h-3.5" />
@@ -112,23 +109,23 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Action Buttons */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            {/* View Mode Toggle Button */}
-            <button
-              onClick={() => setViewMode(viewMode === 'admin' ? 'store' : 'admin')}
+            {/* Route Switcher Button */}
+            <Link
+              href={isAdmin ? '/' : '/admin'}
               className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer border ${
-                viewMode === 'admin'
+                isAdmin
                   ? 'bg-amber-500 text-slate-950 border-amber-600 shadow-sm'
                   : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200/80'
               }`}
             >
               <FaSliders className="w-3.5 h-3.5" />
               <span className="hidden md:inline">
-                {viewMode === 'admin' ? 'Owner Studio (Active)' : 'Owner Studio'}
+                {isAdmin ? 'Owner Studio (Active)' : 'Owner Studio'}
               </span>
               <span className="md:hidden">
-                {viewMode === 'admin' ? 'Studio' : 'Studio'}
+                {isAdmin ? 'Studio' : 'Studio'}
               </span>
-            </button>
+            </Link>
 
             {/* Live Customer Inbox Button */}
             <button
@@ -148,7 +145,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         {/* Mobile Search Bar */}
-        {viewMode === 'store' && (
+        {setSearchQuery && (
           <div className="mt-3 sm:hidden">
             <div className="relative">
               <FaMagnifyingGlass className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-3.5 h-3.5" />

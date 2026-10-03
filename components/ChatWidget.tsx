@@ -9,7 +9,7 @@ import {
   FaCircleCheck
 } from 'react-icons/fa6';
 import { FiX } from 'react-icons/fi';
-import { ChatMessage, Product } from '../types';
+import { ChatMessage, Product } from '../app/types';
 
 interface ChatWidgetProps {
   isOpen: boolean;
@@ -116,40 +116,40 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
         </div>
       )}
 
-      {/* Floating Launcher Button */}
+      {/* Floating Launcher Button (ByteSpace Cobalt & Lime) */}
       {!isOpen && (
         <button
           onClick={onOpen}
-          className="fixed bottom-6 right-6 z-40 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white p-4 rounded-full shadow-xl shadow-blue-600/30 flex items-center justify-center transition-all cursor-pointer group"
+          className="fixed bottom-6 right-6 z-40 bg-[#0d5bff] hover:bg-[#0045d8] active:scale-95 text-white p-4 rounded-full shadow-xl shadow-blue-600/30 flex items-center justify-center transition-all cursor-pointer group"
           title="Customer Support Desk"
         >
           <FaComments className="w-6 h-6 group-hover:scale-110 transition-transform" />
           <span className="absolute -top-1 -right-1 flex h-4 w-4">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-white"></span>
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#ccff00] opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-4 w-4 bg-[#ccff00] border-2 border-[#0d5bff]"></span>
           </span>
         </button>
       )}
 
       {/* Main Chat Drawer / Window */}
       {isOpen && (
-        <div className="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 z-50 w-[calc(100vw-2rem)] sm:w-96 h-[560px] max-h-[85vh] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-200">
+        <div className="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 z-50 w-[calc(100vw-2rem)] sm:w-96 h-[560px] max-h-[85vh] bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-200">
           
-          {/* Header */}
-          <div className="bg-slate-900 text-white px-4 py-3.5 flex items-center justify-between shrink-0">
+          {/* Header (ByteSpace Cobalt Blue) */}
+          <div className="bg-[#0d5bff] text-white px-4 py-3.5 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2.5">
               <div className="relative">
-                <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center font-bold text-white text-sm">
+                <div className="w-9 h-9 rounded-full bg-[#0045d8] flex items-center justify-center font-bold text-white text-sm">
                   <FaShieldHalved className="w-4 h-4" />
                 </div>
-                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-slate-900"></span>
+                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-[#ccff00] rounded-full border-2 border-[#0d5bff]"></span>
               </div>
               <div>
-                <h3 className="font-bold text-sm tracking-tight flex items-center gap-1.5">
-                  AffiliHub Support Desk
+                <h3 className="font-black text-sm tracking-tight flex items-center gap-1.5">
+                  ByteDesk Support Desk
                 </h3>
-                <p className="text-[11px] text-slate-300 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                <p className="text-[11px] text-blue-100 flex items-center gap-1 font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#ccff00]"></span>
                   Admin Online • Live Support
                 </p>
               </div>
@@ -158,14 +158,14 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
             <div className="flex items-center gap-1.5">
               <button
                 onClick={onSwitchToAdmin}
-                className="text-[10px] bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 px-2 py-1 rounded-md font-semibold border border-amber-500/30 transition-colors cursor-pointer"
+                className="text-[10px] bg-[#ccff00] text-slate-950 px-2.5 py-1 rounded-md font-black shadow-xs hover:bg-[#b8e600] transition-colors cursor-pointer"
                 title="Switch to Admin Mode to reply"
               >
                 Admin View
               </button>
               <button
                 onClick={onClose}
-                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+                className="text-white hover:bg-white/20 p-1 rounded-lg transition-colors cursor-pointer"
               >
                 <FiX className="w-5 h-5" />
               </button>
@@ -345,14 +345,14 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
               placeholder={inquiryProduct ? "Type your product inquiry message..." : "Type your message..."}
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              className="flex-1 bg-slate-50 text-slate-900 text-xs sm:text-sm px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 placeholder:text-slate-400"
+              className="flex-1 bg-slate-50 text-slate-900 text-xs sm:text-sm px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0d5bff]/20 focus:border-[#0d5bff] placeholder:text-slate-400 font-medium"
             />
 
             {/* Send Button */}
             <button
               type="submit"
               disabled={!inputText.trim() && !selectedImage && !inquiryProduct}
-              className="p-2.5 bg-blue-600 hover:bg-blue-700 active:scale-95 disabled:opacity-40 disabled:pointer-events-none text-white rounded-xl shadow-md shadow-blue-600/20 transition-all cursor-pointer shrink-0"
+              className="p-2.5 bg-[#0d5bff] hover:bg-[#0045d8] active:scale-95 disabled:opacity-40 disabled:pointer-events-none text-white rounded-xl shadow-md shadow-blue-600/20 transition-all cursor-pointer shrink-0"
               title="Send Message"
             >
               <FaPaperPlane className="w-3.5 h-3.5" />

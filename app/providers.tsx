@@ -1,11 +1,11 @@
 'use client';
 
 import React from 'react';
-import { AppProvider, useApp } from './context/AppContext';
-import { ShareModal } from './components/ShareModal';
-import { ProductDetailModal } from './components/ProductDetailModal';
-import { ChatWidget } from './components/ChatWidget';
-import { NotificationToast } from './components/NotificationToast';
+import { AppProvider, useApp } from '@/app/context/AppContext';
+import { ShareModal } from '@/components/ShareModal';
+import { ProductDetailModal } from '@/components/ProductDetailModal';
+import { ChatWidget } from '@/components/ChatWidget';
+import { NotificationToast } from '@/components/NotificationToast';
 import { useRouter } from 'next/navigation';
 
 const GlobalModals: React.FC = () => {

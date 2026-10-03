@@ -3,6 +3,16 @@
 :root {
   --background: #f8fafc;
   --foreground: #0f172a;
+  
+  /* ByteSpace Signature Color Tokens */
+  --bytespace-blue: #0d5bff;
+  --bytespace-blue-dark: #0045d8;
+  --bytespace-blue-deep: #0a2e8c;
+  --bytespace-lime: #ccff00;
+  --bytespace-lime-hover: #b8e600;
+  --bytespace-lime-light: #f2ffcc;
+  --bytespace-card: #ffffff;
+  --bytespace-border: #e2e8f0;
 }
 
 body {
@@ -32,21 +42,26 @@ body {
   background: #94a3b8;
 }
 
-/* Smooth Chat Bubbles */
-.chat-bubble-customer {
-  border-bottom-right-radius: 4px;
+/* ByteSpace Button Utilities */
+.btn-bytespace-lime {
+  background-color: var(--bytespace-lime);
+  color: #0f172a;
+  font-weight: 700;
+  transition: all 0.2s ease;
 }
 
-.chat-bubble-admin {
-  border-bottom-left-radius: 4px;
+.btn-bytespace-lime:hover {
+  background-color: var(--bytespace-lime-hover);
+  transform: translateY(-1px);
 }
 
-/* Pulse animation for Live Badge */
-@keyframes softPulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.8; transform: scale(1.05); }
+.btn-bytespace-blue {
+  background-color: var(--bytespace-blue);
+  color: #ffffff;
+  font-weight: 600;
+  transition: all 0.2s ease;
 }
 
-.animate-soft-pulse {
-  animation: softPulse 2.5s infinite ease-in-out;
+.btn-bytespace-blue:hover {
+  background-color: var(--bytespace-blue-dark);
 }

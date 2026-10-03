@@ -18,7 +18,7 @@ import {
 } from 'react-icons/fa6';
 import { FaFacebookMessenger, FaWhatsapp } from 'react-icons/fa';
 import { FiX } from 'react-icons/fi';
-import { Product, ChatMessage } from '../types';
+import { Product, ChatMessage } from '../app/types';
 
 interface ClientSharedViewProps {
   product: Product;

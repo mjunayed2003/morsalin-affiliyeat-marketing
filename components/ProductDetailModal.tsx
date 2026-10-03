@@ -12,7 +12,7 @@ import {
 } from 'react-icons/fa6';
 import { FaFacebookMessenger } from 'react-icons/fa';
 import { FiX } from 'react-icons/fi';
-import { Product } from '../types';
+import { Product } from '../app/types';
 
 interface ProductDetailModalProps {
   product: Product | null;

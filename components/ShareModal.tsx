@@ -13,7 +13,7 @@ import {
 } from 'react-icons/fa6';
 import { FaFacebookMessenger, FaWhatsapp } from 'react-icons/fa';
 import { FiX } from 'react-icons/fi';
-import { Product } from '../types';
+import { Product } from '../app/types';
 
 interface ShareModalProps {
   product: Product | null;
@@ -35,9 +35,9 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 
   if (!isOpen || !product) return null;
 
-  // Compute shareable link directly pointing to exclusive client view
+  // Compute shareable link directly pointing to dedicated /client/[id] route
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://affilihub.com';
-  const shareableUrl = `${origin}?client=${product.id}&ref=${product.affiliateCode || 'direct'}`;
+  const shareableUrl = `${origin}/client/${product.id}`;
   
   // Active preview image (either custom uploaded or original product image)
   const activeImage = customImage || product.image;
@@ -128,24 +128,24 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
-      <div className="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-6">
+      <div className="relative w-full max-w-xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden my-6">
         
-        {/* Modal Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 bg-slate-50">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-sky-500 text-white flex items-center justify-center shadow-xs">
+        {/* Modal Header (ByteSpace Cobalt Blue) */}
+        <div className="flex items-center justify-between px-6 py-4.5 border-b border-slate-200 bg-[#0d5bff] text-white">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-[#ccff00] text-slate-950 flex items-center justify-center font-bold shadow-xs">
               <FaFacebookMessenger className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-900">
+              <h2 className="text-base font-black">
                 Messenger & Social Share Preview
               </h2>
-              <p className="text-xs text-slate-500">Preview image & link appearance before sharing to clients</p>
+              <p className="text-xs text-blue-100 font-medium">Preview image & link appearance before sharing to clients</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg text-white hover:bg-white/20 transition-colors cursor-pointer"
           >
             <FiX className="w-5 h-5" />
           </button>
@@ -224,7 +224,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="shrink-0 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-xs transition-all cursor-pointer flex items-center gap-1.5"
+                className="shrink-0 bg-[#0d5bff] hover:bg-[#0045d8] active:scale-95 text-white text-xs font-bold px-3.5 py-2.5 rounded-xl shadow-xs transition-all cursor-pointer flex items-center gap-1.5"
               >
                 <FaImage className="w-3.5 h-3.5" />
                 <span>Upload Image</span>
@@ -240,8 +240,8 @@ export const ShareModal: React.FC<ShareModalProps> = ({
             />
 
             {customImage && (
-              <div className="mt-3 flex items-center gap-2 text-xs text-emerald-800 bg-emerald-100 px-3 py-2 rounded-lg font-medium">
-                <FaCircleCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+              <div className="mt-3 flex items-center gap-2 text-xs text-slate-950 bg-[#ccff00]/40 border border-[#ccff00] px-3 py-2 rounded-xl font-bold">
+                <FaCircleCheck className="w-4 h-4 text-emerald-700 shrink-0" />
                 <span>Custom image applied! This image will now appear in the share preview.</span>
               </div>
             )}
@@ -257,7 +257,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
               {/* Native Mobile Share Button */}
               <button
                 onClick={handleNativeShare}
-                className="flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 active:scale-98 text-white p-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer shadow-xs"
+                className="flex items-center justify-center gap-2 bg-[#0a2e8c] hover:bg-[#0d5bff] active:scale-98 text-white p-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-xs"
               >
                 <FaShareNodes className="w-3.5 h-3.5" />
                 <span>Share to Apps (Web Share)</span>
@@ -266,7 +266,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
               {/* Direct Messenger Button */}
               <button
                 onClick={handleMessengerShare}
-                className="flex items-center justify-center gap-2 bg-sky-500 hover:bg-sky-600 active:scale-98 text-white p-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer shadow-xs"
+                className="flex items-center justify-center gap-2 bg-sky-500 hover:bg-sky-600 active:scale-98 text-white p-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-xs"
               >
                 <FaFacebookMessenger className="w-4 h-4" />
                 <span>Messenger Dialog</span>
@@ -275,7 +275,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
               {/* Direct WhatsApp Button */}
               <button
                 onClick={handleWhatsAppShare}
-                className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white p-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer shadow-xs"
+                className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white p-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-xs"
               >
                 <FaWhatsapp className="w-4 h-4" />
                 <span>Share via WhatsApp</span>
@@ -284,7 +284,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
               {/* Copy Ready-to-paste Caption */}
               <button
                 onClick={handleCopyFormattedPost}
-                className="flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 active:scale-98 text-slate-800 p-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer border border-slate-300"
+                className="flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 active:scale-98 text-slate-800 p-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer border border-slate-300"
               >
                 <FaFileLines className="w-3.5 h-3.5" />
                 <span>Copy Caption & Link</span>
@@ -302,14 +302,14 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                 type="text"
                 readOnly
                 value={shareableUrl}
-                className="flex-1 bg-slate-50 text-slate-700 text-xs px-3 py-2.5 rounded-xl border border-slate-200 font-mono select-all focus:outline-none"
+                className="flex-1 bg-slate-50 text-slate-700 text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 font-mono select-all focus:outline-none font-semibold"
               />
               <button
                 onClick={handleCopyLink}
-                className={`px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
+                className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
                   copied
                     ? 'bg-emerald-600 text-white'
-                    : 'bg-blue-600 hover:bg-blue-700 text-white'
+                    : 'bg-[#ccff00] hover:bg-[#b8e600] text-slate-950 shadow-xs'
                 }`}
               >
                 {copied ? <FaCheck className="w-3.5 h-3.5" /> : <FaCopy className="w-3.5 h-3.5" />}

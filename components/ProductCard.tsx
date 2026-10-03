@@ -11,7 +11,7 @@ import {
   FaShareNodes
 } from 'react-icons/fa6';
 import { FaFacebookMessenger } from 'react-icons/fa';
-import { Product } from '../types';
+import { Product } from '../app/types';
 
 interface ProductCardProps {
   product: Product;
