@@ -2,25 +2,22 @@
 
 import React, { useState, useRef } from 'react';
 import { 
-  FiPlus, 
-  FiEdit2, 
-  FiTrash2, 
-  FiMessageCircle, 
-  FiUpload, 
-  FiImage, 
-  FiCheck, 
-  FiX, 
-  FiTag, 
-  FiEye, 
-  FiSend,
-  FiShoppingBag,
-  FiTrendingUp,
-  FiShare2,
-  FiRefreshCw,
-  FiDollarSign,
-  FiExternalLink
-} from 'react-icons/fi';
-import { FaFacebookMessenger, FaWhatsapp } from 'react-icons/fa';
+  FaPlus, 
+  FaPenToSquare, 
+  FaTrashCan, 
+  FaComments, 
+  FaUpload, 
+  FaImage, 
+  FaCheck, 
+  FaPaperPlane,
+  FaBagShopping,
+  FaDollarSign,
+  FaRotate,
+  FaCircleCheck,
+  FaSliders
+} from 'react-icons/fa6';
+import { FaFacebookMessenger } from 'react-icons/fa';
+import { FiX } from 'react-icons/fi';
 import { Product, ChatMessage } from '../types';
 
 interface AdminPanelProps {
@@ -86,8 +83,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setOriginalPrice('2000');
     setCommissionAmount('250');
     setImage('https://images.unsplash.com/photo-1546868871-7041f2a55e12?auto=format&fit=crop&w=800&q=80');
-    setDescription('নতুন প্রিমিয়াম কোয়ালিটি প্রোডাক্ট। লাইভ সাপোর্ট ও হোম ডেলিভারি এভেইলেবল।');
-    setFeatures('১০০% আসল প্রোডাক্ট, ৭ দিনের রিপ্লেসমেন্ট গ্যারান্টি, ফাস্ট চার্জিং সাপোর্ট');
+    setDescription('High performance smart gadget with premium build quality, fast charging, and full manufacturer warranty.');
+    setFeatures('100% Original Authentic, 7-Day Replacement Guarantee, Fast Wireless Charging');
     setBadge('Hot Deal');
     setAffiliateCode(`AFF-${Date.now().toString().slice(-5)}`);
     setIsFormOpen(true);
@@ -117,7 +114,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     const reader = new FileReader();
     reader.onload = (event) => {
       setImage(event.target?.result as string);
-      onShowToast('ছবি আপলোড সম্পন্ন হয়েছে!');
+      onShowToast('Product photo uploaded successfully!');
     };
     reader.readAsDataURL(file);
     e.target.value = '';
@@ -127,7 +124,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const handleSaveProduct = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !price || !image) {
-      alert('দয়া করে প্রোডাক্টের নাম, মূল্য এবং ছবি প্রদান করুন।');
+      alert('Please provide Product Title, Price, and Image.');
       return;
     }
 
@@ -157,7 +154,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         affiliateCode: affiliateCode || editingProduct.affiliateCode
       };
       onUpdateProduct(updated);
-      onShowToast('প্রোডাক্ট সফলভাবে আপডেট হয়েছে!');
+      onShowToast('Product details updated successfully!');
     } else {
       const newProd: Product = {
         id: `prod-${Date.now().toString().slice(-6)}`,
@@ -169,7 +166,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         commissionAmount: pCommAmt,
         image,
         description,
-        features: featureList.length > 0 ? featureList : ['১০০% অরিজিনাল কোয়ালিটি', 'ক্যাশ অন ডেলিভারি এভেইলেবল'],
+        features: featureList.length > 0 ? featureList : ['100% Original Quality', 'Cash on Delivery Available'],
         rating: 4.8,
         reviewsCount: 1,
         badge,
@@ -178,7 +175,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         createdAt: new Date().toISOString()
       };
       onAddProduct(newProd);
-      onShowToast('নতুন প্রোডাক্ট সফলভাবে যুক্ত হয়েছে!');
+      onShowToast('New product added to catalog!');
     }
 
     setIsFormOpen(false);
@@ -205,7 +202,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     onAdminReply(adminReplyText.trim(), adminReplyImage || undefined);
     setAdminReplyText('');
     setAdminReplyImage(null);
-    onShowToast('অ্যাডমিন রিপ্লাই পাঠানো হয়েছে!');
+    onShowToast('Reply sent to customer inbox!');
   };
 
   return (
@@ -220,14 +217,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 Admin Control Room
               </span>
               <span className="text-xs text-slate-500">
-                প্রোডাক্ট, ইমেজ, অ্যাফিলিয়েট ও ইনবক্স কন্ট্রোল
+                Products, Images, Affiliate Links & Live Customer Desk
               </span>
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">
-              অ্যাডমিন ড্যাশবোর্ড ও ম্যানেজমেন্ট প্যানেল
+              Affiliate Management Dashboard
             </h1>
             <p className="text-xs sm:text-sm text-slate-600 mt-0.5">
-              এখান থেকে নতুন প্রোডাক্ট যোগ করুন, ছবি এডিট করুন এবং কাস্টমারদের ইনবক্স মেসেজে রিপ্লাই ও ছবি পাঠান।
+              Add new products, upload custom images, adjust commission rates, and reply to client inquiries with image attachments.
             </p>
           </div>
 
@@ -236,15 +233,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               onClick={handleOpenAdd}
               className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold shadow-md shadow-blue-600/20 transition-all cursor-pointer"
             >
-              <FiPlus className="w-4 h-4" />
-              <span>নতুন প্রোডাক্ট যোগ করুন</span>
+              <FaPlus className="w-3.5 h-3.5" />
+              <span>Add New Product</span>
             </button>
 
             <button
               onClick={onCloseAdmin}
-              className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-medium rounded-xl border border-slate-300 transition-colors cursor-pointer"
+              className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-semibold rounded-xl border border-slate-300 transition-colors cursor-pointer"
             >
-              স্টোরে ফিরুন
+              Back to Store
             </button>
           </div>
         </div>
@@ -253,31 +250,31 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
           <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
-              <FiShoppingBag className="w-5 h-5" />
+              <FaBagShopping className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs text-slate-500 font-medium">মোট প্রোডাক্টস</p>
-              <h3 className="text-lg font-bold text-slate-900">{products.length} টি</h3>
+              <p className="text-xs text-slate-500 font-medium">Total Products</p>
+              <h3 className="text-lg font-bold text-slate-900">{products.length} Items</h3>
             </div>
           </div>
 
           <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
-              <FiMessageCircle className="w-5 h-5" />
+              <FaComments className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs text-slate-500 font-medium">ইনবক্স মেসেজ</p>
-              <h3 className="text-lg font-bold text-slate-900">{messages.length} টি</h3>
+              <p className="text-xs text-slate-500 font-medium">Inbox Messages</p>
+              <h3 className="text-lg font-bold text-slate-900">{messages.length} Chats</h3>
             </div>
           </div>
 
           <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
-              <FiDollarSign className="w-5 h-5" />
+              <FaDollarSign className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs text-slate-500 font-medium">গড় কমিশন</p>
-              <h3 className="text-lg font-bold text-slate-900">৳৩৫০+ / সেল</h3>
+              <p className="text-xs text-slate-500 font-medium">Avg Commission</p>
+              <h3 className="text-lg font-bold text-slate-900">৳350+ / Sale</h3>
             </div>
           </div>
 
@@ -286,38 +283,38 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               <FaFacebookMessenger className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs text-slate-500 font-medium">মেসেঞ্জার প্রিভিউ</p>
-              <h3 className="text-lg font-bold text-emerald-600">১০০% রেডি</h3>
+              <p className="text-xs text-slate-500 font-medium">Messenger Preview</p>
+              <h3 className="text-lg font-bold text-emerald-600">100% Ready</h3>
             </div>
           </div>
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex items-center gap-2 border-b border-slate-200 bg-white px-4 rounded-xl shadow-xs">
+        <div className="flex items-center gap-2 border-b border-slate-200 bg-white px-4 rounded-xl shadow-xs overflow-x-auto no-scrollbar">
           <button
             onClick={() => setActiveTab('products')}
-            className={`flex items-center gap-2 py-3 px-4 text-xs sm:text-sm font-semibold border-b-2 transition-colors cursor-pointer ${
+            className={`flex items-center gap-2 py-3 px-4 text-xs sm:text-sm font-semibold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${
               activeTab === 'products'
                 ? 'border-blue-600 text-blue-600'
                 : 'border-transparent text-slate-600 hover:text-slate-900'
             }`}
           >
-            <FiShoppingBag className="w-4 h-4" />
-            <span>প্রোডাক্ট ও ইমেজ ম্যানেজমেন্ট ({products.length})</span>
+            <FaBagShopping className="w-3.5 h-3.5" />
+            <span>Product & Image Catalog ({products.length})</span>
           </button>
 
           <button
             onClick={() => setActiveTab('inbox')}
-            className={`flex items-center gap-2 py-3 px-4 text-xs sm:text-sm font-semibold border-b-2 transition-colors cursor-pointer ${
+            className={`flex items-center gap-2 py-3 px-4 text-xs sm:text-sm font-semibold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${
               activeTab === 'inbox'
                 ? 'border-blue-600 text-blue-600'
                 : 'border-transparent text-slate-600 hover:text-slate-900'
             }`}
           >
-            <FiMessageCircle className="w-4 h-4" />
-            <span>লাইভ চ্যাট ইনবক্স ম্যানেজার</span>
+            <FaComments className="w-3.5 h-3.5" />
+            <span>Live Chat Inbox Manager</span>
             {messages.length > 0 && (
-              <span className="bg-blue-100 text-blue-800 text-[11px] px-1.5 py-0.2 rounded-full font-bold">
+              <span className="bg-blue-100 text-blue-800 text-[11px] px-2 py-0.5 rounded-full font-bold">
                 {messages.length}
               </span>
             )}
@@ -325,14 +322,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
           <button
             onClick={() => setActiveTab('previewLab')}
-            className={`flex items-center gap-2 py-3 px-4 text-xs sm:text-sm font-semibold border-b-2 transition-colors cursor-pointer ${
+            className={`flex items-center gap-2 py-3 px-4 text-xs sm:text-sm font-semibold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${
               activeTab === 'previewLab'
                 ? 'border-blue-600 text-blue-600'
                 : 'border-transparent text-slate-600 hover:text-slate-900'
             }`}
           >
-            <FaFacebookMessenger className="w-4 h-4 text-sky-500" />
-            <span>মেসেঞ্জার প্রিভিউ ল্যাব</span>
+            <FaFacebookMessenger className="w-3.5 h-3.5 text-sky-500" />
+            <span>Messenger Preview Lab</span>
           </button>
         </div>
 
@@ -341,14 +338,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-bold text-slate-900">
-                সকল প্রোডাক্ট তালিকা
+                All Listed Products
               </h2>
               <button
                 onClick={onResetProducts}
                 className="flex items-center gap-1.5 text-xs text-slate-600 hover:text-slate-900 bg-white border border-slate-300 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
               >
-                <FiRefreshCw className="w-3.5 h-3.5" />
-                <span>রিসেট ডেমো ডাটা</span>
+                <FaRotate className="w-3 h-3" />
+                <span>Reset Demo Catalog</span>
               </button>
             </div>
 
@@ -371,7 +368,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       </span>
                     </div>
                     <div className="absolute bottom-2 right-2 bg-emerald-600 text-white text-[11px] font-semibold px-2 py-0.5 rounded-md">
-                      কমিশন: {prod.commission}
+                      Commission: {prod.commission}
                     </div>
                   </div>
 
@@ -399,33 +396,33 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     <div className="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-slate-100">
                       <button
                         onClick={() => handleOpenEdit(prod)}
-                        className="flex items-center justify-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-1.5 px-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
-                        title="এডিট করুন"
+                        className="flex items-center justify-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 py-1.5 px-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                        title="Edit Details"
                       >
-                        <FiEdit2 className="w-3.5 h-3.5" />
-                        <span>এডিট</span>
+                        <FaPenToSquare className="w-3 h-3" />
+                        <span>Edit</span>
                       </button>
 
                       <button
                         onClick={() => onOpenShareModal(prod)}
-                        className="flex items-center justify-center gap-1 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 py-1.5 px-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
-                        title="মেসেঞ্জার প্রিভিউ দেখুন"
+                        className="flex items-center justify-center gap-1.5 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 py-1.5 px-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                        title="View Messenger Preview"
                       >
-                        <FaFacebookMessenger className="w-3.5 h-3.5" />
-                        <span>প্রিভিউ</span>
+                        <FaFacebookMessenger className="w-3 h-3" />
+                        <span>Preview</span>
                       </button>
 
                       <button
                         onClick={() => {
-                          if (confirm(`আপনি কি "${prod.title}" প্রোডাক্টটি মুছে ফেলতে চান?`)) {
+                          if (confirm(`Are you sure you want to delete "${prod.title}"?`)) {
                             onDeleteProduct(prod.id);
                           }
                         }}
-                        className="flex items-center justify-center gap-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 py-1.5 px-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
-                        title="মুছে ফেলুন"
+                        className="flex items-center justify-center gap-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 py-1.5 px-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                        title="Delete Product"
                       >
-                        <FiTrash2 className="w-3.5 h-3.5" />
-                        <span>ডিলিট</span>
+                        <FaTrashCan className="w-3 h-3" />
+                        <span>Delete</span>
                       </button>
                     </div>
 
@@ -444,20 +441,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             <div className="p-5 border-b lg:border-b-0 lg:border-r border-slate-200 bg-slate-50 space-y-4">
               <div>
                 <h3 className="text-base font-bold text-slate-900">
-                  কাস্টমার লাইভ কনভারসেশন
+                  Customer Live Inquiries
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  কাস্টমারদের আসা মেসেজগুলো পড়ুন এবং এখান থেকেই রিপ্লাই দিন।
+                  Read client inquiries and send direct admin replies with photos.
                 </p>
               </div>
 
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-3.5 space-y-2 text-xs text-blue-900">
                 <p className="font-semibold flex items-center gap-1.5">
-                  <FiCheck className="w-4 h-4 text-blue-600" />
-                  সরাসরি ইমেজ পাঠানোর সুবিধা
+                  <FaCircleCheck className="w-3.5 h-3.5 text-blue-600" />
+                  Direct Image Send & Receive
                 </p>
                 <p className="text-[11px] text-blue-800 leading-relaxed">
-                  কাস্টমার কোনো ছবি পাঠালে তা চ্যাটে বড় করে দেখতে পারবেন এবং আপনিও প্রোডাক্টের আসল ছবি বা ইনভয়েস কাস্টমারকে পাঠাতে পারবেন।
+                  When a client sends a screenshot or photo, you can inspect it in full zoom, and attach your own parcel slips or real product photos in response.
                 </p>
               </div>
 
@@ -465,7 +462,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 onClick={onClearMessages}
                 className="w-full py-2 px-3 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-lg border border-rose-200 transition-colors cursor-pointer"
               >
-                চ্যাট হিস্ট্রি ক্লিয়ার করুন
+                Clear Chat History
               </button>
             </div>
 
@@ -476,8 +473,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               <div className="flex-1 p-4 overflow-y-auto space-y-3.5 bg-slate-50/50 custom-scrollbar">
                 {messages.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center text-slate-400 text-xs">
-                    <FiMessageCircle className="w-8 h-8 mb-2" />
-                    <span>কোনো মেসেজ নেই।</span>
+                    <FaComments className="w-8 h-8 mb-2" />
+                    <span>No chat messages yet.</span>
                   </div>
                 ) : (
                   messages.map((msg) => {
@@ -488,7 +485,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         className={`flex flex-col ${isAdmin ? 'items-end' : 'items-start'}`}
                       >
                         <span className="text-[10px] text-slate-500 mb-0.5 px-1 font-medium">
-                          {isAdmin ? 'অ্যাডমিন (আপনি)' : 'কাস্টমার (Client)'}
+                          {isAdmin ? 'Admin (You)' : 'Customer (Client)'}
                         </span>
 
                         <div
@@ -545,7 +542,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     className="w-10 h-10 object-cover rounded-lg border border-blue-300"
                   />
                   <span className="text-xs text-blue-900 font-medium flex-1">
-                    ছবি এটাচ করা হয়েছে।
+                    Image attached to reply.
                   </span>
                   <button
                     onClick={() => setAdminReplyImage(null)}
@@ -562,9 +559,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   type="button"
                   onClick={() => adminFileInputRef.current?.click()}
                   className="p-2 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded-xl cursor-pointer"
-                  title="কাস্টমারকে ছবি পাঠান"
+                  title="Attach and send photo to client"
                 >
-                  <FiImage className="w-5 h-5" />
+                  <FaImage className="w-4 h-4" />
                 </button>
 
                 <input
@@ -577,7 +574,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
                 <input
                   type="text"
-                  placeholder="অ্যাডমিন হিসেবে কাস্টমারকে রিপ্লাই লিখুন..."
+                  placeholder="Type an official admin response to the customer..."
                   value={adminReplyText}
                   onChange={(e) => setAdminReplyText(e.target.value)}
                   className="flex-1 bg-slate-50 text-slate-900 text-xs sm:text-sm px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
@@ -587,9 +584,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   type="submit"
                   disabled={!adminReplyText.trim() && !adminReplyImage}
                   className="p-2.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-40 text-white rounded-xl shadow-xs transition-all cursor-pointer"
-                  title="রিপ্লাই পাঠান"
+                  title="Send Reply"
                 >
-                  <FiSend className="w-4 h-4" />
+                  <FaPaperPlane className="w-3.5 h-3.5" />
                 </button>
               </form>
 
@@ -603,17 +600,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-6">
             <div>
               <h3 className="text-base font-bold text-slate-900">
-                মেসেঞ্জার ও ওপেন-গ্রাফ (Open Graph) প্রিভিউ ল্যাব
+                Messenger & Open Graph Social Preview Lab
               </h3>
               <p className="text-xs text-slate-500 mt-0.5">
-                ক্লায়েন্ট মেসেঞ্জারে লিংক দিলে কীভাবে ছবি ও ডিটেইলস ভেসে ওঠে তা পরীক্ষা করুন।
+                Inspect how social crawlers and Facebook Messenger render your product images and details.
               </p>
             </div>
 
             {/* Product Selector */}
             <div className="flex items-center gap-3">
               <label className="text-xs font-semibold text-slate-700">
-                যাচাইয়ের জন্য প্রোডাক্ট বেছে নিন:
+                Select Product to Inspect:
               </label>
               <select
                 value={selectedLabProduct?.id || ''}
@@ -638,7 +635,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 <div className="bg-[#f0f2f5] p-4 rounded-2xl border border-slate-200">
                   <div className="flex items-center gap-2 mb-3 text-xs font-bold text-slate-700">
                     <FaFacebookMessenger className="w-4 h-4 text-sky-500" />
-                    <span>Facebook Messenger প্রিভিউ কার্ড:</span>
+                    <span>Facebook Messenger Live Card Simulation:</span>
                   </div>
 
                   <div className="bg-white rounded-xl overflow-hidden border border-slate-300 shadow-md">
@@ -649,8 +646,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         className="w-full h-full object-cover"
                       />
                     </div>
-                    <div className="p-3">
-                      <p className="text-[10px] text-slate-400 uppercase font-semibold">
+                    <div className="p-3.5">
+                      <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">
                         AFFILIHUB.COM
                       </p>
                       <h4 className="font-bold text-slate-900 text-sm mt-0.5 line-clamp-1">
@@ -664,10 +661,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
                   <button
                     onClick={() => onOpenShareModal(selectedLabProduct)}
-                    className="w-full mt-4 py-2 bg-sky-500 hover:bg-sky-600 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                    className="w-full mt-4 py-2.5 bg-sky-500 hover:bg-sky-600 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors cursor-pointer flex items-center justify-center gap-2"
                   >
                     <FaFacebookMessenger className="w-4 h-4" />
-                    <span>মেসেঞ্জারে লাইভ শেয়ার উইন্ডো ওপেন করুন</span>
+                    <span>Open Live Messenger Share Modal</span>
                   </button>
                 </div>
 
@@ -675,7 +672,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 <div className="bg-slate-900 text-slate-200 p-4 rounded-2xl space-y-3 font-mono text-xs overflow-x-auto">
                   <div className="flex items-center justify-between text-slate-400 font-sans text-xs pb-2 border-b border-slate-800">
                     <span className="font-bold">Generated Open Graph Meta Tags</span>
-                    <span className="text-[10px] text-emerald-400">Valid & Verified</span>
+                    <span className="text-[10px] text-emerald-400 font-semibold">Valid & Verified</span>
                   </div>
 
                   <p className="text-emerald-400">
@@ -695,7 +692,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   </p>
 
                   <div className="pt-2 border-t border-slate-800 font-sans text-[11px] text-slate-400">
-                    ফেসবুক স্ক্র্যাপার এই ট্যাগগুলো পড়ে স্বয়ংক্রিয়ভাবে থাম্বনেইল প্রদর্শন করে।
+                    Facebook Messenger crawlers scrape these tags automatically to produce high-resolution link previews with images.
                   </div>
                 </div>
 
@@ -714,7 +711,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             {/* Modal Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50">
               <h2 className="text-base font-bold text-slate-900">
-                {editingProduct ? 'প্রোডাক্ট এডিট করুন' : 'নতুন প্রোডাক্ট যোগ করুন'}
+                {editingProduct ? 'Edit Product Details' : 'Add New Affiliate Product'}
               </h2>
               <button
                 onClick={() => setIsFormOpen(false)}
@@ -730,12 +727,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               {/* Title */}
               <div>
                 <label className="text-xs font-semibold text-slate-700 block mb-1">
-                  প্রোডাক্টের নাম (Title) *
+                  Product Title *
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="যেমন: T900 Ultra Series 9 Smart Watch"
+                  placeholder="e.g. T900 Ultra Series 9 Smart Watch"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   className="w-full bg-slate-50 text-slate-900 text-xs sm:text-sm px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
@@ -746,7 +743,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-semibold text-slate-700 block mb-1">
-                    ক্যাটাগরি
+                    Category
                   </label>
                   <select
                     value={category}
@@ -763,7 +760,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
                 <div>
                   <label className="text-xs font-semibold text-slate-700 block mb-1">
-                    হাইলাইট ব্যাজ
+                    Highlight Badge
                   </label>
                   <select
                     value={badge}
@@ -782,7 +779,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="text-xs font-semibold text-slate-700 block mb-1">
-                    অফার মূল্য (৳) *
+                    Deal Price (৳) *
                   </label>
                   <input
                     type="number"
@@ -796,7 +793,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
                 <div>
                   <label className="text-xs font-semibold text-slate-700 block mb-1">
-                    রেগুলার মূল্য (৳)
+                    Regular Price (৳)
                   </label>
                   <input
                     type="number"
@@ -809,7 +806,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
                 <div>
                   <label className="text-xs font-semibold text-slate-700 block mb-1">
-                    কমিশন (৳)
+                    Commission (৳)
                   </label>
                   <input
                     type="number"
@@ -824,14 +821,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               {/* Image Upload Option */}
               <div>
                 <label className="text-xs font-semibold text-slate-700 block mb-1">
-                  প্রোডাক্ট ছবি আপলোড (Image Upload) *
+                  Product Image Upload *
                 </label>
                 
                 <div className="flex gap-2">
                   <input
                     type="text"
                     required
-                    placeholder="ইমেজ URL অথবা নিচের বাটন থেকে ছবি আপলোড করুন"
+                    placeholder="Enter Image URL or click upload button"
                     value={image}
                     onChange={(e) => setImage(e.target.value)}
                     className="flex-1 bg-slate-50 text-slate-900 text-xs px-3 py-2 rounded-xl border border-slate-200 focus:outline-none"
@@ -842,8 +839,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     onClick={() => productFileInputRef.current?.click()}
                     className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-xl flex items-center gap-1.5 shrink-0 cursor-pointer"
                   >
-                    <FiUpload className="w-3.5 h-3.5" />
-                    <span>ছবি আপলোড</span>
+                    <FaUpload className="w-3 h-3" />
+                    <span>Upload</span>
                   </button>
                 </div>
 
@@ -863,7 +860,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       className="w-12 h-12 object-cover rounded-lg border border-slate-300"
                     />
                     <span className="text-[11px] text-slate-500">
-                      ইমেজ প্রিভিউ লোড হয়েছে (মেসেঞ্জারেও এটি দেখাবে)
+                      Image preview active (will appear on Messenger share)
                     </span>
                   </div>
                 )}
@@ -872,11 +869,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               {/* Description */}
               <div>
                 <label className="text-xs font-semibold text-slate-700 block mb-1">
-                  বিবরণ (Description)
+                  Product Description
                 </label>
                 <textarea
                   rows={2}
-                  placeholder="প্রোডাক্ট সম্পর্কে প্রয়োজনীয় তথ্য..."
+                  placeholder="Provide essential details about the product..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   className="w-full bg-slate-50 text-slate-900 text-xs sm:text-sm px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
@@ -886,11 +883,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               {/* Features */}
               <div>
                 <label className="text-xs font-semibold text-slate-700 block mb-1">
-                  মূল বৈশিষ্ট্যসমূহ (কমা দিয়ে লিখুন)
+                  Key Specifications (comma-separated)
                 </label>
                 <input
                   type="text"
-                  placeholder="যেমন: ফাস্ট চার্জিং, ব্লুটুথ কলিং, ওয়াটারপ্রুফ"
+                  placeholder="e.g. Fast Wireless Charging, Bluetooth HD Calling, Water Resistant"
                   value={features}
                   onChange={(e) => setFeatures(e.target.value)}
                   className="w-full bg-slate-50 text-slate-900 text-xs sm:text-sm px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
@@ -904,13 +901,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   onClick={() => setIsFormOpen(false)}
                   className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold cursor-pointer"
                 >
-                  বাতিল
+                  Cancel
                 </button>
                 <button
                   type="submit"
                   className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-md shadow-blue-600/20 cursor-pointer"
                 >
-                  {editingProduct ? 'আপডেট করুন' : 'প্রোডাক্ট সংরক্ষণ করুন'}
+                  {editingProduct ? 'Update Product' : 'Save Product'}
                 </button>
               </div>
 

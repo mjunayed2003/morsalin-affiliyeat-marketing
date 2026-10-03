@@ -2,13 +2,15 @@
 
 import React from 'react';
 import { 
-  FiShoppingBag, 
-  FiSearch, 
-  FiMessageCircle, 
-  FiSliders, 
-  FiTag,
-  FiExternalLink
-} from 'react-icons/fi';
+  FaBagShopping, 
+  FaTags, 
+  FaSliders, 
+  FaComments, 
+  FaMagnifyingGlass,
+  FaArrowRightArrowLeft,
+  FaUserTie
+} from 'react-icons/fa6';
+import { FiX } from 'react-icons/fi';
 import { ViewMode } from '../types';
 
 interface NavbarProps {
@@ -32,27 +34,28 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs">
-      {/* Top Affiliate Micro-bar */}
+      {/* Top Personal Affiliate Micro-bar */}
       <div className="bg-slate-900 text-slate-200 text-xs py-1.5 px-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-semibold text-[11px]">
-              <FiTag className="w-3 h-3" /> স্পেশাল কমিশন
+            <span className="inline-flex items-center gap-1.5 bg-blue-500/20 text-blue-300 px-2.5 py-0.5 rounded-full font-semibold text-[11px]">
+              <FaUserTie className="w-3 h-3 text-blue-400" /> Personal Affiliate Workspace
             </span>
             <span className="hidden sm:inline text-slate-300">
-              প্রতিটি প্রডাক্টে সরাসরি ১২% থেকে ২৫% পর্যন্ত ইনস্ট্যান্ট অ্যাফিলিয়েট কমিশন!
+              Only You & Your Client • Direct Image Sharing with Live Messenger Preview
             </span>
             <span className="sm:hidden text-slate-300">
-              ১২%-২৫% অ্যাফিলিয়েট কমিশন
+              Private Client Desk
             </span>
           </div>
-          <div className="flex items-center gap-4 text-[11px] text-slate-300">
-            <span className="hidden md:inline">লাইভ মেসেঞ্জার ও হোয়াটসঅ্যাপ প্রিভিউ সাপোর্টেড</span>
+
+          <div className="flex items-center gap-3 text-[11px]">
             <button 
-              onClick={() => setViewMode(viewMode === 'store' ? 'admin' : 'store')}
-              className="text-amber-400 hover:text-amber-300 underline font-medium cursor-pointer"
+              onClick={() => setViewMode(viewMode === 'admin' ? 'store' : 'admin')}
+              className="text-amber-400 hover:text-amber-300 font-semibold cursor-pointer flex items-center gap-1"
             >
-              {viewMode === 'store' ? 'অ্যাডমিন মোড অন করুন' : 'কাস্টমার স্টোরে ফিরুন'}
+              <FaArrowRightArrowLeft className="w-2.5 h-2.5" />
+              <span>{viewMode === 'admin' ? 'Switch to Store' : 'Open Admin Studio'}</span>
             </button>
           </div>
         </div>
@@ -68,18 +71,18 @@ export const Navbar: React.FC<NavbarProps> = ({
             className="flex items-center gap-2.5 cursor-pointer group shrink-0"
           >
             <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-600/20 group-hover:bg-blue-700 transition-colors">
-              <FiShoppingBag className="w-5 h-5" />
+              <FaBagShopping className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="font-bold text-lg sm:text-xl text-slate-900 tracking-tight">
-                  Affili<span className="text-blue-600">Hub</span>
+                  Personal<span className="text-blue-600">Desk</span>
                 </span>
-                <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
-                  Affiliate
+                <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  Client & Owner
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500 hidden sm:block">প্রোডাক্ট শোকেস ও ডাইরেক্ট চ্যাট হাব</p>
+              <p className="text-[11px] text-slate-500 hidden sm:block">Private Showcase & Direct Order Desk</p>
             </div>
           </div>
 
@@ -87,20 +90,20 @@ export const Navbar: React.FC<NavbarProps> = ({
           {viewMode === 'store' && (
             <div className="flex-1 max-w-md mx-2 hidden sm:block">
               <div className="relative">
-                <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+                <FaMagnifyingGlass className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-3.5 h-3.5" />
                 <input
                   type="text"
-                  placeholder="প্রোডাক্টের নাম বা ক্যাটাগরি দিয়ে খুঁজুন..."
+                  placeholder="Search your curated client items..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-slate-50 hover:bg-slate-100/80 focus:bg-white text-slate-900 text-sm pl-10 pr-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all placeholder:text-slate-400"
+                  className="w-full bg-slate-50 hover:bg-slate-100/80 focus:bg-white text-slate-900 text-sm pl-10 pr-9 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all placeholder:text-slate-400"
                 />
                 {searchQuery && (
                   <button 
                     onClick={() => setSearchQuery('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                   >
-                    Clear
+                    <FiX className="w-4 h-4" />
                   </button>
                 )}
               </div>
@@ -111,29 +114,29 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             {/* View Mode Toggle Button */}
             <button
-              onClick={() => setViewMode(viewMode === 'store' ? 'admin' : 'store')}
-              className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer border ${
+              onClick={() => setViewMode(viewMode === 'admin' ? 'store' : 'admin')}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer border ${
                 viewMode === 'admin'
                   ? 'bg-amber-500 text-slate-950 border-amber-600 shadow-sm'
                   : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200/80'
               }`}
             >
-              <FiSliders className="w-4 h-4" />
+              <FaSliders className="w-3.5 h-3.5" />
               <span className="hidden md:inline">
-                {viewMode === 'admin' ? 'অ্যাডমিন প্যানেল (Active)' : 'অ্যাডমিন ড্যাশবোর্ড'}
+                {viewMode === 'admin' ? 'Owner Studio (Active)' : 'Owner Studio'}
               </span>
               <span className="md:hidden">
-                {viewMode === 'admin' ? 'অ্যাডমিন' : 'ড্যাশবোর্ড'}
+                {viewMode === 'admin' ? 'Studio' : 'Studio'}
               </span>
             </button>
 
             {/* Live Customer Inbox Button */}
             <button
               onClick={openChat}
-              className="relative flex items-center gap-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium shadow-md shadow-blue-600/20 transition-all cursor-pointer"
+              className="relative flex items-center gap-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold shadow-md shadow-blue-600/20 transition-all cursor-pointer"
             >
-              <FiMessageCircle className="w-4 h-4" />
-              <span className="hidden sm:inline">ওয়েবসাইট ইনবক্স</span>
+              <FaComments className="w-4 h-4" />
+              <span className="hidden sm:inline">Client Inbox</span>
               {unreadCount > 0 && (
                 <span className="absolute -top-1.5 -right-1.5 bg-rose-500 text-white font-bold text-[10px] min-w-5 h-5 px-1 rounded-full flex items-center justify-center border-2 border-white shadow-xs">
                   {unreadCount}
@@ -148,10 +151,10 @@ export const Navbar: React.FC<NavbarProps> = ({
         {viewMode === 'store' && (
           <div className="mt-3 sm:hidden">
             <div className="relative">
-              <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+              <FaMagnifyingGlass className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-3.5 h-3.5" />
               <input
                 type="text"
-                placeholder="প্রোডাক্ট খুঁজুন..."
+                placeholder="Search products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full bg-slate-50 text-slate-900 text-sm pl-10 pr-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"

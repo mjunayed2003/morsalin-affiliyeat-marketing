@@ -3,8 +3,8 @@ import { Product } from '../types';
 export const INITIAL_PRODUCTS: Product[] = [
   {
     id: "prod-101",
-    title: "T900 Ultra Series 9 Smart Watch with Bluetooth Calling",
-    description: "2.09-inch HD Infinite Display, Wireless Fast Charging, Heart Rate & SpO2 Monitor, 50+ Sports Modes with IP68 Water Resistance.",
+    title: "T900 Ultra Series 9 Smart Watch with HD Bluetooth Calling",
+    description: "2.09-inch HD Infinite Display, Wireless Fast Magnetic Charging, Real-time Heart Rate & SpO2 Monitoring, 50+ Sports Modes with IP68 Water Resistance.",
     category: "Smart Gadgets",
     price: 1850,
     originalPrice: 2450,
@@ -13,9 +13,9 @@ export const INITIAL_PRODUCTS: Product[] = [
     image: "https://images.unsplash.com/photo-1579586337278-3befd40fd17a?auto=format&fit=crop&w=800&q=80",
     affiliateCode: "AFF-T900-ULTRA",
     features: [
-      "2.09\" HD IPS Display",
-      "Wireless Fast Charging Support",
-      "Bluetooth HD Calling & Notifications",
+      "2.09\" HD IPS Curved Display",
+      "Wireless Fast Magnetic Charger",
+      "Bluetooth HD Calling & App Notifications",
       "Custom Watch Faces & Health Sensors"
     ],
     rating: 4.8,
@@ -27,7 +27,7 @@ export const INITIAL_PRODUCTS: Product[] = [
   {
     id: "prod-102",
     title: "M10 TWS Wireless Earbuds with 2000mAh Power Bank Case",
-    description: "Deep Bass 9D Stereo Sound, Touch Control, LED Digital Display case, CVC8.0 Noise Cancelling & Emergency Power Bank function.",
+    description: "Deep Bass 9D Stereo Surround Sound, Touch Sensor Controls, LED Digital Power Display case, CVC8.0 Noise Cancelling & Emergency Phone Charging.",
     category: "Smart Gadgets",
     price: 950,
     originalPrice: 1400,
@@ -36,9 +36,9 @@ export const INITIAL_PRODUCTS: Product[] = [
     image: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=800&q=80",
     affiliateCode: "AFF-M10-TWS",
     features: [
-      "2000mAh Powerbank Battery Case",
-      "Hi-Fi 9D Surround Bass",
-      "Dual LED Battery Indicator",
+      "2000mAh Power Bank Battery Case",
+      "Hi-Fi 9D Dynamic Bass Drivers",
+      "Dual LED Battery Percentage Indicator",
       "IPX7 Waterproof & Sweatproof"
     ],
     rating: 4.6,
@@ -50,7 +50,7 @@ export const INITIAL_PRODUCTS: Product[] = [
   {
     id: "prod-103",
     title: "Magnetic 10,000mAh Wireless Fast Power Bank 20W PD",
-    description: "Ultra-slim Snap & Charge MagSafe compatible power bank with folding metal stand and dual USB-C rapid charging ports.",
+    description: "Ultra-slim Snap & Charge MagSafe compatible power bank with sturdy folding metal stand and dual USB-C rapid bidirectional charging ports.",
     category: "Mobile Accessories",
     price: 2650,
     originalPrice: 3200,
@@ -59,10 +59,10 @@ export const INITIAL_PRODUCTS: Product[] = [
     image: "https://images.unsplash.com/photo-1622445262464-84b1456045b6?auto=format&fit=crop&w=800&q=80",
     affiliateCode: "AFF-MAG-10K",
     features: [
-      "Strong N52 Magnetic Grip",
-      "20W PD Super Fast Delivery",
-      "Built-in Folding Kickstand",
-      "Overheat & Surge Protection"
+      "Strong N52 Magnetic Grip Alignment",
+      "20W PD Super Fast Power Delivery",
+      "Built-in Folding Ergonomic Kickstand",
+      "Smart Overheat & Surge Protection"
     ],
     rating: 4.9,
     reviewsCount: 96,
@@ -73,7 +73,7 @@ export const INITIAL_PRODUCTS: Product[] = [
   {
     id: "prod-104",
     title: "Vintage Handcrafted Genuine Leather Bifold Wallet",
-    description: "Top-grain cowhide leather with RFID blocking security lining, 8 card slots, dual cash compartments, and coin zipper pocket.",
+    description: "Top-grain cowhide leather with RFID blocking security shielding, 8 quick-access card slots, dual cash compartments, and coin zipper pouch.",
     category: "Fashion & Lifestyle",
     price: 1250,
     originalPrice: 1750,
@@ -82,10 +82,10 @@ export const INITIAL_PRODUCTS: Product[] = [
     image: "https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&w=800&q=80",
     affiliateCode: "AFF-LEATHER-WLT",
     features: [
-      "100% Top Grain Cowhide Leather",
-      "RFID Protection Against Scanning",
-      "Compact Slim Pocket Profile",
-      "Comes with Premium Gift Box"
+      "100% Top-Grain Cowhide Leather",
+      "RFID Shielding Protection",
+      "Compact Slim Pocket Silhouette",
+      "Includes Premium Wooden Gift Box"
     ],
     rating: 4.7,
     reviewsCount: 168,
@@ -96,7 +96,7 @@ export const INITIAL_PRODUCTS: Product[] = [
   {
     id: "prod-105",
     title: "Rechargeable Bladeless Neck Fan 4000mAh 360° Airflow",
-    description: "Hands-free personal cooling neck fan with 3 speed levels, ultra-quiet brushless motor, and up to 14 hours continuous runtime.",
+    description: "Hands-free personal cooling wearable neck fan with 3 speed levels, ultra-quiet brushless silent motor, and up to 14 hours continuous runtime.",
     category: "Lifestyle",
     price: 1450,
     originalPrice: 1950,
@@ -105,10 +105,10 @@ export const INITIAL_PRODUCTS: Product[] = [
     image: "https://images.unsplash.com/photo-1585338107529-13afc5f02586?auto=format&fit=crop&w=800&q=80",
     affiliateCode: "AFF-NECK-FAN",
     features: [
-      "Bladeless Safe Air Outlets",
-      "4000mAh Long-lasting Battery",
-      "Ultra-quiet Silent Engine",
-      "Lightweight Ergonomic Design"
+      "Bladeless Safe Anti-Twist Air Vents",
+      "4000mAh Long-lasting Dual Battery",
+      "Ultra-quiet Whisper Silent Engine",
+      "Lightweight Ergonomic Silicone Band"
     ],
     rating: 4.5,
     reviewsCount: 74,
@@ -119,7 +119,7 @@ export const INITIAL_PRODUCTS: Product[] = [
   {
     id: "prod-106",
     title: "4K Ultra HD Dual Lens Action Camera with Waterproof Case",
-    description: "Native 4K 60FPS video recording, EIS anti-shake stabilization, front & rear dual screens, and 30M waterproof diving casing.",
+    description: "Native 4K 60FPS crystal-clear video recording, 6-axis EIS anti-shake stabilization, front & rear dual LCD displays, and 30M waterproof diving housing.",
     category: "Electronics",
     price: 4950,
     originalPrice: 6500,
@@ -128,10 +128,10 @@ export const INITIAL_PRODUCTS: Product[] = [
     image: "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=800&q=80",
     affiliateCode: "AFF-ACTION-CAM",
     features: [
-      "4K 60FPS Crisp Video Recording",
-      "Electronic Image Stabilization",
-      "30m Deep Waterproof Case Included",
-      "WiFi Live Smartphone Connection"
+      "4K 60FPS Ultra HD Video Recording",
+      "6-Axis Electronic Image Stabilization",
+      "30m Deep Underwater Waterproof Case",
+      "WiFi Live Smartphone Companion App"
     ],
     rating: 4.9,
     reviewsCount: 112,
@@ -145,7 +145,7 @@ export const INITIAL_CHAT_MESSAGES = [
   {
     id: "msg-1",
     sender: "admin" as const,
-    text: "আসসালামু আলাইকুম! আমাদের শপে স্বাগতম। আপনি যেকোনো প্রোডাক্টের অর্ডার বা অ্যাফিলিয়েট কমিশন সম্পর্কে জানতে এখানে মেসেজ করতে পারেন বা ছবি পাঠাতে পারেন।",
+    text: "Hello and welcome to AffiliHub! You can ask questions about any product, check delivery details, or send product photos directly here in the chat.",
     timestamp: "10:00 AM",
     read: true
   }

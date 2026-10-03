@@ -2,18 +2,16 @@
 
 import React from 'react';
 import { 
-  FiX, 
-  FiStar, 
-  FiTag, 
-  FiMessageCircle, 
-  FiShare2, 
-  FiCheck, 
-  FiShield, 
-  FiTruck, 
-  FiClock,
-  FiShoppingBag
-} from 'react-icons/fi';
+  FaStar, 
+  FaTag, 
+  FaCheck, 
+  FaTruckFast, 
+  FaShieldHalved, 
+  FaClock, 
+  FaComments
+} from 'react-icons/fa6';
 import { FaFacebookMessenger } from 'react-icons/fa';
+import { FiX } from 'react-icons/fi';
 import { Product } from '../types';
 
 interface ProductDetailModalProps {
@@ -42,18 +40,18 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50">
           <div className="flex items-center gap-2">
-            <span className="text-xs uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-blue-100 text-blue-800">
+            <span className="text-xs uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800">
               {product.category}
             </span>
             {product.badge && (
-              <span className="text-xs font-semibold px-2 py-0.5 rounded bg-slate-900 text-white">
+              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-900 text-white">
                 {product.badge}
               </span>
             )}
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition-colors cursor-pointer"
           >
             <FiX className="w-5 h-5" />
           </button>
@@ -65,25 +63,25 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
             
             {/* Image Preview */}
-            <div className="relative aspect-square rounded-xl overflow-hidden bg-slate-100 border border-slate-200">
+            <div className="relative aspect-square rounded-2xl overflow-hidden bg-slate-100 border border-slate-200">
               <img
                 src={product.image}
                 alt={product.title}
                 className="w-full h-full object-cover"
               />
-              <div className="absolute bottom-3 left-3 bg-emerald-600 text-white text-xs font-semibold px-2.5 py-1 rounded-lg shadow-md flex items-center gap-1">
-                <FiTag className="w-3.5 h-3.5" />
-                <span>অ্যাফিলিয়েট কমিশন: {product.commission}</span>
+              <div className="absolute bottom-3 left-3 bg-emerald-600 text-white text-xs font-semibold px-3 py-1 rounded-xl shadow-md flex items-center gap-1.5 backdrop-blur-xs">
+                <FaTag className="w-3 h-3 text-emerald-200" />
+                <span>Affiliate Commission: {product.commission}</span>
               </div>
             </div>
 
             {/* Product Meta */}
             <div className="space-y-4">
               <div>
-                <div className="flex items-center gap-1 text-amber-500 text-sm font-semibold mb-1">
-                  <FiStar className="w-4 h-4 fill-amber-500" />
+                <div className="flex items-center gap-1.5 text-amber-500 text-sm font-bold mb-1">
+                  <FaStar className="w-4 h-4 text-amber-500" />
                   <span>{product.rating}</span>
-                  <span className="text-slate-400 font-normal">({product.reviewsCount} টি কাস্টমার রিভিউ)</span>
+                  <span className="text-slate-400 font-normal">({product.reviewsCount} Customer Reviews)</span>
                 </div>
                 <h2 className="text-lg sm:text-xl font-bold text-slate-900 leading-snug">
                   {product.title}
@@ -91,7 +89,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               </div>
 
               {/* Price Details */}
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+              <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
                 <div className="flex items-baseline gap-2">
                   <span className="text-2xl font-black text-slate-950">
                     ৳{product.price.toLocaleString()}
@@ -103,19 +101,19 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   )}
                   {discountAmount > 0 && (
                     <span className="ml-auto text-xs bg-rose-100 text-rose-700 font-bold px-2 py-0.5 rounded-full">
-                      সেভ ৳{discountAmount.toLocaleString()}
+                      Save ৳{discountAmount.toLocaleString()}
                     </span>
                   )}
                 </div>
                 <p className="text-xs text-slate-500 mt-1">
-                  স্টক স্ট্যাটাস: <span className="text-emerald-600 font-semibold">এভেইলেবল (ইন-স্টক)</span>
+                  Availability: <span className="text-emerald-600 font-semibold">In Stock (Ready to Ship)</span>
                 </p>
               </div>
 
               {/* Description */}
               <div>
                 <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
-                  প্রোডাক্ট বর্ণনা:
+                  Product Overview:
                 </h4>
                 <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
                   {product.description}
@@ -125,12 +123,12 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               {/* Specifications / Features */}
               <div>
                 <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-                  মূল বৈশিষ্ট্যসমূহ:
+                  Key Specifications:
                 </h4>
                 <ul className="space-y-1.5">
                   {product.features.map((feat, idx) => (
                     <li key={idx} className="flex items-start gap-2 text-xs text-slate-700">
-                      <FiCheck className="w-3.5 h-3.5 text-emerald-600 mt-0.5 shrink-0" />
+                      <FaCheck className="w-3.5 h-3.5 text-emerald-600 mt-0.5 shrink-0" />
                       <span>{feat}</span>
                     </li>
                   ))}
@@ -141,21 +139,21 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           </div>
 
           {/* Trust Guarantees */}
-          <div className="grid grid-cols-3 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 text-center text-xs">
+          <div className="grid grid-cols-3 gap-3 p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-center text-xs">
             <div className="flex flex-col items-center gap-1 text-slate-700">
-              <FiTruck className="w-4 h-4 text-blue-600" />
-              <span className="font-semibold">সারা দেশে ডেলিভারি</span>
-              <span className="text-[10px] text-slate-500">হোম ডেলিভারি সুবিধা</span>
+              <FaTruckFast className="w-4 h-4 text-blue-600" />
+              <span className="font-semibold">Fast Delivery</span>
+              <span className="text-[10px] text-slate-500">Nationwide Shipping</span>
             </div>
             <div className="flex flex-col items-center gap-1 text-slate-700">
-              <FiShield className="w-4 h-4 text-emerald-600" />
-              <span className="font-semibold">১০০% আসল প্রোডাক্ট</span>
-              <span className="text-[10px] text-slate-500">কোয়ালিটি চেকড</span>
+              <FaShieldHalved className="w-4 h-4 text-emerald-600" />
+              <span className="font-semibold">100% Genuine</span>
+              <span className="text-[10px] text-slate-500">Quality Checked</span>
             </div>
             <div className="flex flex-col items-center gap-1 text-slate-700">
-              <FiClock className="w-4 h-4 text-amber-600" />
-              <span className="font-semibold">দ্রুত রিপ্লাই</span>
-              <span className="text-[10px] text-slate-500">সরাসরি ইনবক্স সাপোর্ট</span>
+              <FaClock className="w-4 h-4 text-amber-600" />
+              <span className="font-semibold">Live Support</span>
+              <span className="text-[10px] text-slate-500">Direct Chat Desk</span>
             </div>
           </div>
 
@@ -168,10 +166,10 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               onClose();
               onOpenShare(product);
             }}
-            className="flex items-center gap-2 bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer shadow-xs"
+            className="flex items-center gap-2 bg-sky-500 hover:bg-sky-600 text-white px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer shadow-xs"
           >
             <FaFacebookMessenger className="w-4 h-4" />
-            <span>মেসেঞ্জারে শেয়ার প্রিভিউ</span>
+            <span>Messenger Share Preview</span>
           </button>
 
           <div className="flex items-center gap-2">
@@ -180,10 +178,10 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 onClose();
                 onInquire(product);
               }}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white px-5 py-2 rounded-xl text-xs sm:text-sm font-semibold shadow-md shadow-blue-600/20 transition-all cursor-pointer"
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold shadow-md shadow-blue-600/20 transition-all cursor-pointer"
             >
-              <FiMessageCircle className="w-4 h-4" />
-              <span>ইনবক্সে অর্ডার ইনকোয়ারি করুন</span>
+              <FaComments className="w-4 h-4" />
+              <span>Inquire via Chat</span>
             </button>
           </div>
         </div>

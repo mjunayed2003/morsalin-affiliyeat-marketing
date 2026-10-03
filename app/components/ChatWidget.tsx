@@ -2,17 +2,13 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { 
-  FiMessageCircle, 
-  FiX, 
-  FiSend, 
-  FiImage, 
-  FiCheck, 
-  FiPaperclip,
-  FiShoppingBag,
-  FiMaximize2,
-  FiUser,
-  FiShield
-} from 'react-icons/fi';
+  FaComments, 
+  FaPaperPlane, 
+  FaImage, 
+  FaShieldHalved,
+  FaCircleCheck
+} from 'react-icons/fa6';
+import { FiX } from 'react-icons/fi';
 import { ChatMessage, Product } from '../types';
 
 interface ChatWidgetProps {
@@ -55,7 +51,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      alert('দয়া করে সঠিক ইমেজ ফাইল সিলেক্ট করুন।');
+      alert('Please select a valid image file (JPG, PNG, or WebP).');
       return;
     }
 
@@ -82,7 +78,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
     }
 
     onSendMessage(
-      inputText.trim() || (inquiryProduct ? `আমি এই পণ্যটি অর্ডার করতে চাই: ${inquiryProduct.title}` : ''),
+      inputText.trim() || (inquiryProduct ? `Hello! I would like to inquire about this product: ${inquiryProduct.title}` : ''),
       selectedImage || undefined,
       productPayload
     );
@@ -107,7 +103,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
           <div className="relative max-w-2xl max-h-[85vh] bg-transparent">
             <button
               onClick={() => setPreviewModalImage(null)}
-              className="absolute -top-10 right-0 text-white bg-slate-800/80 p-2 rounded-full hover:bg-slate-700"
+              className="absolute -top-10 right-0 text-white bg-slate-800/80 p-2 rounded-full hover:bg-slate-700 cursor-pointer"
             >
               <FiX className="w-5 h-5" />
             </button>
@@ -125,9 +121,9 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
         <button
           onClick={onOpen}
           className="fixed bottom-6 right-6 z-40 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white p-4 rounded-full shadow-xl shadow-blue-600/30 flex items-center justify-center transition-all cursor-pointer group"
-          title="কাস্টমার সাপোর্ট ও ইনবক্স"
+          title="Customer Support Desk"
         >
-          <FiMessageCircle className="w-6 h-6 group-hover:scale-110 transition-transform" />
+          <FaComments className="w-6 h-6 group-hover:scale-110 transition-transform" />
           <span className="absolute -top-1 -right-1 flex h-4 w-4">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-white"></span>
@@ -144,17 +140,17 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
             <div className="flex items-center gap-2.5">
               <div className="relative">
                 <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center font-bold text-white text-sm">
-                  <FiShield className="w-4 h-4" />
+                  <FaShieldHalved className="w-4 h-4" />
                 </div>
                 <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-slate-900"></span>
               </div>
               <div>
                 <h3 className="font-bold text-sm tracking-tight flex items-center gap-1.5">
-                  AffiliHub কাস্টমার ডেস্ক
+                  AffiliHub Support Desk
                 </h3>
                 <p className="text-[11px] text-slate-300 flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                  অ্যাডমিন অনলাইন • লাইভ চ্যাট
+                  Admin Online • Live Support
                 </p>
               </div>
             </div>
@@ -163,9 +159,9 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
               <button
                 onClick={onSwitchToAdmin}
                 className="text-[10px] bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 px-2 py-1 rounded-md font-semibold border border-amber-500/30 transition-colors cursor-pointer"
-                title="অ্যাডমিন প্যানেল থেকে রিপ্লাই দিন"
+                title="Switch to Admin Mode to reply"
               >
-                অ্যাডমিন ভিউ
+                Admin View
               </button>
               <button
                 onClick={onClose}
@@ -186,7 +182,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
               />
               <div className="flex-1 min-w-0">
                 <p className="text-[10px] uppercase font-bold text-amber-800">
-                  ইনকোয়ারি প্রোডাক্ট:
+                  Inquiring About Product:
                 </p>
                 <p className="text-xs font-semibold text-slate-900 truncate">
                   {inquiryProduct.title}
@@ -215,8 +211,8 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
                   className={`flex flex-col ${isCustomer ? 'items-end' : 'items-start'}`}
                 >
                   {/* Sender indicator */}
-                  <span className="text-[10px] text-slate-600 mb-1 px-1">
-                    {isCustomer ? 'আপনি (Customer)' : 'অ্যাডমিন সাপোর্ট (Admin)'}
+                  <span className="text-[10px] text-slate-500 mb-1 px-1 font-medium">
+                    {isCustomer ? 'You (Customer)' : 'Support Team (Admin)'}
                   </span>
 
                   {/* Message Bubble Container */}
@@ -256,7 +252,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
                           className="max-h-48 w-auto object-cover rounded-lg cursor-pointer hover:opacity-95 transition-opacity"
                         />
                         <p className="text-[10px] mt-1 opacity-80 text-center">
-                          (বড় করে দেখতে ছবিতে ক্লিক করুন)
+                          (Click image to expand)
                         </p>
                       </div>
                     )}
@@ -269,7 +265,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
                     )}
                   </div>
 
-                  <span className="text-[9px] text-slate-600 mt-0.5 px-1">
+                  <span className="text-[9px] text-slate-400 mt-0.5 px-1">
                     {msg.timestamp}
                   </span>
                 </div>
@@ -281,22 +277,22 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
           {/* Quick FAQ Suggestion Chips */}
           <div className="px-3 py-1.5 bg-white border-t border-slate-100 flex items-center gap-1.5 overflow-x-auto text-[11px] shrink-0 no-scrollbar">
             <button
-              onClick={() => handleQuickQuestion('ক্যাশ অন ডেলিভারি সুবিধা আছে?')}
+              onClick={() => handleQuickQuestion('Is Cash on Delivery available?')}
               className="shrink-0 bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-full transition-colors cursor-pointer"
             >
-              ক্যাশ অন ডেলিভারি?
+              Cash on Delivery?
             </button>
             <button
-              onClick={() => handleQuickQuestion('ডেলিভারি চার্জ কত পড়বে?')}
+              onClick={() => handleQuickQuestion('What is the delivery timeline and charge?')}
               className="shrink-0 bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-full transition-colors cursor-pointer"
             >
-              ডেলিভারি চার্জ কত?
+              Delivery Timeline?
             </button>
             <button
-              onClick={() => handleQuickQuestion('অর্ডার কনফার্ম করতে কি কি তথ্য লাগবে?')}
+              onClick={() => handleQuickQuestion('How do I confirm my order?')}
               className="shrink-0 bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-full transition-colors cursor-pointer"
             >
-              অর্ডার করার নিয়ম?
+              How to Order?
             </button>
           </div>
 
@@ -312,13 +308,13 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
                 <button
                   type="button"
                   onClick={() => setSelectedImage(null)}
-                  className="absolute -top-1.5 -right-1.5 bg-rose-500 text-white rounded-full p-0.5 shadow-xs hover:bg-rose-600"
+                  className="absolute -top-1.5 -right-1.5 bg-rose-500 text-white rounded-full p-0.5 shadow-xs hover:bg-rose-600 cursor-pointer"
                 >
                   <FiX className="w-3 h-3" />
                 </button>
               </div>
               <span className="text-xs text-blue-900 font-medium">
-                ছবি যুক্ত হয়েছে। সেন্ড বাটনে ক্লিক করুন।
+                Image attached. Click send button to deliver.
               </span>
             </div>
           )}
@@ -330,9 +326,9 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
               type="button"
               onClick={() => fileInputRef.current?.click()}
               className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors cursor-pointer shrink-0"
-              title="চ্যাটে ছবি পাঠান"
+              title="Attach and send image"
             >
-              <FiImage className="w-5 h-5" />
+              <FaImage className="w-4 h-4" />
             </button>
 
             <input
@@ -346,7 +342,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
             {/* Message Text Input */}
             <input
               type="text"
-              placeholder={inquiryProduct ? "অর্ডার বা ইনকোয়ারি মেসেজ লিখুন..." : "মেসেজ লিখুন..."}
+              placeholder={inquiryProduct ? "Type your product inquiry message..." : "Type your message..."}
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               className="flex-1 bg-slate-50 text-slate-900 text-xs sm:text-sm px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 placeholder:text-slate-400"
@@ -357,9 +353,9 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
               type="submit"
               disabled={!inputText.trim() && !selectedImage && !inquiryProduct}
               className="p-2.5 bg-blue-600 hover:bg-blue-700 active:scale-95 disabled:opacity-40 disabled:pointer-events-none text-white rounded-xl shadow-md shadow-blue-600/20 transition-all cursor-pointer shrink-0"
-              title="মেসেজ পাঠান"
+              title="Send Message"
             >
-              <FiSend className="w-4 h-4" />
+              <FaPaperPlane className="w-3.5 h-3.5" />
             </button>
           </form>
 

@@ -5,7 +5,7 @@ export interface Product {
   category: string;
   price: number;
   originalPrice: number;
-  commission: string; // e.g. "৳320 (17%)"
+  commission: string;
   commissionAmount: number;
   image: string;
   gallery?: string[];
@@ -13,7 +13,7 @@ export interface Product {
   features: string[];
   rating: number;
   reviewsCount: number;
-  badge?: string; // "Trending", "Hot Deal", "Affiliate Pick", "Best Seller"
+  badge?: string;
   inStock: boolean;
   createdAt: string;
 }
@@ -22,7 +22,7 @@ export interface ChatMessage {
   id: string;
   sender: 'customer' | 'admin';
   text: string;
-  image?: string; // Attached image URL or base64 data
+  image?: string;
   productId?: string;
   productInfo?: {
     title: string;
@@ -33,17 +33,4 @@ export interface ChatMessage {
   read: boolean;
 }
 
-export interface Inquiry {
-  id: string;
-  productId: string;
-  productTitle: string;
-  productPrice: number;
-  productImage: string;
-  customerName: string;
-  customerPhone?: string;
-  message: string;
-  status: 'pending' | 'in_progress' | 'completed';
-  createdAt: string;
-}
-
-export type ViewMode = 'store' | 'admin';
+export type ViewMode = 'store' | 'admin' | 'client';
