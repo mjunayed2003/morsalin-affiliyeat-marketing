@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { 
   FaComments, 
   FaPaperPlane, 
@@ -32,18 +33,22 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
   onClearInquiryProduct,
   onSwitchToAdmin
 }) => {
+  const pathname = usePathname();
   const [inputText, setInputText] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [previewModalImage, setPreviewModalImage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-scroll on new message
+  // Auto-scroll on new message (Must be called before any early return to satisfy Rules of Hooks)
   useEffect(() => {
     if (isOpen) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, isOpen, selectedImage]);
+
+  // If already on full /chat page, don't show floating widget
+  if (pathname === '/chat') return null;
 
   // Handle Image Selection
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -120,7 +125,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
       {!isOpen && (
         <button
           onClick={onOpen}
-          className="fixed bottom-6 right-6 z-40 bg-[#0d5bff] hover:bg-[#0045d8] active:scale-95 text-white p-4 rounded-full shadow-xl shadow-blue-600/30 flex items-center justify-center transition-all cursor-pointer group"
+          className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-40 bg-[#0d5bff] hover:bg-[#0045d8] active:scale-95 text-white p-3.5 sm:p-4 rounded-full shadow-xl shadow-blue-600/30 flex items-center justify-center transition-all cursor-pointer group"
           title="Customer Support Desk"
         >
           <FaComments className="w-6 h-6 group-hover:scale-110 transition-transform" />
@@ -133,7 +138,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
 
       {/* Main Chat Drawer / Window */}
       {isOpen && (
-        <div className="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 z-50 w-[calc(100vw-2rem)] sm:w-96 h-[560px] max-h-[85vh] bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-200">
+        <div className="fixed bottom-18 sm:bottom-6 right-2 sm:right-6 z-50 w-[calc(100vw-1rem)] sm:w-96 h-[540px] max-h-[78vh] sm:max-h-[85vh] bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-200">
           
           {/* Header (ByteSpace Cobalt Blue) */}
           <div className="bg-[#0d5bff] text-white px-4 py-3.5 flex items-center justify-between shrink-0">

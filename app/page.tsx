@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Navbar } from '@/components/Navbar';
 import { ProductCard } from '@/components/ProductCard';
 import { useApp } from '@/app/context/AppContext';
+import { useAuth } from '@/app/context/AuthContext';
 import { 
   FaBagShopping, 
   FaComments, 
@@ -16,11 +17,16 @@ import {
   FaTruckFast, 
   FaArrowRight, 
   FaUserTie,
+  FaUser,
+  FaCheck,
   FaImage,
   FaArrowTrendUp,
-  FaPlus
+  FaPlus,
+  FaLock
 } from 'react-icons/fa6';
 import { FaWhatsapp } from 'react-icons/fa';
+import { AuthCard } from '@/components/AuthCard';
+import { maskPhone } from '@/app/types';
 
 export default function Home() {
   const router = useRouter();
@@ -33,6 +39,7 @@ export default function Home() {
     copiedId,
     openChat
   } = useApp();
+  const { user, isAuthenticated, isLoading, openAuthModal } = useAuth();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -94,8 +101,72 @@ export default function Home() {
     }
   };
 
+  // 1. Loading screen while auth session is read from localStorage
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4">
+        <div className="w-16 h-16 rounded-3xl bg-[#0d5bff] flex items-center justify-center text-white shadow-2xl shadow-blue-500/30 animate-pulse">
+          <FaBagShopping className="w-8 h-8 text-[#ccff00]" />
+        </div>
+        <p className="mt-4 text-xs font-bold text-slate-400 font-mono tracking-wider">
+          AUTHENTICATING CLIENT SESSION...
+        </p>
+      </div>
+    );
+  }
+
+  // 2. Auth Gate: If user is NOT logged in, do NOT show the home page products/catalog!
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="min-h-screen flex flex-col bg-slate-950 text-white selection:bg-[#ccff00] selection:text-slate-950 font-sans relative overflow-hidden pb-16">
+        {/* Ambient Glows */}
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#0d5bff]/20 rounded-full blur-3xl pointer-events-none -mr-40 -mt-40"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#ccff00]/10 rounded-full blur-3xl pointer-events-none -ml-20 -mb-20"></div>
+
+        <Navbar />
+
+        <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 my-8 z-10">
+          {/* Brand Logo (Navbar is hidden when logged out) */}
+          <div className="flex items-center gap-2.5 mb-6">
+            <div className="w-11 h-11 rounded-2xl bg-[#0d5bff] text-white flex items-center justify-center shadow-lg shadow-blue-600/30">
+              <FaBagShopping className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <span className="font-black text-2xl text-white tracking-tight">
+                  Byte<span className="text-[#0d5bff]">Desk</span>
+                </span>
+                <span className="text-[10px] uppercase font-black tracking-wider px-2 py-0.5 rounded-full bg-[#ccff00] text-slate-950">
+                  Client Portal
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="text-center max-w-lg mb-6 space-y-2.5">
+            <div className="inline-flex items-center gap-2 bg-[#ccff00] text-slate-950 px-3.5 py-1 rounded-full text-xs font-black shadow-md">
+              <FaLock className="w-3 h-3" />
+              <span>Client Authentication Required</span>
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+              Please Log In to View Home Page
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-400 max-w-md mx-auto leading-relaxed">
+              Our store and live admin desk are only accessible to verified clients. New clients register directly; returning clients log in with password.
+            </p>
+          </div>
+
+          <AuthCard 
+            title="Unlock Storefront"
+            subtitle="New clients can register with phone & password. Returning clients log in directly."
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 selection:bg-[#ccff00] selection:text-slate-950 font-sans">
+    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 selection:bg-[#ccff00] selection:text-slate-950 font-sans pb-24 sm:pb-12">
       {/* Top Navigation */}
       <Navbar />
 
@@ -119,27 +190,46 @@ export default function Home() {
               <span className="text-[#ccff00]">Click for Details & Chat with Admin.</span>
             </h1>
 
+            {/* Client Status Badge if Logged In */}
+            {isAuthenticated && user ? (
+              <div className="inline-flex items-center gap-2 bg-blue-900/60 border border-blue-400/40 text-blue-100 px-3.5 py-1.5 rounded-full text-xs">
+                <span>👋 Welcome back, <strong className="text-white">{user.name}</strong></span>
+                <span className="bg-emerald-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
+                  <FaCheck className="w-2.5 h-2.5" />
+                  Verified: {maskPhone(user.phone)}
+                </span>
+              </div>
+            ) : null}
+
             {/* Subtitle */}
             <p className="text-sm sm:text-base text-blue-100 font-medium leading-relaxed max-w-2xl">
-              All items and photos uploaded by the admin are public. Click any product to inspect high-resolution images and specifications, or send a live message to the admin directly.
+              Explore public items and inspect high-resolution details. Verified clients enjoy 1-on-1 real-time chat with Admin and direct order delivery tracking.
             </p>
 
-            {/* Quick Action Badges */}
+            {/* Quick Action Badges: Chat Desk, Profile, Admin Studio */}
             <div className="flex flex-wrap items-center gap-3 pt-2">
-              <button
-                onClick={openChat}
+              <Link
+                href="/chat"
                 className="flex items-center gap-2 bg-[#ccff00] hover:bg-[#b8e600] active:scale-95 text-slate-950 px-5 py-3 rounded-2xl font-black text-xs sm:text-sm shadow-lg transition-all cursor-pointer"
               >
                 <FaComments className="w-4 h-4 text-slate-900" />
-                <span>Message Admin Live</span>
-              </button>
+                <span>Open Chat Desk</span>
+              </Link>
+
+              <Link
+                href="/profile"
+                className="flex items-center gap-2 bg-white text-slate-950 hover:bg-slate-100 active:scale-95 px-5 py-3 rounded-2xl font-black text-xs sm:text-sm shadow-md transition-all cursor-pointer"
+              >
+                <FaUser className="w-4 h-4 text-[#0d5bff]" />
+                <span>{isAuthenticated ? 'My Client Profile' : 'Register / Sign In'}</span>
+              </Link>
 
               <Link
                 href="/admin"
                 className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-5 py-3 rounded-2xl font-bold text-xs sm:text-sm border border-white/20 transition-all cursor-pointer"
               >
-                <FaUserTie className="w-4 h-4 text-[#ccff00]" />
-                <span>Admin Studio (Upload Products)</span>
+                <FaSliders className="w-4 h-4 text-[#ccff00]" />
+                <span>Admin Studio</span>
               </Link>
             </div>
           </div>
