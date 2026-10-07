@@ -49,21 +49,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Initialize from LocalStorage
   useEffect(() => {
     try {
-      const storedProds = localStorage.getItem('personal_desk_products_v4');
+      const storedProds = localStorage.getItem('product_perks_catalog_v1');
       if (storedProds) {
         const parsed = JSON.parse(storedProds);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // If previous version had old Taka numbers (e.g. price > 500 or commission with ৳)
-          const needsDollarFix = parsed.some((p: any) => p.commission?.includes('৳') || p.price > 500);
-          if (needsDollarFix) {
-            setProducts(INITIAL_PRODUCTS);
-            localStorage.setItem('personal_desk_products_v4', JSON.stringify(INITIAL_PRODUCTS));
-          } else {
-            setProducts(parsed);
-          }
+          setProducts(parsed);
         }
+      } else {
+        setProducts(INITIAL_PRODUCTS);
+        localStorage.setItem('product_perks_catalog_v1', JSON.stringify(INITIAL_PRODUCTS));
       }
-      const storedMsgs = localStorage.getItem('personal_desk_messages_v4');
+      const storedMsgs = localStorage.getItem('product_perks_messages_v1');
       if (storedMsgs) {
         setMessages(JSON.parse(storedMsgs));
       }
@@ -75,13 +71,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Save to LocalStorage
   useEffect(() => {
     try {
-      localStorage.setItem('personal_desk_products_v4', JSON.stringify(products));
+      localStorage.setItem('product_perks_catalog_v1', JSON.stringify(products));
     } catch (e) {}
   }, [products]);
 
   useEffect(() => {
     try {
-      localStorage.setItem('personal_desk_messages_v4', JSON.stringify(messages));
+      localStorage.setItem('product_perks_messages_v1', JSON.stringify(messages));
     } catch (e) {}
   }, [messages]);
 

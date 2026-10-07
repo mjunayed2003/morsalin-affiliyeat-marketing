@@ -14,20 +14,23 @@ import {
 import { FaFacebookMessenger, FaWhatsapp } from 'react-icons/fa';
 import { FiX } from 'react-icons/fi';
 import { Product } from '../app/types';
+import { useApp } from '../app/context/AppContext';
 
 interface ShareModalProps {
   product: Product | null;
   isOpen: boolean;
   onClose: () => void;
-  onShowToast: (message: string) => void;
+  onShowToast?: (message: string) => void;
 }
 
 export const ShareModal: React.FC<ShareModalProps> = ({
   product,
   isOpen,
   onClose,
-  onShowToast
+  onShowToast: onShowToastProp
 }) => {
+  const { showToast } = useApp();
+  const onShowToast = onShowToastProp || showToast;
   const [copied, setCopied] = useState(false);
   const [customImage, setCustomImage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);

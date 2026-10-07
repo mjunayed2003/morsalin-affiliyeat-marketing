@@ -4,244 +4,225 @@ import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { 
-  FaBagShopping, 
-  FaSliders, 
-  FaComments, 
-  FaUser,
-  FaCheck,
+  FaMagnifyingGlass, 
+  FaUser, 
+  FaCheck, 
   FaArrowRightFromBracket,
   FaPhone,
-  FaShieldHalved,
-  FaHouse
+  FaComments,
+  FaSliders,
+  FaChevronDown,
+  FaBars,
+  FaXmark
 } from 'react-icons/fa6';
 import { useApp } from '@/app/context/AppContext';
 import { useAuth } from '@/app/context/AuthContext';
 import { maskPhone } from '@/app/types';
 
-export const Navbar: React.FC = () => {
+interface NavbarProps {
+  onSearchClick?: () => void;
+  searchQuery?: string;
+  onSearchChange?: (val: string) => void;
+}
+
+export const Navbar: React.FC<NavbarProps> = ({ 
+  onSearchClick, 
+  searchQuery, 
+  onSearchChange 
+}) => {
   const pathname = usePathname();
   const router = useRouter();
   const { unreadCount } = useApp();
-  const { user, isAuthenticated, isLoading, openAuthModal, logout } = useAuth();
+  const { user, isAuthenticated, openAuthModal, logout } = useAuth();
+  
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
+  const [selectedCountry, setSelectedCountry] = useState('USA');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showSearchInput, setShowSearchInput] = useState(false);
+
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const countryRef = useRef<HTMLDivElement>(null);
 
-  const isAdmin = pathname.startsWith('/admin');
-  const isHome = pathname === '/';
-  const isChat = pathname === '/chat';
-  const isProfile = pathname === '/profile';
-
-  // Close dropdown on click outside
+  // Close dropdowns on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setUserDropdownOpen(false);
+      }
+      if (countryRef.current && !countryRef.current.contains(event.target as Node)) {
+        setCountryDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Login na korle navbar hide thakbe (Desktop header & Mobile bottom dock completely hidden)
-  if (isLoading || !isAuthenticated || !user) {
-    return null;
-  }
+  const navLinks = [
+    { label: 'Home', href: '/' },
+    { label: 'Products', href: '/products' },
+    { label: 'How It Works', href: '/#how-it-works' },
+    { label: 'About Us', href: '/#about-us' },
+    { label: 'FAQ', href: '/#faq' },
+  ];
+
+  const handleLinkClick = (href: string) => {
+    setMobileMenuOpen(false);
+    if (href.startsWith('#')) {
+      if (pathname !== '/') {
+        router.push('/' + href);
+      } else {
+        const el = document.querySelector(href);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+    } else {
+      router.push(href);
+    }
+  };
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs">
-      {/* Top Notice Bar */}
-      <div className="bg-[#0a2e8c] text-slate-200 text-xs py-1.5 px-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 bg-[#ccff00] text-slate-950 px-2.5 py-0.5 rounded-full font-black text-[10px]">
-              ByteDesk
-            </span>
-            <span className="hidden sm:inline text-slate-300 text-[11px] font-medium">
-              Verified Client Portal • 1-on-1 Real-time Chat with Admin & Direct Ordering
-            </span>
-            <span className="sm:hidden text-slate-300 text-[11px]">
-              Client Portal • Live Chat Desk
-            </span>
-          </div>
-
-          <div className="flex items-center gap-3 text-[11px]">
-            {isAuthenticated ? (
-              <span className="text-[#ccff00] font-semibold flex items-center gap-1">
-                <FaCheck className="w-3 h-3" />
-                Verified Client: {maskPhone(user?.phone)}
-              </span>
-            ) : (
-              <button
-                onClick={() => openAuthModal('register')}
-                className="text-[#ccff00] hover:underline font-bold cursor-pointer flex items-center gap-1"
-              >
-                <span>New client? Register your account →</span>
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Main Navigation Bar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-        <div className="flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-2xs transition-all">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-18 sm:h-20 gap-4">
           
-          {/* Brand Logo */}
+          {/* Logo */}
           <Link 
             href="/"
-            className="flex items-center gap-2.5 cursor-pointer group shrink-0"
+            className="flex items-center gap-2.5 group shrink-0"
           >
-            <div className="w-10 h-10 rounded-xl bg-[#0d5bff] text-white flex items-center justify-center shadow-md shadow-blue-600/20 group-hover:bg-[#0045d8] transition-colors">
-              <FaBagShopping className="w-5 h-5 text-white" />
+            {/* Emerald Gift Box Icon */}
+            <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 border border-emerald-100/80 shadow-2xs group-hover:scale-105 transition-transform">
+              <svg className="w-5 h-5 text-[#15803d]" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20 7h-2.18A3.996 3.996 0 0 0 16 3.07C14.89 2.43 13.56 2.5 12.63 3.25L12 3.75l-.63-.5C10.44 2.5 9.11 2.43 8 3.07 6.46 3.96 5.8 5.81 6.18 7H4c-1.1 0-2 .9-2 2v2c0 .55.45 1 1 1h1v8c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-8h1c.55 0 1-.45 1-1V9c0-1.1-.9-2-2-2zm-9-3c.53 0 1.04.2 1.42.58l.58.58-1.06 1.06-.58-.58A1.99 1.99 0 0 1 11 4zm-3 2c0-.53.2-1.04.58-1.42.78-.78 2.05-.78 2.83 0l.58.58-1.99 1.99L8 6.15A1.99 1.99 0 0 1 8 6zm5 14H6v-8h7v8zm7 0h-5v-8h5v8zm0-10H4V9h16v1z" />
+              </svg>
             </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="font-black text-lg sm:text-xl text-slate-950 tracking-tight">
-                  Byte<span className="text-[#0d5bff]">Desk</span>
-                </span>
-                <span className="text-[10px] uppercase font-black tracking-wider px-2 py-0.5 rounded-full bg-[#ccff00] text-slate-950">
-                  Client Hub
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-500 hidden sm:block font-medium">Store, Real-time Chat & Profile</p>
+            
+            {/* Logo Text & Tagline */}
+            <div className="flex flex-col">
+              <span className="font-bold text-lg sm:text-xl text-slate-900 tracking-tight leading-tight">
+                Product<span className="text-[#1b3b2b]">Perks</span>
+              </span>
+              <span className="text-[10px] sm:text-[11px] text-slate-500 font-medium leading-none hidden sm:block">
+                Discover products. Get rewarded.
+              </span>
             </div>
           </Link>
 
-          {/* Navigation Links: 3 Core Icons (Home, Chat, Profile) */}
-          <nav className="hidden sm:flex items-center gap-1.5 bg-slate-100/90 p-1.5 rounded-2xl border border-slate-200/80 shadow-xs">
-            {/* 1. Home Icon */}
-            <Link
-              href="/"
-              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
-                isHome
-                  ? 'bg-white text-[#0d5bff] shadow-xs scale-102'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
-              }`}
-            >
-              <FaHouse className={`w-3.5 h-3.5 ${isHome ? 'text-[#0d5bff]' : 'text-slate-500'}`} />
-              <span>Home</span>
-            </Link>
-
-            {/* 2. Chat Icon */}
-            <Link
-              href="/chat"
-              className={`relative flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
-                isChat
-                  ? 'bg-white text-[#0d5bff] shadow-xs scale-102'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
-              }`}
-            >
-              <FaComments className={`w-3.5 h-3.5 ${isChat ? 'text-[#0d5bff]' : 'text-slate-500'}`} />
-              <span>Chat</span>
-              {unreadCount > 0 && (
-                <span className="bg-[#ccff00] text-slate-950 font-black text-[9px] px-1.5 py-0.2 rounded-full border border-slate-300">
-                  {unreadCount}
-                </span>
-              )}
-            </Link>
-
-            {/* 3. Profile Icon */}
-            <Link
-              href="/profile"
-              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
-                isProfile
-                  ? 'bg-white text-[#0d5bff] shadow-xs scale-102'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
-              }`}
-            >
-              <FaUser className={`w-3.5 h-3.5 ${isProfile ? 'text-[#0d5bff]' : 'text-slate-500'}`} />
-              <span>Profile</span>
-              {isAuthenticated && (
-                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-              )}
-            </Link>
+          {/* Desktop Navigation Links */}
+          <nav className="hidden md:flex items-center gap-7 lg:gap-8">
+            {navLinks.map((link) => (
+              <button
+                key={link.label}
+                onClick={() => handleLinkClick(link.href)}
+                className={`text-xs sm:text-[13px] font-semibold transition-colors cursor-pointer ${
+                  link.label === 'Home' && pathname === '/'
+                    ? 'text-slate-950 font-bold'
+                    : 'text-slate-600 hover:text-slate-950'
+                }`}
+              >
+                {link.label}
+              </button>
+            ))}
           </nav>
 
-          {/* Action Buttons & Auth */}
-          <div className="flex items-center gap-2 shrink-0">
+          {/* Right Action Controls */}
+          <div className="flex items-center gap-3 sm:gap-4 shrink-0">
             
-            {/* Admin Studio Link */}
-            <Link
-              href={isAdmin ? '/' : '/admin'}
-              className={`hidden lg:flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
-                isAdmin
-                  ? 'bg-[#ccff00] text-slate-950 border-[#b8e600] shadow-sm'
-                  : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200/80'
-              }`}
-            >
-              <FaSliders className="w-3 h-3 text-[#0d5bff]" />
-              <span>{isAdmin ? 'Admin (Active)' : 'Admin'}</span>
-            </Link>
+            {/* Search Icon / Input */}
+            <div className="relative">
+              {showSearchInput ? (
+                <div className="flex items-center bg-slate-50 border border-slate-200 rounded-full px-3 py-1.5 w-44 sm:w-60 animate-in fade-in zoom-in-95 duration-150">
+                  <FaMagnifyingGlass className="w-3.5 h-3.5 text-slate-400 shrink-0 mr-2" />
+                  <input
+                    type="text"
+                    value={searchQuery || ''}
+                    onChange={(e) => onSearchChange?.(e.target.value)}
+                    placeholder="Search products..."
+                    className="w-full bg-transparent text-xs text-slate-900 focus:outline-none"
+                    autoFocus
+                  />
+                  <button 
+                    onClick={() => {
+                      setShowSearchInput(false);
+                      onSearchChange?.('');
+                    }}
+                    className="text-slate-400 hover:text-slate-600 text-xs ml-1"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowSearchInput(true);
+                    onSearchClick?.();
+                  }}
+                  className="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 hover:text-slate-950 hover:bg-slate-100 transition-colors cursor-pointer"
+                  title="Search"
+                >
+                  <FaMagnifyingGlass className="w-4 h-4" />
+                </button>
+              )}
+            </div>
 
-            {/* User Auth Section */}
+            {/* Authenticated User Menu OR Log In / Sign Up Buttons */}
             {isAuthenticated && user ? (
               <div className="relative" ref={dropdownRef}>
                 <button
                   type="button"
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200/80 border border-slate-200 py-1.5 px-2.5 sm:px-3 rounded-xl transition-all cursor-pointer"
+                  className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200/80 border border-slate-200/80 py-1.5 px-3 rounded-full transition-all cursor-pointer"
                 >
                   <img
                     src={user.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${user.name}`}
                     alt={user.name}
-                    className="w-7 h-7 rounded-lg object-cover border border-blue-200"
+                    className="w-6 h-6 rounded-full object-cover"
                   />
-                  <div className="text-left hidden sm:block">
-                    <p className="text-xs font-black text-slate-900 leading-tight flex items-center gap-1">
-                      {user.name.split(' ')[0]}
-                      <span className="w-3.5 h-3.5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[8px]" title="Verified Client">
-                        ✓
-                      </span>
-                    </p>
-                    <p className="text-[10px] text-slate-500 font-mono font-medium">{maskPhone(user.phone)}</p>
-                  </div>
+                  <span className="text-xs font-bold text-slate-800 hidden sm:inline">
+                    {user.name.split(' ')[0]}
+                  </span>
+                  <FaChevronDown className="w-2.5 h-2.5 text-slate-500" />
                 </button>
 
                 {/* Dropdown Menu */}
                 {userDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 z-50 animate-in fade-in slide-from-top-2 duration-150">
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50 animate-in fade-in slide-from-top-2 duration-150">
                     <div className="px-4 py-2 border-b border-slate-100">
-                      <p className="text-xs font-black text-slate-900">{user.name}</p>
+                      <p className="text-xs font-bold text-slate-900">{user.name}</p>
                       <p className="text-[11px] text-slate-500 font-mono flex items-center gap-1 mt-0.5">
                         <FaPhone className="w-2.5 h-2.5 text-emerald-600" />
                         {maskPhone(user.phone)}
                       </p>
-                      <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                      <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
                         <FaCheck className="w-2.5 h-2.5" />
-                        Verified Account
+                        Verified Member
                       </span>
                     </div>
 
                     <div className="py-1">
                       <Link
-                        href="/"
-                        onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-[#0d5bff] transition-colors"
-                      >
-                        <FaHouse className="w-3.5 h-3.5 text-slate-400" />
-                        <span>Home Store</span>
-                      </Link>
-
-                      <Link
                         href="/profile"
                         onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-[#0d5bff] transition-colors"
+                        className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
                       >
                         <FaUser className="w-3.5 h-3.5 text-slate-400" />
-                        <span>My Profile & Shipping</span>
+                        <span>My Account</span>
                       </Link>
 
                       <Link
                         href="/chat"
                         onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center justify-between px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-[#0d5bff] transition-colors"
+                        className="flex items-center justify-between px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
                       >
                         <div className="flex items-center gap-2.5">
                           <FaComments className="w-3.5 h-3.5 text-slate-400" />
-                          <span>Chat with Admin</span>
+                          <span>Chat Support</span>
                         </div>
                         {unreadCount > 0 && (
-                          <span className="bg-[#ccff00] text-slate-950 font-black text-[9px] px-1.5 py-0.2 rounded-full">
+                          <span className="bg-emerald-600 text-white font-bold text-[9px] px-1.5 py-0.2 rounded-full">
                             {unreadCount}
                           </span>
                         )}
@@ -250,7 +231,7 @@ export const Navbar: React.FC = () => {
                       <Link
                         href="/admin"
                         onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-[#0d5bff] transition-colors"
+                        className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
                       >
                         <FaSliders className="w-3.5 h-3.5 text-slate-400" />
                         <span>Admin Studio</span>
@@ -262,9 +243,8 @@ export const Navbar: React.FC = () => {
                         onClick={() => {
                           setUserDropdownOpen(false);
                           logout();
-                          router.push('/');
                         }}
-                        className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 transition-colors text-left cursor-pointer"
+                        className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors text-left cursor-pointer"
                       >
                         <FaArrowRightFromBracket className="w-3.5 h-3.5 text-rose-500" />
                         <span>Sign Out</span>
@@ -274,89 +254,124 @@ export const Navbar: React.FC = () => {
                 )}
               </div>
             ) : (
-              <div className="flex items-center gap-1.5">
-                {/* Sign In Button */}
+              <>
+                {/* Log In Link */}
                 <button
                   type="button"
                   onClick={() => openAuthModal('login')}
-                  className="px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:text-[#0d5bff] hover:bg-slate-100 transition-colors cursor-pointer"
+                  className="text-xs sm:text-[13px] font-semibold text-slate-700 hover:text-slate-950 px-2 py-1.5 transition-colors cursor-pointer"
                 >
-                  Sign In
+                  Log In
                 </button>
 
-                {/* Direct Register Button */}
+                {/* Sign Up Pill Button */}
                 <button
                   type="button"
                   onClick={() => openAuthModal('register')}
-                  className="bg-[#0d5bff] hover:bg-[#0045d8] active:scale-95 text-white font-black px-3.5 py-2 rounded-xl text-xs shadow-md shadow-blue-600/20 transition-all cursor-pointer flex items-center gap-1.5"
+                  className="bg-[#1b3b2b] hover:bg-[#142e21] text-white font-semibold px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-[13px] transition-all shadow-xs active:scale-95 cursor-pointer whitespace-nowrap"
                 >
-                  <FaPhone className="w-3 h-3 text-[#ccff00]" />
-                  <span>Register</span>
+                  Sign Up
                 </button>
-              </div>
+              </>
             )}
+
+            {/* Country Selector Dropdown */}
+            <div className="relative" ref={countryRef}>
+              <button
+                type="button"
+                onClick={() => setCountryDropdownOpen(!countryDropdownOpen)}
+                className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 hover:text-slate-950 py-1.5 px-2 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <span className="text-sm">🇺🇸</span>
+                <span className="hidden sm:inline">{selectedCountry}</span>
+                <FaChevronDown className="w-2.5 h-2.5 text-slate-500" />
+              </button>
+
+              {countryDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-32 bg-white rounded-xl shadow-lg border border-slate-100 py-1 z-50 text-xs">
+                  <button
+                    onClick={() => {
+                      setSelectedCountry('USA');
+                      setCountryDropdownOpen(false);
+                    }}
+                    className="w-full px-3 py-1.5 flex items-center gap-2 hover:bg-slate-50 text-slate-800 font-medium text-left"
+                  >
+                    <span>🇺🇸</span> USA
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedCountry('CAN');
+                      setCountryDropdownOpen(false);
+                    }}
+                    className="w-full px-3 py-1.5 flex items-center gap-2 hover:bg-slate-50 text-slate-800 font-medium text-left"
+                  >
+                    <span>🇨🇦</span> Canada
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedCountry('UK');
+                      setCountryDropdownOpen(false);
+                    }}
+                    className="w-full px-3 py-1.5 flex items-center gap-2 hover:bg-slate-50 text-slate-800 font-medium text-left"
+                  >
+                    <span>🇬🇧</span> UK
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Mobile Menu Hamburger */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 rounded-xl text-slate-700 hover:bg-slate-100 cursor-pointer"
+            >
+              {mobileMenuOpen ? <FaXmark className="w-5 h-5" /> : <FaBars className="w-5 h-5" />}
+            </button>
 
           </div>
 
         </div>
       </div>
 
-      {/* Responsive Mobile Bottom Navigation Bar with the 3 Core Icons */}
-      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-slate-200/90 py-1.5 px-6 shadow-2xl flex items-center justify-around">
-        {/* 1. Home Icon */}
-        <Link
-          href="/"
-          className={`flex flex-col items-center justify-center gap-1 py-1.5 px-5 rounded-2xl transition-all cursor-pointer ${
-            isHome 
-              ? 'text-[#0d5bff] bg-blue-50/90 font-black' 
-              : 'text-slate-500 hover:text-slate-900 font-bold'
-          }`}
-        >
-          <div className="relative">
-            <FaHouse className={`w-5 h-5 transition-transform ${isHome ? 'scale-110 text-[#0d5bff]' : 'text-slate-500'}`} />
+      {/* Mobile Drawer Menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden border-t border-slate-100 bg-white px-4 pt-3 pb-6 space-y-3 animate-in fade-in duration-200">
+          <div className="flex flex-col space-y-2">
+            {navLinks.map((link) => (
+              <button
+                key={link.label}
+                onClick={() => handleLinkClick(link.href)}
+                className="text-left py-2 px-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 rounded-xl"
+              >
+                {link.label}
+              </button>
+            ))}
           </div>
-          <span className="text-[10px] tracking-tight">Home</span>
-        </Link>
 
-        {/* 2. Chat Icon */}
-        <Link
-          href="/chat"
-          className={`relative flex flex-col items-center justify-center gap-1 py-1.5 px-5 rounded-2xl transition-all cursor-pointer ${
-            isChat 
-              ? 'text-[#0d5bff] bg-blue-50/90 font-black' 
-              : 'text-slate-500 hover:text-slate-900 font-bold'
-          }`}
-        >
-          <div className="relative">
-            <FaComments className={`w-5 h-5 transition-transform ${isChat ? 'scale-110 text-[#0d5bff]' : 'text-slate-500'}`} />
-            {unreadCount > 0 && (
-              <span className="absolute -top-1.5 -right-3 bg-[#ccff00] text-slate-950 font-black text-[9px] min-w-4 h-4 px-1 rounded-full flex items-center justify-center border-2 border-white shadow-xs">
-                {unreadCount}
-              </span>
-            )}
-          </div>
-          <span className="text-[10px] tracking-tight">Chat</span>
-        </Link>
-
-        {/* 3. Profile Icon */}
-        <Link
-          href="/profile"
-          className={`relative flex flex-col items-center justify-center gap-1 py-1.5 px-5 rounded-2xl transition-all cursor-pointer ${
-            isProfile 
-              ? 'text-[#0d5bff] bg-blue-50/90 font-black' 
-              : 'text-slate-500 hover:text-slate-900 font-bold'
-          }`}
-        >
-          <div className="relative">
-            <FaUser className={`w-5 h-5 transition-transform ${isProfile ? 'scale-110 text-[#0d5bff]' : 'text-slate-500'}`} />
-            {isAuthenticated && (
-              <span className="absolute -top-0.5 -right-1 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white"></span>
-            )}
-          </div>
-          <span className="text-[10px] tracking-tight">Profile</span>
-        </Link>
-      </div>
+          {!isAuthenticated && (
+            <div className="pt-3 border-t border-slate-100 flex items-center gap-3">
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  openAuthModal('login');
+                }}
+                className="flex-1 py-2.5 text-center text-xs font-bold text-slate-800 bg-slate-100 rounded-full"
+              >
+                Log In
+              </button>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  openAuthModal('register');
+                }}
+                className="flex-1 py-2.5 text-center text-xs font-bold text-white bg-[#1b3b2b] rounded-full"
+              >
+                Sign Up
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </header>
   );
 };
-

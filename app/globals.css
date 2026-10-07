@@ -1,16 +1,21 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --background: #ffffff;
+  --foreground: #111827;
   
-  /* ByteSpace Signature Color Tokens */
+  /* ProductPerks Signature Color Tokens */
+  --perks-green-dark: #1b3b2b;
+  --perks-green-hover: #153022;
+  --perks-green-primary: #15803d;
+  --perks-green-soft: #edf7f0;
+  
+  /* ByteSpace Legacy Tokens */
   --bytespace-blue: #0d5bff;
   --bytespace-blue-dark: #0045d8;
   --bytespace-blue-deep: #0a2e8c;
   --bytespace-lime: #ccff00;
   --bytespace-lime-hover: #b8e600;
-  --bytespace-lime-light: #f2ffcc;
   --bytespace-card: #ffffff;
   --bytespace-border: #e2e8f0;
 }
@@ -18,8 +23,16 @@
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   overflow-x: hidden;
+}
+
+.font-headline {
+  font-family: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+}
+
+.font-handwriting {
+  font-family: 'Caveat', cursive;
 }
 
 /* Custom Scrollbar for Chat & Modals */

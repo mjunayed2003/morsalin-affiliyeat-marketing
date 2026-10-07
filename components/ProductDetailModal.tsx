@@ -91,24 +91,28 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               </div>
 
               {/* Price Details */}
-              <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+              <div className="p-3.5 bg-stone-50 rounded-xl border border-stone-200">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-black text-slate-950">
-                    ${product.price.toLocaleString()}
+                  {product.price === 0 ? (
+                    <span className="text-2xl font-black text-[#1b3b2b]">
+                      FREE
+                    </span>
+                  ) : (
+                    <span className="text-2xl font-black text-slate-950">
+                      ${product.price.toLocaleString()}
+                    </span>
+                  )}
+                  {product.originalPrice > 0 && (
+                    <span className="text-xs text-slate-400 line-through">
+                      Est. Retail: ${product.originalPrice.toLocaleString()}
+                    </span>
+                  )}
+                  <span className="ml-auto text-xs bg-emerald-100 text-emerald-800 font-bold px-2.5 py-0.5 rounded-full">
+                    Free Member Perk
                   </span>
-                  {product.originalPrice > product.price && (
-                    <span className="text-sm text-slate-400 line-through">
-                      ${product.originalPrice.toLocaleString()}
-                    </span>
-                  )}
-                  {discountAmount > 0 && (
-                    <span className="ml-auto text-xs bg-rose-100 text-rose-700 font-bold px-2 py-0.5 rounded-full">
-                      Save ${discountAmount.toLocaleString()}
-                    </span>
-                  )}
                 </div>
                 <p className="text-xs text-slate-500 mt-1">
-                  Availability: <span className="text-emerald-600 font-semibold">In Stock (Ready to Ship)</span>
+                  Availability: <span className="text-emerald-700 font-semibold">Available for Review & Keep</span>
                 </p>
               </div>
 
@@ -190,10 +194,10 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 onClose();
                 onInquire(product);
               }}
-              className="flex items-center gap-2 bg-[#0d5bff] hover:bg-[#0045d8] active:scale-95 text-white px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black shadow-md shadow-blue-600/20 transition-all cursor-pointer"
+              className="flex items-center gap-2 bg-[#1b3b2b] hover:bg-[#142e20] active:scale-95 text-white px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-md transition-all cursor-pointer"
             >
               <FaComments className="w-4 h-4" />
-              <span>Message Admin Now</span>
+              <span>Apply & Chat with Admin</span>
             </button>
           </div>
         </div>

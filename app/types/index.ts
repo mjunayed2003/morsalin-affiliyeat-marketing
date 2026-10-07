@@ -3,6 +3,7 @@ export interface Product {
   title: string;
   description: string;
   category: string;
+  subCategory?: string;
   price: number;
   originalPrice: number;
   commission: string;
