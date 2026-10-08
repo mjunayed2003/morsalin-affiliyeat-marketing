@@ -111,16 +111,17 @@ export default function ProductsPage() {
 
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight">
-                Featured Products
+              <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight flex items-center gap-2.5">
+                <span>Featured Amazon Products</span>
               </h1>
               <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
-                Explore popular products available for test, honest review, and keep.
+                Explore verified partner Amazon products available to test, share an honest review, and keep 100% free.
               </p>
             </div>
 
             <div className="inline-flex items-center gap-2 text-xs font-semibold bg-white border border-stone-200/80 px-3.5 py-1.5 rounded-full text-slate-600 shadow-2xs">
-              <span>{filteredProducts.length} Products Found</span>
+              <FaAmazon className="w-3.5 h-3.5 text-[#ff9900]" />
+              <span>{filteredProducts.length} Amazon Items Active</span>
             </div>
           </div>
         </div>
@@ -137,7 +138,7 @@ export default function ProductsPage() {
               <FaMagnifyingGlass className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
               <input
                 type="text"
-                placeholder="Search products by title, keyword, or category..."
+                placeholder="Search Amazon products by title, store (e.g. LONG YUE, Lickoon), or category..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-11 pr-10 py-3 bg-stone-50/80 text-slate-900 rounded-2xl text-xs sm:text-sm font-medium border border-stone-200 focus:outline-none focus:ring-2 focus:ring-[#1b3b2b]/30 focus:border-[#1b3b2b] placeholder:text-slate-400 transition-all"
@@ -228,15 +229,16 @@ export default function ProductsPage() {
                     className="group bg-white rounded-2xl border border-stone-200/80 hover:border-stone-300 p-4 sm:p-5 flex flex-col justify-between shadow-2xs hover:shadow-md transition-all duration-200"
                   >
                     <div>
-                      {/* Product Image Box */}
-                      <div 
-                        onClick={() => openDetailModal(prod)}
-                        className="relative w-full aspect-4/3 rounded-xl bg-[#f8f7f4] overflow-hidden mb-4 cursor-pointer flex items-center justify-center"
+                      {/* Product Image Link */}
+                      <Link 
+                        href={`/p/${prod.id}`}
+                        className="block relative w-full aspect-4/3 rounded-xl bg-[#f8f7f4] overflow-hidden mb-4 cursor-pointer flex items-center justify-center group/img"
+                        title={`View ${prod.title}`}
                       >
                         <img 
                           src={prod.image} 
                           alt={prod.title}
-                          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 cursor-pointer"
                           loading="lazy"
                         />
                         {prod.badge && (
@@ -244,7 +246,7 @@ export default function ProductsPage() {
                             {prod.badge}
                           </div>
                         )}
-                      </div>
+                      </Link>
 
                       {/* Category Pill, Store & Rating */}
                       <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
@@ -267,12 +269,12 @@ export default function ProductsPage() {
                       </div>
 
                       {/* Product Title */}
-                      <h3 
-                        onClick={() => openDetailModal(prod)}
-                        className="font-bold text-slate-900 text-base leading-snug hover:text-[#1b3b2b] transition-colors cursor-pointer line-clamp-1"
+                      <Link 
+                        href={`/p/${prod.id}`}
+                        className="block font-bold text-slate-900 text-base leading-snug hover:text-[#1b3b2b] transition-colors cursor-pointer line-clamp-1"
                       >
                         {prod.title}
-                      </h3>
+                      </Link>
 
                       {/* Subcategory / Niche */}
                       <p className="text-xs text-slate-500 font-medium mt-0.5">
@@ -282,12 +284,12 @@ export default function ProductsPage() {
 
                     {/* Action Buttons: "Get It Free" + "Amazon" */}
                     <div className="pt-5 flex items-center gap-2">
-                      <button
-                        onClick={() => openDetailModal(prod)}
+                      <Link
+                        href={`/p/${prod.id}`}
                         className="flex-1 py-2.5 px-3 rounded-xl font-semibold text-xs sm:text-sm bg-[#f4f3ef] hover:bg-[#1b3b2b] text-slate-700 hover:text-white transition-all duration-200 cursor-pointer shadow-2xs text-center"
                       >
                         Get It Free
-                      </button>
+                      </Link>
                       {prod.amazonUrl && (
                         <a
                           href={prod.amazonUrl}

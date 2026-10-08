@@ -121,41 +121,41 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
         </div>
       )}
 
-      {/* Floating Launcher Button (ByteSpace Cobalt & Lime) */}
+      {/* Floating Launcher Button */}
       {!isOpen && (
         <button
           onClick={onOpen}
-          className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-40 bg-[#0d5bff] hover:bg-[#0045d8] active:scale-95 text-white p-3.5 sm:p-4 rounded-full shadow-xl shadow-blue-600/30 flex items-center justify-center transition-all cursor-pointer group"
-          title="Customer Support Desk"
+          className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-40 bg-[#1b3b2b] hover:bg-[#142e20] active:scale-95 text-white p-3.5 sm:p-4 rounded-full shadow-xl shadow-stone-800/20 flex items-center justify-center transition-all cursor-pointer group"
+          title="Amazon Reviewer Desk"
         >
           <FaComments className="w-6 h-6 group-hover:scale-110 transition-transform" />
           <span className="absolute -top-1 -right-1 flex h-4 w-4">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#ccff00] opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-4 w-4 bg-[#ccff00] border-2 border-[#0d5bff]"></span>
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-white"></span>
           </span>
         </button>
       )}
 
       {/* Main Chat Drawer / Window */}
       {isOpen && (
-        <div className="fixed bottom-18 sm:bottom-6 right-2 sm:right-6 z-50 w-[calc(100vw-1rem)] sm:w-96 h-[540px] max-h-[78vh] sm:max-h-[85vh] bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-200">
+        <div className="fixed bottom-18 sm:bottom-6 right-2 sm:right-6 z-50 w-[calc(100vw-1rem)] sm:w-96 h-[540px] max-h-[78vh] sm:max-h-[85vh] bg-white rounded-3xl shadow-2xl border border-stone-200/90 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-200">
           
-          {/* Header (ByteSpace Cobalt Blue) */}
-          <div className="bg-[#0d5bff] text-white px-4 py-3.5 flex items-center justify-between shrink-0">
+          {/* Header */}
+          <div className="bg-[#1b3b2b] text-white px-4 py-3.5 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2.5">
               <div className="relative">
-                <div className="w-9 h-9 rounded-full bg-[#0045d8] flex items-center justify-center font-bold text-white text-sm">
-                  <FaShieldHalved className="w-4 h-4" />
+                <div className="w-9 h-9 rounded-full bg-[#264e3b] flex items-center justify-center font-bold text-white text-sm">
+                  <FaShieldHalved className="w-4 h-4 text-emerald-300" />
                 </div>
-                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-[#ccff00] rounded-full border-2 border-[#0d5bff]"></span>
+                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-[#1b3b2b]"></span>
               </div>
               <div>
-                <h3 className="font-black text-sm tracking-tight flex items-center gap-1.5">
-                  ByteDesk Support Desk
+                <h3 className="font-bold text-sm tracking-tight flex items-center gap-1.5 text-white">
+                  ProductPerks Support Desk
                 </h3>
-                <p className="text-[11px] text-blue-100 flex items-center gap-1 font-medium">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#ccff00]"></span>
-                  Admin Online • Live Support
+                <p className="text-[11px] text-emerald-200 flex items-center gap-1 font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                  Admin Online • Amazon Perks Support
                 </p>
               </div>
             </div>
@@ -163,7 +163,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
             <div className="flex items-center gap-1.5">
               <button
                 onClick={onSwitchToAdmin}
-                className="text-[10px] bg-[#ccff00] text-slate-950 px-2.5 py-1 rounded-md font-black shadow-xs hover:bg-[#b8e600] transition-colors cursor-pointer"
+                className="text-[10px] bg-white text-slate-900 px-2.5 py-1 rounded-md font-bold shadow-xs hover:bg-stone-100 transition-colors cursor-pointer"
                 title="Switch to Admin Mode to reply"
               >
                 Admin View
@@ -179,21 +179,21 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
 
           {/* Product Inquiry Context Bar (if initiated from a product) */}
           {inquiryProduct && (
-            <div className="p-2.5 bg-amber-50 border-b border-amber-200 flex items-center gap-2.5 shrink-0">
+            <div className="p-2.5 bg-stone-50 border-b border-stone-200 flex items-center gap-2.5 shrink-0">
               <img
                 src={inquiryProduct.image}
                 alt={inquiryProduct.title}
-                className="w-11 h-11 object-cover rounded-lg border border-amber-300 shrink-0"
+                className="w-11 h-11 object-cover rounded-lg border border-stone-300 shrink-0"
               />
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] uppercase font-bold text-amber-800">
-                  Inquiring About Product:
+                <p className="text-[10px] uppercase font-bold text-[#1b3b2b]">
+                  Inquiring About Amazon Product:
                 </p>
                 <p className="text-xs font-semibold text-slate-900 truncate">
                   {inquiryProduct.title}
                 </p>
-                <p className="text-xs font-bold text-blue-700">
-                  ${inquiryProduct.price.toLocaleString()}
+                <p className="text-xs font-bold text-[#1b3b2b]">
+                  {inquiryProduct.price === 0 ? 'FREE Review Perk' : `$${inquiryProduct.price.toLocaleString()}`}
                 </p>
               </div>
               <button
@@ -207,7 +207,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
           )}
 
           {/* Messages Body */}
-          <div className="flex-1 p-3.5 overflow-y-auto space-y-3.5 bg-slate-50/70 custom-scrollbar">
+          <div className="flex-1 p-3.5 overflow-y-auto space-y-3.5 bg-stone-50/60 custom-scrollbar">
             {messages.map((msg) => {
               const isCustomer = msg.sender === 'customer';
               return (
@@ -217,15 +217,15 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
                 >
                   {/* Sender indicator */}
                   <span className="text-[10px] text-slate-500 mb-1 px-1 font-medium">
-                    {isCustomer ? 'You (Customer)' : 'Support Team (Admin)'}
+                    {isCustomer ? 'You (Reviewer)' : 'ProductPerks Admin'}
                   </span>
 
                   {/* Message Bubble Container */}
                   <div
                     className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-xs sm:text-sm shadow-xs ${
                       isCustomer
-                        ? 'bg-blue-600 text-white rounded-br-xs'
-                        : 'bg-white text-slate-800 rounded-bl-xs border border-slate-200'
+                        ? 'bg-[#1b3b2b] text-white rounded-br-xs'
+                        : 'bg-white text-slate-800 rounded-bl-xs border border-stone-200'
                     }`}
                   >
                     {/* Attached Product Card in Message */}
@@ -241,7 +241,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
                             {msg.productInfo.title}
                           </p>
                           <p className="font-bold text-[11px] opacity-90">
-                            ${msg.productInfo.price.toLocaleString()}
+                            {msg.productInfo.price === 0 ? 'FREE Perk' : `$${msg.productInfo.price.toLocaleString()}`}
                           </p>
                         </div>
                       </div>
@@ -282,33 +282,33 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
           {/* Quick FAQ Suggestion Chips */}
           <div className="px-3 py-1.5 bg-white border-t border-slate-100 flex items-center gap-1.5 overflow-x-auto text-[11px] shrink-0 no-scrollbar">
             <button
-              onClick={() => handleQuickQuestion('Is Cash on Delivery available?')}
-              className="shrink-0 bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-full transition-colors cursor-pointer"
+              onClick={() => handleQuickQuestion('How does the Amazon review testing program work?')}
+              className="shrink-0 bg-stone-100 hover:bg-[#1b3b2b] hover:text-white text-slate-700 px-2.5 py-1 rounded-full transition-colors cursor-pointer"
             >
-              Cash on Delivery?
+              How It Works?
             </button>
             <button
-              onClick={() => handleQuickQuestion('What is the delivery timeline and charge?')}
-              className="shrink-0 bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-full transition-colors cursor-pointer"
+              onClick={() => handleQuickQuestion('Are these Amazon products really 100% free?')}
+              className="shrink-0 bg-stone-100 hover:bg-[#1b3b2b] hover:text-white text-slate-700 px-2.5 py-1 rounded-full transition-colors cursor-pointer"
             >
-              Delivery Timeline?
+              100% Free Items?
             </button>
             <button
-              onClick={() => handleQuickQuestion('How do I confirm my order?')}
-              className="shrink-0 bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-full transition-colors cursor-pointer"
+              onClick={() => handleQuickQuestion('Can you send the Amazon order link and instructions?')}
+              className="shrink-0 bg-stone-100 hover:bg-[#1b3b2b] hover:text-white text-slate-700 px-2.5 py-1 rounded-full transition-colors cursor-pointer"
             >
-              How to Order?
+              Get Amazon Link
             </button>
           </div>
 
           {/* Selected Image Preview (Before Send) */}
           {selectedImage && (
-            <div className="p-2 bg-blue-50 border-t border-blue-200 flex items-center gap-2 shrink-0">
+            <div className="p-2 bg-emerald-50 border-t border-emerald-200 flex items-center gap-2 shrink-0">
               <div className="relative">
                 <img
                   src={selectedImage}
                   alt="Selected upload"
-                  className="w-12 h-12 object-cover rounded-lg border border-blue-300"
+                  className="w-12 h-12 object-cover rounded-lg border border-emerald-300"
                 />
                 <button
                   type="button"
@@ -318,8 +318,8 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
                   <FiX className="w-3 h-3" />
                 </button>
               </div>
-              <span className="text-xs text-blue-900 font-medium">
-                Image attached. Click send button to deliver.
+              <span className="text-xs text-emerald-900 font-medium">
+                Photo attached. Ready to deliver to admin.
               </span>
             </div>
           )}
@@ -330,8 +330,8 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors cursor-pointer shrink-0"
-              title="Attach and send image"
+              className="p-2 text-slate-500 hover:text-[#1b3b2b] hover:bg-stone-100 rounded-xl transition-colors cursor-pointer shrink-0"
+              title="Attach screenshot or photo"
             >
               <FaImage className="w-4 h-4" />
             </button>
@@ -347,17 +347,17 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
             {/* Message Text Input */}
             <input
               type="text"
-              placeholder={inquiryProduct ? "Type your product inquiry message..." : "Type your message..."}
+              placeholder={inquiryProduct ? "Ask about this Amazon product or request review link..." : "Type your message to admin..."}
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              className="flex-1 bg-slate-50 text-slate-900 text-xs sm:text-sm px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0d5bff]/20 focus:border-[#0d5bff] placeholder:text-slate-400 font-medium"
+              className="flex-1 bg-stone-50 text-slate-900 text-xs sm:text-sm px-4 py-2.5 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-[#1b3b2b]/20 focus:border-[#1b3b2b] placeholder:text-slate-400 font-medium"
             />
 
             {/* Send Button */}
             <button
               type="submit"
               disabled={!inputText.trim() && !selectedImage && !inquiryProduct}
-              className="p-2.5 bg-[#0d5bff] hover:bg-[#0045d8] active:scale-95 disabled:opacity-40 disabled:pointer-events-none text-white rounded-xl shadow-md shadow-blue-600/20 transition-all cursor-pointer shrink-0"
+              className="p-2.5 bg-[#1b3b2b] hover:bg-[#142e20] active:scale-95 disabled:opacity-40 disabled:pointer-events-none text-white rounded-xl shadow-xs transition-all cursor-pointer shrink-0"
               title="Send Message"
             >
               <FaPaperPlane className="w-3.5 h-3.5" />

@@ -49,24 +49,52 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Initialize from LocalStorage
   useEffect(() => {
     try {
-      const storedProds = localStorage.getItem('product_perks_catalog_v2');
+      // Clear legacy storage keys if present
+      localStorage.removeItem('product_perks_catalog_v1');
+      localStorage.removeItem('product_perks_catalog_v2');
+      localStorage.removeItem('product_perks_catalog_v3');
+
+      const storedProds = localStorage.getItem('product_perks_catalog_v4');
       if (storedProds) {
         const parsed = JSON.parse(storedProds);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // Check if new products from INITIAL_PRODUCTS are present, if not merge them
-          const existingIds = new Set(parsed.map((p: Product) => p.id));
+          // Keep only Amazon products (or admin-added products with amazonUrl)
+          const validAmazonProds = parsed.filter(
+            (item: Product) => item.amazonUrl || INITIAL_PRODUCTS.some((ip) => ip.id === item.id)
+          );
+
+          // Update them with latest official images and metadata from INITIAL_PRODUCTS
+          const updated = validAmazonProds.map((item: Product) => {
+            const init = INITIAL_PRODUCTS.find((p) => p.id === item.id);
+            if (init) {
+              return {
+                ...item,
+                image: init.image,
+                gallery: init.gallery,
+                store: init.store,
+                amazonUrl: init.amazonUrl,
+                title: init.title,
+                description: init.description,
+                features: init.features,
+                rating: init.rating,
+                reviewsCount: init.reviewsCount
+              };
+            }
+            return item;
+          });
+
+          const existingIds = new Set(updated.map((p: Product) => p.id));
           const missingNew = INITIAL_PRODUCTS.filter((p) => !existingIds.has(p.id));
-          if (missingNew.length > 0) {
-            const merged = [...missingNew, ...parsed];
-            setProducts(merged);
-            localStorage.setItem('product_perks_catalog_v2', JSON.stringify(merged));
-          } else {
-            setProducts(parsed);
-          }
+          const finalProds = [...missingNew, ...updated];
+          setProducts(finalProds);
+          localStorage.setItem('product_perks_catalog_v4', JSON.stringify(finalProds));
+        } else {
+          setProducts(INITIAL_PRODUCTS);
+          localStorage.setItem('product_perks_catalog_v4', JSON.stringify(INITIAL_PRODUCTS));
         }
       } else {
         setProducts(INITIAL_PRODUCTS);
-        localStorage.setItem('product_perks_catalog_v2', JSON.stringify(INITIAL_PRODUCTS));
+        localStorage.setItem('product_perks_catalog_v4', JSON.stringify(INITIAL_PRODUCTS));
       }
       const storedMsgs = localStorage.getItem('product_perks_messages_v1');
       if (storedMsgs) {
@@ -80,7 +108,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Save to LocalStorage
   useEffect(() => {
     try {
-      localStorage.setItem('product_perks_catalog_v2', JSON.stringify(products));
+      localStorage.setItem('product_perks_catalog_v4', JSON.stringify(products));
     } catch (e) {}
   }, [products]);
 
@@ -129,7 +157,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const clearInquiryProduct = () => setInquiryProduct(null);
 
   const copyClientLink = (prod: Product) => {
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://affilihub.com';
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://productperks.com';
     const link = `${origin}/p/${prod.id}`;
     navigator.clipboard.writeText(link);
     setCopiedId(prod.id);
@@ -152,7 +180,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const resetProducts = () => {
     setProducts(INITIAL_PRODUCTS);
-    showToast('Demo catalog restored.');
+    try {
+      localStorage.setItem('product_perks_catalog_v4', JSON.stringify(INITIAL_PRODUCTS));
+    } catch (e) {}
+    showToast('Catalog restored to official Amazon products.');
   };
 
   const sendCustomerMessage = (

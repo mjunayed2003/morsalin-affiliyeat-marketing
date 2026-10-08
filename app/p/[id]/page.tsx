@@ -18,13 +18,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   return {
-    title: `${product.title} - $${product.price.toLocaleString()} | ByteDesk`,
+    title: `${product.title} - $${product.price.toLocaleString()} | ProductPerks`,
     description: `Price: $${product.price.toLocaleString()} (Regular: $${product.originalPrice.toLocaleString()}). Tap to view full product details and chat live with admin.`,
     openGraph: {
       title: `${product.title} - $${product.price.toLocaleString()}`,
       description: `Price: $${product.price.toLocaleString()} • Live 1-on-1 Chat with Admin & Direct Order`,
-      url: `https://affilihub.com/p/${product.id}`,
-      siteName: 'ByteDesk Store',
+      url: `https://productperks.com/p/${product.id}`,
+      siteName: 'ProductPerks',
       images: [
         {
           url: product.image,

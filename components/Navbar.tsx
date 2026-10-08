@@ -60,9 +60,9 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const navLinks = [
     { label: 'Home', href: '/' },
-    { label: 'Products', href: '/products' },
+    { label: 'Amazon Products', href: '/products' },
     { label: 'How It Works', href: '/#how-it-works' },
-    { label: 'About Us', href: '/#about-us' },
+    { label: 'Reviewers', href: '/#about-us' },
     { label: 'FAQ', href: '/#faq' },
   ];
 
@@ -104,8 +104,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="font-bold text-lg sm:text-xl text-slate-900 tracking-tight leading-tight">
                 Product<span className="text-[#1b3b2b]">Perks</span>
               </span>
-              <span className="text-[10px] sm:text-[11px] text-slate-500 font-medium leading-none hidden sm:block">
-                Discover products. Get rewarded.
+              <span className="text-[10px] sm:text-[11px] text-amber-700 font-semibold leading-none hidden sm:flex items-center gap-1">
+                <span>Amazon Review & Perks Club</span>
               </span>
             </div>
           </Link>

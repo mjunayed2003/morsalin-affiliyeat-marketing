@@ -39,7 +39,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
   if (!isOpen || !product) return null;
 
   // Compute shareable link directly pointing to dedicated /p/[id] route
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://affilihub.com';
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://productperks.com';
   const shareableUrl = `${origin}/p/${product.id}`;
   
   // Active preview image (either custom uploaded or original product image)
@@ -69,15 +69,15 @@ export const ShareModal: React.FC<ShareModalProps> = ({
   const handleCopyLink = () => {
     navigator.clipboard.writeText(shareableUrl);
     setCopied(true);
-    onShowToast('Affiliate link copied to clipboard!');
+    onShowToast('Product link copied to clipboard!');
     setTimeout(() => setCopied(false), 2500);
   };
 
   // Copy Formatted Post (Caption + Link)
   const handleCopyFormattedPost = () => {
-    let text = `🔥 ${product.title}\n\n`;
-    if (product.store) text += `🏪 Store: ${product.store}\n`;
-    text += `💰 Deal Price: $${product.price.toLocaleString()} (Regular: $${product.originalPrice.toLocaleString()})\n✨ Highlights: ${product.features.join(', ')}\n\n👉 Order or view full details here:\n${shareableUrl}`;
+    let text = `🔥 Free Amazon Review Perk: ${product.title}\n\n`;
+    if (product.store) text += `🏪 Amazon Store: ${product.store}\n`;
+    text += `💰 Deal: 100% Free / Rebate (Amazon Retail: $${product.originalPrice.toLocaleString()})\n✨ Highlights: ${product.features.join(', ')}\n\n👉 Claim free unit to test & review:\n${shareableUrl}`;
     if (product.amazonUrl) {
       text += `\n\n🛒 Official Amazon Listing:\n${product.amazonUrl}`;
     }

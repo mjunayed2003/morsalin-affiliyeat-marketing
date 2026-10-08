@@ -3,19 +3,19 @@ import "./globals.css";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "PersonalDesk - Private Client Showcase & Messenger Direct Share",
-  description: "Share custom affiliate products and photos directly with clients on Messenger with rich live image previews and 1-on-1 private chat.",
+  title: "ProductPerks - Amazon Review Club | Free Products for Reviewers",
+  description: "Test brand-name products from verified Amazon stores (LONG YUE, Lickoon, Imps Hair & more). Share honest reviews and keep products 100% free!",
   openGraph: {
-    title: "PersonalDesk - Private Client Showcase & Messenger Direct Share",
-    description: "Share custom affiliate products and photos directly with clients on Messenger with rich live image previews.",
-    url: "https://affilihub.com",
-    siteName: "PersonalDesk",
+    title: "ProductPerks - Amazon Review Club | Free Products for Reviewers",
+    description: "Test brand-name products from verified Amazon stores. Share honest reviews and keep products 100% free!",
+    url: "https://productperks.com",
+    siteName: "ProductPerks",
     images: [
       {
-        url: "https://images.unsplash.com/photo-1579586337278-3befd40fd17a?auto=format&fit=crop&w=1200&h=630&q=80",
+        url: "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&w=1200&h=630&q=80",
         width: 1200,
         height: 630,
-        alt: "PersonalDesk Showcase"
+        alt: "ProductPerks Amazon Review Club"
       }
     ],
     locale: "en_US",
@@ -23,9 +23,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "PersonalDesk - Private Client Showcase",
-    description: "Share products directly to Messenger with rich live image previews.",
-    images: ["https://images.unsplash.com/photo-1579586337278-3befd40fd17a?auto=format&fit=crop&w=1200&h=630&q=80"]
+    title: "ProductPerks - Amazon Review Club",
+    description: "Test products from verified Amazon stores, share honest reviews, and keep them free.",
+    images: ["https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&w=1200&h=630&q=80"]
   }
 };
 
