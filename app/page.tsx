@@ -10,6 +10,7 @@ import { AuthModal } from '@/components/AuthModal';
 import { useApp } from '@/app/context/AppContext';
 import { useAuth } from '@/app/context/AuthContext';
 import { Product } from '@/app/types';
+import { FaAmazon, FaStore } from 'react-icons/fa';
 import { 
   FaArrowRight, 
   FaCheck, 
@@ -36,6 +37,9 @@ const CATEGORY_STYLES: Record<string, { bg: string; text: string }> = {
   'Home': { bg: 'bg-[#e0f2fe]', text: 'text-[#075985]' },
   'Lifestyle': { bg: 'bg-[#f3e8ff]', text: 'text-[#6b21a8]' },
   'Accessories': { bg: 'bg-[#fef9c3]', text: 'text-[#854d0e]' },
+  'Pet Supplies': { bg: 'bg-[#ecfdf5]', text: 'text-[#065f46]' },
+  'Home & Garden': { bg: 'bg-[#f0fdfa]', text: 'text-[#115e59]' },
+  'Beauty & Personal Care': { bg: 'bg-[#fff1f2]', text: 'text-[#9f1239]' },
 };
 
 export default function Home() {
@@ -314,11 +318,22 @@ export default function Home() {
                         />
                       </div>
 
-                      {/* Category Pill Badge */}
-                      <div className="mb-2">
+                      {/* Category Pill & Store Badge */}
+                      <div className="mb-2 flex items-center gap-1.5 flex-wrap">
                         <span className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold ${badgeStyle.bg} ${badgeStyle.text}`}>
                           {prod.category}
                         </span>
+                        {prod.store && (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                            <FaStore className="w-2.5 h-2.5 text-amber-600" />
+                            <span>{prod.store}</span>
+                          </span>
+                        )}
+                        {prod.badge && (
+                          <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-900 text-white">
+                            {prod.badge}
+                          </span>
+                        )}
                       </div>
 
                       {/* Product Title */}
@@ -335,14 +350,27 @@ export default function Home() {
                       </p>
                     </div>
 
-                    {/* Action Button: "Get It Free" */}
-                    <div className="pt-5">
+                    {/* Action Buttons: "Get It Free" + "Amazon" */}
+                    <div className="pt-5 flex items-center gap-2">
                       <button
                         onClick={() => handleGetItFree(prod)}
-                        className="w-full py-2.5 px-4 rounded-xl font-semibold text-xs sm:text-sm bg-[#f4f3ef] hover:bg-[#1b3b2b] text-slate-700 hover:text-white transition-all duration-200 cursor-pointer shadow-2xs"
+                        className="flex-1 py-2.5 px-3 rounded-xl font-semibold text-xs sm:text-sm bg-[#f4f3ef] hover:bg-[#1b3b2b] text-slate-700 hover:text-white transition-all duration-200 cursor-pointer shadow-2xs text-center"
                       >
                         Get It Free
                       </button>
+                      {prod.amazonUrl && (
+                        <a
+                          href={prod.amazonUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="py-2.5 px-3 rounded-xl font-bold text-xs bg-[#fff8e7] hover:bg-[#ff9900] text-[#92400e] hover:text-slate-950 border border-amber-300 hover:border-[#e08500] transition-all duration-200 inline-flex items-center gap-1.5 shadow-2xs cursor-pointer shrink-0"
+                          title={`View on Amazon (${prod.store || 'Amazon'})`}
+                        >
+                          <FaAmazon className="w-3.5 h-3.5 text-[#e08500]" />
+                          <span>Amazon</span>
+                        </a>
+                      )}
                     </div>
                   </div>
                 );

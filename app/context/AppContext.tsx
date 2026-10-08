@@ -49,15 +49,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Initialize from LocalStorage
   useEffect(() => {
     try {
-      const storedProds = localStorage.getItem('product_perks_catalog_v1');
+      const storedProds = localStorage.getItem('product_perks_catalog_v2');
       if (storedProds) {
         const parsed = JSON.parse(storedProds);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          setProducts(parsed);
+          // Check if new products from INITIAL_PRODUCTS are present, if not merge them
+          const existingIds = new Set(parsed.map((p: Product) => p.id));
+          const missingNew = INITIAL_PRODUCTS.filter((p) => !existingIds.has(p.id));
+          if (missingNew.length > 0) {
+            const merged = [...missingNew, ...parsed];
+            setProducts(merged);
+            localStorage.setItem('product_perks_catalog_v2', JSON.stringify(merged));
+          } else {
+            setProducts(parsed);
+          }
         }
       } else {
         setProducts(INITIAL_PRODUCTS);
-        localStorage.setItem('product_perks_catalog_v1', JSON.stringify(INITIAL_PRODUCTS));
+        localStorage.setItem('product_perks_catalog_v2', JSON.stringify(INITIAL_PRODUCTS));
       }
       const storedMsgs = localStorage.getItem('product_perks_messages_v1');
       if (storedMsgs) {
@@ -71,7 +80,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Save to LocalStorage
   useEffect(() => {
     try {
-      localStorage.setItem('product_perks_catalog_v1', JSON.stringify(products));
+      localStorage.setItem('product_perks_catalog_v2', JSON.stringify(products));
     } catch (e) {}
   }, [products]);
 

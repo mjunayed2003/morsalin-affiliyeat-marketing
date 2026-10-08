@@ -19,6 +19,7 @@ import {
   FaRotateLeft,
   FaCheck
 } from 'react-icons/fa6';
+import { FaAmazon, FaStore } from 'react-icons/fa';
 
 // Pastel category badges map
 const CATEGORY_STYLES: Record<string, { bg: string; text: string }> = {
@@ -31,7 +32,10 @@ const CATEGORY_STYLES: Record<string, { bg: string; text: string }> = {
   'Smart Gadgets': { bg: 'bg-emerald-50', text: 'text-emerald-700' },
   'Mobile Accessories': { bg: 'bg-blue-50', text: 'text-blue-700' },
   'Electronics': { bg: 'bg-purple-50', text: 'text-purple-700' },
-  'Fashion & Lifestyle': { bg: 'bg-amber-50', text: 'text-amber-700' }
+  'Fashion & Lifestyle': { bg: 'bg-amber-50', text: 'text-amber-700' },
+  'Pet Supplies': { bg: 'bg-[#ecfdf5]', text: 'text-[#065f46]' },
+  'Home & Garden': { bg: 'bg-[#f0fdfa]', text: 'text-[#115e59]' },
+  'Beauty & Personal Care': { bg: 'bg-[#fff1f2]', text: 'text-[#9f1239]' },
 };
 
 export default function ProductsPage() {
@@ -242,11 +246,19 @@ export default function ProductsPage() {
                         )}
                       </div>
 
-                      {/* Category Pill & Rating */}
-                      <div className="flex items-center justify-between gap-2 mb-2">
-                        <span className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold ${badgeStyle.bg} ${badgeStyle.text}`}>
-                          {prod.category}
-                        </span>
+                      {/* Category Pill, Store & Rating */}
+                      <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold ${badgeStyle.bg} ${badgeStyle.text}`}>
+                            {prod.category}
+                          </span>
+                          {prod.store && (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                              <FaStore className="w-2.5 h-2.5 text-amber-600" />
+                              <span>{prod.store}</span>
+                            </span>
+                          )}
+                        </div>
                         <div className="flex items-center gap-1 text-amber-500 font-bold text-xs">
                           <FaStar className="w-3 h-3 text-amber-400" />
                           <span>{prod.rating}</span>
@@ -268,14 +280,27 @@ export default function ProductsPage() {
                       </p>
                     </div>
 
-                    {/* Action Button: "Get It Free" */}
-                    <div className="pt-5">
+                    {/* Action Buttons: "Get It Free" + "Amazon" */}
+                    <div className="pt-5 flex items-center gap-2">
                       <button
                         onClick={() => openDetailModal(prod)}
-                        className="w-full py-2.5 px-4 rounded-xl font-semibold text-xs sm:text-sm bg-[#f4f3ef] hover:bg-[#1b3b2b] text-slate-700 hover:text-white transition-all duration-200 cursor-pointer shadow-2xs"
+                        className="flex-1 py-2.5 px-3 rounded-xl font-semibold text-xs sm:text-sm bg-[#f4f3ef] hover:bg-[#1b3b2b] text-slate-700 hover:text-white transition-all duration-200 cursor-pointer shadow-2xs text-center"
                       >
                         Get It Free
                       </button>
+                      {prod.amazonUrl && (
+                        <a
+                          href={prod.amazonUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="py-2.5 px-3 rounded-xl font-bold text-xs bg-[#fff8e7] hover:bg-[#ff9900] text-[#92400e] hover:text-slate-950 border border-amber-300 hover:border-[#e08500] transition-all duration-200 inline-flex items-center gap-1.5 shadow-2xs cursor-pointer shrink-0"
+                          title={`View on Amazon (${prod.store || 'Amazon'})`}
+                        >
+                          <FaAmazon className="w-3.5 h-3.5 text-[#e08500]" />
+                          <span>Amazon</span>
+                        </a>
+                      )}
                     </div>
                   </div>
                 );

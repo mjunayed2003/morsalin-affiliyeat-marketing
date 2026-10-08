@@ -15,9 +15,10 @@ import {
   FaCheck, 
   FaExpand,
   FaCircleCheck,
-  FaLock
+  FaLock,
+  FaArrowUpRightFromSquare
 } from 'react-icons/fa6';
-import { FaWhatsapp } from 'react-icons/fa';
+import { FaWhatsapp, FaAmazon, FaStore } from 'react-icons/fa';
 import { FiX } from 'react-icons/fi';
 
 interface ClientProductViewProps {
@@ -197,12 +198,24 @@ export const ClientProductView: React.FC<ClientProductViewProps> = ({ productId 
             <div>
               <p className="font-black text-base sm:text-lg text-white">Private Product Shared For You</p>
               <p className="text-blue-100 text-xs sm:text-sm font-medium">
+                {product.store && <span className="font-bold text-[#ccff00]">Store: {product.store} • </span>}
                 Review the product details and chat live with the admin below to order or ask questions.
               </p>
             </div>
           </div>
           
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 shrink-0 flex-wrap">
+            {product.amazonUrl && (
+              <a
+                href={product.amazonUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 bg-[#ff9900] hover:bg-[#ea8b00] text-slate-950 px-4 py-2.5 rounded-xl font-black text-xs shadow-md transition-all cursor-pointer border border-[#e08500]"
+              >
+                <FaAmazon className="w-4 h-4 text-slate-950" />
+                <span>Buy on Amazon</span>
+              </a>
+            )}
             <a
               href={whatsappUrl}
               target="_blank"
@@ -256,8 +269,17 @@ export const ClientProductView: React.FC<ClientProductViewProps> = ({ productId 
 
               {/* Title & Price Row */}
               <div className="space-y-3 pt-2">
-                <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                <div className="flex items-center gap-2 flex-wrap text-xs font-bold text-slate-500 uppercase tracking-wider">
                   <span>{product.category}</span>
+                  {product.store && (
+                    <>
+                      <span>•</span>
+                      <span className="bg-amber-100 text-amber-900 border border-amber-300 text-[11px] font-bold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 normal-case">
+                        <FaStore className="w-3 h-3 text-amber-700" />
+                        Store: {product.store}
+                      </span>
+                    </>
+                  )}
                   <span>•</span>
                   <span className="text-emerald-600 font-bold">Verified In-Stock</span>
                 </div>
@@ -267,18 +289,38 @@ export const ClientProductView: React.FC<ClientProductViewProps> = ({ productId 
                 </h1>
 
                 {/* Pricing Box */}
-                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex flex-wrap items-baseline gap-3">
-                  <span className="text-3xl font-black text-slate-950">
-                    ${product.price.toLocaleString()}
-                  </span>
-                  {product.originalPrice > product.price && (
-                    <span className="text-base text-slate-400 line-through font-semibold">
-                      ${product.originalPrice.toLocaleString()}
+                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                  <div className="flex flex-wrap items-baseline gap-3">
+                    <span className="text-3xl font-black text-slate-950">
+                      ${product.price.toLocaleString()}
                     </span>
+                    {product.originalPrice > product.price && (
+                      <span className="text-base text-slate-400 line-through font-semibold">
+                        ${product.originalPrice.toLocaleString()}
+                      </span>
+                    )}
+                    <span className="ml-auto text-xs bg-[#ccff00] text-slate-950 font-black px-3 py-1 rounded-lg">
+                      Special Offer
+                    </span>
+                  </div>
+
+                  {product.amazonUrl && (
+                    <div className="pt-2 border-t border-slate-200">
+                      <a
+                        href={product.amazonUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-2.5 w-full bg-[#ff9900] hover:bg-[#ea8b00] active:scale-[0.99] text-slate-950 font-black py-3 px-5 rounded-2xl text-xs sm:text-sm shadow-md transition-all cursor-pointer border border-[#e08500]"
+                      >
+                        <FaAmazon className="w-4 h-4 text-slate-950 shrink-0" />
+                        <span>Order Directly on Amazon ({product.store || 'Amazon Store'})</span>
+                        <FaArrowUpRightFromSquare className="w-3.5 h-3.5 opacity-80 shrink-0" />
+                      </a>
+                      <p className="text-[11px] text-slate-500 text-center mt-1 font-medium">
+                        Fulfilled via Amazon with Prime shipping & return guarantee
+                      </p>
+                    </div>
                   )}
-                  <span className="ml-auto text-xs bg-[#ccff00] text-slate-950 font-black px-3 py-1 rounded-lg">
-                    Special Offer
-                  </span>
                 </div>
               </div>
 

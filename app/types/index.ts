@@ -17,6 +17,8 @@ export interface Product {
   badge?: string;
   inStock: boolean;
   createdAt: string;
+  store?: string;
+  amazonUrl?: string;
 }
 
 export interface ChatMessage {

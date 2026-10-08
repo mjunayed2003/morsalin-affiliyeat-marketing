@@ -11,7 +11,7 @@ import {
   FaImage,
   FaFileLines
 } from 'react-icons/fa6';
-import { FaFacebookMessenger, FaWhatsapp } from 'react-icons/fa';
+import { FaFacebookMessenger, FaWhatsapp, FaAmazon } from 'react-icons/fa';
 import { FiX } from 'react-icons/fi';
 import { Product } from '../app/types';
 import { useApp } from '../app/context/AppContext';
@@ -75,9 +75,14 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 
   // Copy Formatted Post (Caption + Link)
   const handleCopyFormattedPost = () => {
-    const text = `🔥 ${product.title}\n\n💰 Deal Price: $${product.price.toLocaleString()} (Regular: $${product.originalPrice.toLocaleString()})\n✨ Highlights: ${product.features.join(', ')}\n\n👉 Order or view full details here:\n${shareableUrl}`;
+    let text = `🔥 ${product.title}\n\n`;
+    if (product.store) text += `🏪 Store: ${product.store}\n`;
+    text += `💰 Deal Price: $${product.price.toLocaleString()} (Regular: $${product.originalPrice.toLocaleString()})\n✨ Highlights: ${product.features.join(', ')}\n\n👉 Order or view full details here:\n${shareableUrl}`;
+    if (product.amazonUrl) {
+      text += `\n\n🛒 Official Amazon Listing:\n${product.amazonUrl}`;
+    }
     navigator.clipboard.writeText(text);
-    onShowToast('Caption and link copied! Paste into Messenger or WhatsApp.');
+    onShowToast('Caption and links copied! Paste into Messenger or WhatsApp.');
   };
 
   // Direct Web Share API (with Image File if supported)
@@ -320,6 +325,44 @@ export const ShareModal: React.FC<ShareModalProps> = ({
               </button>
             </div>
           </div>
+
+          {/* Official Amazon URL Input */}
+          {product.amazonUrl && (
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                  <FaAmazon className="w-3.5 h-3.5 text-[#ff9900]" />
+                  <span>Amazon Store Link ({product.store || 'Amazon'}):</span>
+                </label>
+                <a
+                  href={product.amazonUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[11px] font-bold text-blue-600 hover:underline"
+                >
+                  Open in New Tab ↗
+                </a>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={product.amazonUrl}
+                  className="flex-1 bg-amber-50/40 text-slate-700 text-xs px-3.5 py-2.5 rounded-xl border border-amber-200 font-mono select-all focus:outline-none font-semibold"
+                />
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(product.amazonUrl!);
+                    onShowToast('Amazon product link copied!');
+                  }}
+                  className="px-4 py-2.5 rounded-xl text-xs font-black bg-[#ff9900] hover:bg-[#eb8c00] text-slate-950 transition-all cursor-pointer flex items-center gap-1.5 shrink-0 shadow-xs"
+                >
+                  <FaCopy className="w-3.5 h-3.5" />
+                  <span>Copy</span>
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Helpful Technical Explanation Box */}
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 text-xs text-amber-900 flex items-start gap-2.5">
