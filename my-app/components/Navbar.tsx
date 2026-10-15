@@ -33,7 +33,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const pathname = usePathname();
   const router = useRouter();
   const { unreadCount } = useApp();
-  const { user, isAuthenticated, openAuthModal, logout } = useAuth();
+  const { user, isAuthenticated, isAdmin, openAuthModal, logout } = useAuth();
   
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
@@ -228,14 +228,16 @@ export const Navbar: React.FC<NavbarProps> = ({
                         )}
                       </Link>
 
-                      <Link
-                        href="/admin"
-                        onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
-                      >
-                        <FaSliders className="w-3.5 h-3.5 text-slate-400" />
-                        <span>Admin Studio</span>
-                      </Link>
+                      {isAdmin && (
+                        <Link
+                          href="/admin"
+                          onClick={() => setUserDropdownOpen(false)}
+                          className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-emerald-800 bg-emerald-50/50 hover:bg-emerald-50 transition-colors"
+                        >
+                          <FaSliders className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Admin Studio</span>
+                        </Link>
+                      )}
                     </div>
 
                     <div className="pt-1 border-t border-slate-100">

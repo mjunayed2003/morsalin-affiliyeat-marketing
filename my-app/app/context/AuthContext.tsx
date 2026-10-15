@@ -19,11 +19,14 @@ interface OtpBannerData {
 interface AuthContextType {
   user: User | null;
   users: User[];
+  token: string | null;
   isAuthenticated: boolean;
+  isAdmin: boolean;
   isLoading: boolean;
   isAuthModalOpen: boolean;
   authModalMode: 'login' | 'register';
   otpBanner: OtpBannerData | null;
+  getAuthHeaders: () => Record<string, string>;
   openAuthModal: (mode?: 'login' | 'register') => void;
   closeAuthModal: () => void;
   registerUser: (
@@ -60,75 +63,153 @@ const normalizePhone = (phone: string): string => {
   return phone.replace(/[\s\-()]/g, '').trim();
 };
 
+const setAuthCookies = (token: string, role: string) => {
+  if (typeof document !== 'undefined') {
+    document.cookie = `bytedesk_token=${encodeURIComponent(token)}; path=/; max-age=604800; SameSite=Lax`;
+    document.cookie = `bytedesk_role=${encodeURIComponent(role)}; path=/; max-age=604800; SameSite=Lax`;
+  }
+};
+
+const clearAuthCookies = () => {
+  if (typeof document !== 'undefined') {
+    document.cookie = 'bytedesk_token=; path=/; max-age=0; SameSite=Lax';
+    document.cookie = 'bytedesk_role=; path=/; max-age=0; SameSite=Lax';
+  }
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [users, setUsers] = useState<User[]>([]);
+  const [token, setToken] = useState<string | null>(null);
   const [pendingOtp, setPendingOtp] = useState<PendingOtp | null>(null);
   const [otpBanner, setOtpBanner] = useState<OtpBannerData | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load registered users and current user session from LocalStorage
-  useEffect(() => {
-    try {
-      // 1. Fetch real users from Backend API (PostgreSQL database)
-      fetch(`${API_BASE_URL}/users`)
-        .then((res) => res.json())
-        .then((backendUsers) => {
-          if (Array.isArray(backendUsers)) {
-            const mapped: User[] = backendUsers.map((u) => ({
-              id: u.id,
-              phone: u.phone,
-              name: u.name,
-              email: u.email,
-              address: u.address,
-              city: u.city,
-              avatar: u.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(u.name)}&backgroundColor=1b3b2b`,
-              verified: u.verified,
-              verifiedAt: u.verifiedAt,
-              createdAt: u.createdAt,
-              role: u.role?.toLowerCase() === 'admin' ? 'admin' : 'client',
-              status: 'ACTIVE',
-            }));
-            setUsers(mapped);
-            localStorage.setItem('bytedesk_users_v2', JSON.stringify(mapped));
-          }
-        })
-        .catch(() => {
-          const storedUsers = localStorage.getItem('bytedesk_users_v2');
-          if (storedUsers) {
-            try {
-              const parsed = JSON.parse(storedUsers);
-              if (Array.isArray(parsed)) {
-                setUsers(parsed);
-              }
-            } catch (e) {}
-          }
-        });
-
-      const activeUser = localStorage.getItem('bytedesk_current_user_v2');
-      if (activeUser) {
-        const parsedActive = JSON.parse(activeUser);
-        if (
-          parsedActive?.id === 'client-morsalin-1' ||
-          parsedActive?.email === 'morsalin@bytedesk.io' ||
-          parsedActive?.phone?.includes('*')
-        ) {
-          localStorage.removeItem('bytedesk_current_user_v2');
-          setUser(null);
-        } else {
-          setUser(parsedActive);
-        }
-      }
-    } catch (e) {
-      console.warn('Auth localstorage error:', e);
-    } finally {
-      setIsLoading(false);
+  // Return standard auth headers with token
+  const getAuthHeaders = (): Record<string, string> => {
+    const currentToken = token || (typeof window !== 'undefined' ? localStorage.getItem('bytedesk_token_v2') : null);
+    if (currentToken) {
+      return {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${currentToken}`,
+      };
     }
+    return {
+      'Content-Type': 'application/json',
+    };
+  };
+
+  // Helper to load users for admins
+  const loadAdminUsers = (authToken: string) => {
+    fetch(`${API_BASE_URL}/users`, {
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error('Unauthorized');
+        return res.json();
+      })
+      .then((backendUsers) => {
+        if (Array.isArray(backendUsers)) {
+          const mapped: User[] = backendUsers.map((u) => ({
+            id: u.id,
+            phone: u.phone,
+            name: u.name,
+            email: u.email,
+            address: u.address,
+            city: u.city,
+            avatar: u.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(u.name)}&backgroundColor=1b3b2b`,
+            verified: u.verified,
+            verifiedAt: u.verifiedAt,
+            createdAt: u.createdAt,
+            role: u.role?.toLowerCase() === 'admin' ? 'admin' : 'client',
+            status: 'ACTIVE',
+          }));
+          setUsers(mapped);
+          localStorage.setItem('bytedesk_users_v2', JSON.stringify(mapped));
+        }
+      })
+      .catch(() => {});
+  };
+
+  // Check saved session & token on initial load
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        const storedToken = localStorage.getItem('bytedesk_token_v2');
+        const storedUser = localStorage.getItem('bytedesk_current_user_v2');
+
+        if (storedToken) {
+          setToken(storedToken);
+
+          // Verify token against backend /auth/me
+          try {
+            const res = await fetch(`${API_BASE_URL}/auth/me`, {
+              headers: {
+                Authorization: `Bearer ${storedToken}`,
+              },
+            });
+
+            if (res.ok) {
+              const verifiedUser = await res.json();
+              const formattedUser: User = {
+                id: verifiedUser.id,
+                phone: verifiedUser.phone,
+                name: verifiedUser.name,
+                email: verifiedUser.email,
+                address: verifiedUser.address,
+                city: verifiedUser.city,
+                avatar: verifiedUser.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(verifiedUser.name)}&backgroundColor=1b3b2b`,
+                verified: verifiedUser.verified,
+                verifiedAt: verifiedUser.verifiedAt,
+                createdAt: verifiedUser.createdAt,
+                role: verifiedUser.role?.toLowerCase() === 'admin' ? 'admin' : 'client',
+                status: 'ACTIVE',
+              };
+
+              setUser(formattedUser);
+              localStorage.setItem('bytedesk_current_user_v2', JSON.stringify(formattedUser));
+              setAuthCookies(storedToken, formattedUser.role);
+
+              if (formattedUser.role === 'admin') {
+                loadAdminUsers(storedToken);
+              }
+            } else {
+              // Token expired or invalid
+              localStorage.removeItem('bytedesk_token_v2');
+              localStorage.removeItem('bytedesk_current_user_v2');
+              clearAuthCookies();
+              setUser(null);
+              setToken(null);
+            }
+          } catch {
+            // Backend offline fallback - restore cached user if valid
+            if (storedUser) {
+              const parsed = JSON.parse(storedUser);
+              setUser(parsed);
+              setAuthCookies(storedToken, parsed.role || 'client');
+            }
+          }
+        } else if (storedUser) {
+          // No token saved, clear outdated mock user
+          localStorage.removeItem('bytedesk_current_user_v2');
+          clearAuthCookies();
+          setUser(null);
+        }
+      } catch (e) {
+        console.warn('Auth localstorage init error:', e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initAuth();
   }, []);
 
-  // Save users when changed
+  // Save users when changed (by admin)
   const persistUsers = (newUsers: User[]) => {
     setUsers(newUsers);
     try {
@@ -136,14 +217,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (e) {}
   };
 
-  // Save current user session
-  const setCurrentUser = (usr: User | null) => {
+  // Save current user session & token
+  const setCurrentUser = (usr: User | null, authToken?: string | null) => {
     setUser(usr);
     try {
       if (usr) {
         localStorage.setItem('bytedesk_current_user_v2', JSON.stringify(usr));
+        if (authToken) {
+          setToken(authToken);
+          localStorage.setItem('bytedesk_token_v2', authToken);
+          setAuthCookies(authToken, usr.role);
+        }
       } else {
         localStorage.removeItem('bytedesk_current_user_v2');
+        localStorage.removeItem('bytedesk_token_v2');
+        clearAuthCookies();
+        setToken(null);
       }
     } catch (e) {}
   };
@@ -161,14 +250,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setOtpBanner(null);
   };
 
-  // Send OTP (Verification code) for first time client registration
+  // Send OTP
   const sendOtp = async (rawPhone: string) => {
     const cleanPhone = normalizePhone(rawPhone);
     if (!cleanPhone || cleanPhone.length < 7) {
       return { success: false, message: 'Please enter a valid phone number (minimum 7 digits).' };
     }
 
-    // Check if phone number is already registered
     const existing = users.find((u) => normalizePhone(u.phone) === cleanPhone);
     if (existing) {
       return { 
@@ -178,22 +266,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
     }
 
-    // Generate random 6-digit code
     const generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiry = Date.now() + 3 * 60 * 1000; // 3 minutes
+    const expiry = Date.now() + 3 * 60 * 1000;
 
     const session: PendingOtp = {
       phone: cleanPhone,
       code: generatedCode,
-      expiresAt: expiry
+      expiresAt: expiry,
     };
     setPendingOtp(session);
 
-    // Show simulated SMS notification banner
     setOtpBanner({
       phone: cleanPhone,
       code: generatedCode,
-      visible: true
+      visible: true,
     });
 
     return { 
@@ -203,7 +289,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   };
 
-  // First time client: Verify OTP and Register account
+  // OTP Register helper
   const verifyOtpAndRegister = async (
     rawPhone: string,
     code: string,
@@ -212,59 +298,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     email?: string,
     address?: string
   ) => {
-    const cleanPhone = normalizePhone(rawPhone);
-    const cleanCode = code.trim();
-
-    if (!pendingOtp || pendingOtp.phone !== cleanPhone) {
-      // Allow fallback test code 123456
-      if (cleanCode !== '123456') {
-        return { success: false, message: 'No OTP session found for this number. Please request a new code.' };
-      }
-    } else {
-      if (Date.now() > pendingOtp.expiresAt) {
-        return { success: false, message: 'Verification code has expired. Please request a new code.' };
-      }
-      if (pendingOtp.code !== cleanCode && cleanCode !== '123456') {
-        return { success: false, message: 'Incorrect 6-digit code. Please verify the SMS.' };
-      }
-    }
-
-    if (!name.trim()) {
-      return { success: false, message: 'Please enter your full name.' };
-    }
-    if (!password || password.length < 4) {
-      return { success: false, message: 'Password must be at least 4 characters long.' };
-    }
-
-    const newUser: User = {
-      id: `client-${Date.now()}`,
-      phone: cleanPhone,
-      name: name.trim(),
-      password: password,
-      email: email?.trim() || `${cleanPhone}@client.bytedesk.io`,
-      address: address?.trim() || '',
-      city: 'Dhaka',
-      avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name.trim())}&backgroundColor=0d5bff,0045d8,1e293b`,
-      verified: true,
-      verifiedAt: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
-      role: 'client'
-    };
-
-    const updatedUsers = [newUser, ...users.filter((u) => normalizePhone(u.phone) !== cleanPhone)];
-    persistUsers(updatedUsers);
-    setCurrentUser(newUser);
-    setPendingOtp(null);
-    setOtpBanner(null);
-    setIsAuthModalOpen(false);
-
-    return { 
-      success: true, 
-      message: `Registration successful! Welcome, ${newUser.name}. Your phone number is verified.` 
-    };
+    return registerUser(name, rawPhone, password, email, address);
   };
 
-  // Direct Client Registration (Connected to Backend API)
+  // Direct Client Registration
   const registerUser = async (
     name: string,
     rawPhone: string,
@@ -311,12 +348,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           verified: true,
           verifiedAt: new Date().toISOString(),
           createdAt: data.user.createdAt || new Date().toISOString(),
-          role: 'client',
+          role: data.user.role?.toLowerCase() === 'admin' ? 'admin' : 'client',
         };
 
-        const updatedUsers = [backendUser, ...users.filter((u) => normalizePhone(u.phone) !== cleanPhone)];
-        persistUsers(updatedUsers);
-        setCurrentUser(backendUser);
+        setCurrentUser(backendUser, data.token);
         setPendingOtp(null);
         setOtpBanner(null);
         setIsAuthModalOpen(false);
@@ -332,38 +367,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
       }
     } catch (e) {
-      // Fallback to client local persistence if backend is offline
+      return {
+        success: false,
+        message: 'Could not connect to authentication server. Please check connection.',
+      };
     }
 
-    const newUser: User = {
-      id: `client-${Date.now()}`,
-      phone: cleanPhone,
-      name: name.trim(),
-      password: password,
-      email: email?.trim() || `${cleanPhone}@reviewer.productperks.com`,
-      address: address?.trim() || '',
-      city: city?.trim() || 'Dhaka',
-      avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name.trim())}&backgroundColor=1b3b2b`,
-      verified: true,
-      verifiedAt: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
-      role: 'client'
-    };
-
-    const updatedUsers = [newUser, ...users.filter((u) => normalizePhone(u.phone) !== cleanPhone)];
-    persistUsers(updatedUsers);
-    setCurrentUser(newUser);
-    setPendingOtp(null);
-    setOtpBanner(null);
-    setIsAuthModalOpen(false);
-
-    return { 
-      success: true, 
-      message: `Registration successful! Welcome to ProductPerks, ${newUser.name}.` 
-    };
+    return { success: false, message: 'Registration failed.' };
   };
 
-  // Log in with Phone + Password (Connected to Backend API)
+  // Log in with Phone + Password
   const loginWithPassword = async (rawPhone: string, password: string) => {
     const cleanPhone = normalizePhone(rawPhone);
     if (!cleanPhone || !password) {
@@ -393,49 +406,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           verified: true,
           verifiedAt: new Date().toISOString(),
           createdAt: data.user.createdAt || new Date().toISOString(),
-          role: data.user.role === 'ADMIN' ? 'admin' : 'client',
+          role: data.user.role?.toLowerCase() === 'admin' ? 'admin' : 'client',
         };
 
-        setCurrentUser(loggedInUser);
+        setCurrentUser(loggedInUser, data.token);
         setIsAuthModalOpen(false);
+
+        if (loggedInUser.role === 'admin' && data.token) {
+          loadAdminUsers(data.token);
+        }
+
         return { success: true, message: data.message || `Welcome back, ${loggedInUser.name}!` };
       } else if (!response.ok) {
         return { success: false, message: data.message || 'Login failed. Please check credentials.' };
       }
     } catch (e) {
-      // Fallback to client local persistence
+      return { success: false, message: 'Unable to connect to authentication server.' };
     }
 
-    const found = users.find((u) => normalizePhone(u.phone) === cleanPhone);
-    if (!found) {
-      return { 
-        success: false, 
-        message: 'No account found with this phone number. Please click "New Registration" to register first.' 
-      };
-    }
-
-    // Check password
-    if (found.password && found.password !== password) {
-      return { success: false, message: 'Incorrect password. Please try again.' };
-    }
-
-    setCurrentUser(found);
-    setIsAuthModalOpen(false);
-    return { success: true, message: `Welcome back, ${found.name}!` };
+    return { success: false, message: 'Login failed.' };
   };
 
-  // Optional OTP login for users who forgot password
+  // OTP login
   const loginWithOtp = async (rawPhone: string, code: string) => {
     const cleanPhone = normalizePhone(rawPhone);
     const cleanCode = code.trim();
 
-    const found = users.find((u) => normalizePhone(u.phone) === cleanPhone);
-    if (!found) {
-      return { success: false, message: 'Phone number not registered. Please register first.' };
-    }
-
     if (!pendingOtp || pendingOtp.phone !== cleanPhone || (pendingOtp.code !== cleanCode && cleanCode !== '123456')) {
       return { success: false, message: 'Invalid or expired verification code.' };
+    }
+
+    const found = users.find((u) => normalizePhone(u.phone) === cleanPhone);
+    if (!found) {
+      return { success: false, message: 'Phone number not found in directory. Please register.' };
     }
 
     setCurrentUser(found);
@@ -454,7 +457,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateUserProfile = (data: Partial<User>) => {
     if (!user) return;
     const updated: User = { ...user, ...data };
-    setCurrentUser(updated);
+    setCurrentUser(updated, token);
 
     const updatedUsers = users.map((u) => (u.id === user.id ? updated : u));
     persistUsers(updatedUsers);
@@ -464,7 +467,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const updatedUsers = users.map((u) => u.id === userId ? { ...u, status: 'BLOCKED' as const } : u);
     persistUsers(updatedUsers);
     if (user && user.id === userId) {
-      setCurrentUser({ ...user, status: 'BLOCKED' });
+      setCurrentUser({ ...user, status: 'BLOCKED' }, token);
     }
   };
 
@@ -472,7 +475,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const updatedUsers = users.map((u) => u.id === userId ? { ...u, status: 'ACTIVE' as const } : u);
     persistUsers(updatedUsers);
     if (user && user.id === userId) {
-      setCurrentUser({ ...user, status: 'ACTIVE' });
+      setCurrentUser({ ...user, status: 'ACTIVE' }, token);
     }
   };
 
@@ -493,11 +496,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         user,
         users,
+        token,
         isAuthenticated: !!user,
+        isAdmin: user?.role === 'admin',
         isLoading,
         isAuthModalOpen,
         authModalMode,
         otpBanner,
+        getAuthHeaders,
         openAuthModal,
         closeAuthModal,
         registerUser,
@@ -518,7 +524,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     </AuthContext.Provider>
   );
 };
-
 
 export const useAuth = () => {
   const context = useContext(AuthContext);

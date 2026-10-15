@@ -37,6 +37,20 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+// Helper for sending authenticated requests
+const getAuthHeaders = (): Record<string, string> => {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('bytedesk_token_v2');
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+  }
+  return headers;
+};
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
   const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_CHAT_MESSAGES);
@@ -68,7 +82,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Initialize from Backend & LocalStorage fallback
   useEffect(() => {
     try {
-      // 1. Fetch products from Backend API
+      // 1. Fetch public products from Backend API
       fetch(`${API_BASE_URL}/products`)
         .then((res) => res.json())
         .then((data) => {
@@ -87,23 +101,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           }
         });
 
-      // 2. Fetch initial messages from Backend API
-      fetch(`${API_BASE_URL}/chat/messages`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (Array.isArray(data) && data.length > 0) {
-            setMessages(data);
-            localStorage.setItem('product_perks_messages_v1', JSON.stringify(data));
-          }
+      // 2. Fetch authenticated messages if token is available
+      const token = typeof window !== 'undefined' ? localStorage.getItem('bytedesk_token_v2') : null;
+      if (token) {
+        fetch(`${API_BASE_URL}/chat/messages`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         })
-        .catch(() => {
-          const storedMsgs = localStorage.getItem('product_perks_messages_v1');
-          if (storedMsgs) {
-            try {
-              setMessages(JSON.parse(storedMsgs));
-            } catch (e) {}
-          }
-        });
+          .then((res) => {
+            if (res.ok) return res.json();
+            return null;
+          })
+          .then((data) => {
+            if (Array.isArray(data)) {
+              setMessages(data);
+              localStorage.setItem('product_perks_messages_v1', JSON.stringify(data));
+            }
+          })
+          .catch(() => {});
+      } else {
+        const storedMsgs = localStorage.getItem('product_perks_messages_v1');
+        if (storedMsgs) {
+          try {
+            setMessages(JSON.parse(storedMsgs));
+          } catch (e) {}
+        }
+      }
 
       // 3. Connect Socket.IO for real-time chat
       const socket = getSocket();
@@ -112,7 +136,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
         const handleNewMessage = (newMsg: ChatMessage) => {
           setMessages((prev) => {
-            // Avoid duplicate message IDs
             if (prev.some((m) => m.id === newMsg.id)) return prev;
             return [...prev, newMsg];
           });
@@ -176,7 +199,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setProducts((prev) => [newProd, ...prev]);
     fetch(`${API_BASE_URL}/products`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify(newProd),
     }).catch(() => {});
   };
@@ -185,7 +208,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setProducts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
     fetch(`${API_BASE_URL}/products/${updated.id}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify(updated),
     }).catch(() => {});
   };
@@ -194,6 +217,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setProducts((prev) => prev.filter((p) => p.id !== id));
     fetch(`${API_BASE_URL}/products/${id}`, {
       method: 'DELETE',
+      headers: getAuthHeaders(),
     }).catch(() => {});
     showToast('Product removed.');
   };
@@ -235,10 +259,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         productInfo,
       });
     } else {
-      // Fallback via REST API
+      // Fallback via REST API with Auth
       fetch(`${API_BASE_URL}/chat/messages`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           sender: 'customer',
           text,
@@ -276,6 +300,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         text,
         image,
       });
+    } else {
+      fetch(`${API_BASE_URL}/chat/messages`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          sender: 'admin',
+          text,
+          image,
+        }),
+      }).catch(() => {});
     }
   };
 
@@ -283,6 +317,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setMessages(INITIAL_CHAT_MESSAGES);
     fetch(`${API_BASE_URL}/chat/messages`, {
       method: 'DELETE',
+      headers: getAuthHeaders(),
     }).catch(() => {});
     showToast('Chat history cleared.');
   };
@@ -322,7 +357,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         sendCustomerMessage,
         sendAdminReply,
         clearMessages,
-        getProductById
+        getProductById,
       }}
     >
       {children}
