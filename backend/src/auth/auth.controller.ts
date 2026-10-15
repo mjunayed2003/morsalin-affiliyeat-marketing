@@ -1,7 +1,9 @@
-import { Controller, Post, Get, Body, Query, Headers } from '@nestjs/common';
+import { Controller, Post, Get, Body, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { LoginDto } from './dto/login.dto.js';
+import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
+import { CurrentUser, type AuthenticatedUser } from './decorators/current-user.decorator.js';
 
 @Controller('auth')
 export class AuthController {
@@ -18,14 +20,8 @@ export class AuthController {
   }
 
   @Get('me')
-  async getProfile(
-    @Query('phone') phoneQuery?: string,
-    @Headers('x-user-phone') phoneHeader?: string,
-  ) {
-    const phone = phoneQuery || phoneHeader;
-    if (!phone) {
-      return { success: false, message: 'Phone parameter required' };
-    }
-    return this.authService.getProfile(phone);
+  @UseGuards(JwtAuthGuard)
+  async getProfile(@CurrentUser() currentUser: AuthenticatedUser) {
+    return this.authService.getProfile(currentUser.id);
   }
 }

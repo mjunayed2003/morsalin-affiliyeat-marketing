@@ -1,6 +1,7 @@
 import { AuthService } from './auth.service.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { LoginDto } from './dto/login.dto.js';
+import { type AuthenticatedUser } from './decorators/current-user.decorator.js';
 export declare class AuthController {
     private readonly authService;
     constructor(authService: AuthService);
@@ -19,6 +20,7 @@ export declare class AuthController {
             role: import("../generated/prisma/enums.js").Role;
             createdAt: Date;
         };
+        token: string;
     }>;
     login(dto: LoginDto): Promise<{
         success: boolean;
@@ -35,8 +37,9 @@ export declare class AuthController {
             role: import("../generated/prisma/enums.js").Role;
             createdAt: Date;
         };
+        token: string;
     }>;
-    getProfile(phoneQuery?: string, phoneHeader?: string): Promise<{
+    getProfile(currentUser: AuthenticatedUser): Promise<{
         id: string;
         phone: string;
         name: string;
@@ -47,8 +50,5 @@ export declare class AuthController {
         verified: boolean;
         role: import("../generated/prisma/enums.js").Role;
         createdAt: Date;
-    } | {
-        success: boolean;
-        message: string;
     }>;
 }

@@ -1,9 +1,10 @@
 import { InquiriesService } from './inquiries.service.js';
 import { CreateInquiryDto } from './dto/create-inquiry.dto.js';
+import { type AuthenticatedUser } from '../auth/decorators/current-user.decorator.js';
 export declare class InquiriesController {
     private readonly inquiriesService;
     constructor(inquiriesService: InquiriesService);
-    create(dto: CreateInquiryDto): Promise<{
+    create(dto: CreateInquiryDto, currentUser: AuthenticatedUser): Promise<{
         user: {
             id: string;
             phone: string;
@@ -43,7 +44,7 @@ export declare class InquiriesController {
         reviewUrl: string | null;
         notes: string | null;
     }>;
-    findAll(userId?: string): Promise<({
+    findAll(currentUser: AuthenticatedUser, queryUserId?: string): Promise<({
         user: {
             id: string;
             phone: string;

@@ -10,19 +10,30 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-import { Controller, Get, Post, Patch, Param, Body, Query } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Body, Query, UseGuards } from '@nestjs/common';
 import { InquiriesService } from './inquiries.service.js';
 import { CreateInquiryDto } from './dto/create-inquiry.dto.js';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
+import { RolesGuard } from '../auth/guards/roles.guard.js';
+import { Roles } from '../auth/decorators/roles.decorator.js';
+import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 let InquiriesController = class InquiriesController {
     inquiriesService;
     constructor(inquiriesService) {
         this.inquiriesService = inquiriesService;
     }
-    async create(dto) {
-        return this.inquiriesService.create(dto);
+    async create(dto, currentUser) {
+        const targetUserId = currentUser.role === 'ADMIN' && dto.userId ? dto.userId : currentUser.id;
+        return this.inquiriesService.create({
+            ...dto,
+            userId: targetUserId,
+        });
     }
-    async findAll(userId) {
-        return this.inquiriesService.findAll(userId);
+    async findAll(currentUser, queryUserId) {
+        if (currentUser.role === 'ADMIN') {
+            return this.inquiriesService.findAll(queryUserId);
+        }
+        return this.inquiriesService.findAll(currentUser.id);
     }
     async updateStatus(id, status) {
         return this.inquiriesService.updateStatus(id, status);
@@ -31,19 +42,22 @@ let InquiriesController = class InquiriesController {
 __decorate([
     Post(),
     __param(0, Body()),
+    __param(1, CurrentUser()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [CreateInquiryDto]),
+    __metadata("design:paramtypes", [CreateInquiryDto, Object]),
     __metadata("design:returntype", Promise)
 ], InquiriesController.prototype, "create", null);
 __decorate([
     Get(),
-    __param(0, Query('userId')),
+    __param(0, CurrentUser()),
+    __param(1, Query('userId')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", Promise)
 ], InquiriesController.prototype, "findAll", null);
 __decorate([
     Patch(':id/status'),
+    Roles('ADMIN'),
     __param(0, Param('id')),
     __param(1, Body('status')),
     __metadata("design:type", Function),
@@ -52,6 +66,7 @@ __decorate([
 ], InquiriesController.prototype, "updateStatus", null);
 InquiriesController = __decorate([
     Controller('inquiries'),
+    UseGuards(JwtAuthGuard, RolesGuard),
     __metadata("design:paramtypes", [InquiriesService])
 ], InquiriesController);
 export { InquiriesController };

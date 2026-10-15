@@ -1,4 +1,5 @@
 import { UsersService } from './users.service.js';
+import { type AuthenticatedUser } from '../auth/decorators/current-user.decorator.js';
 export declare class UsersController {
     private readonly usersService;
     constructor(usersService: UsersService);
@@ -16,7 +17,7 @@ export declare class UsersController {
         createdAt: Date;
         updatedAt: Date;
     }[]>;
-    findOne(id: string): Promise<{
+    findOne(id: string, currentUser: AuthenticatedUser): Promise<{
         id: string;
         phone: string;
         name: string;

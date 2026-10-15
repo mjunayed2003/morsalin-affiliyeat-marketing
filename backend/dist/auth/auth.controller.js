@@ -10,10 +10,12 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-import { Controller, Post, Get, Body, Query, Headers } from '@nestjs/common';
+import { Controller, Post, Get, Body, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { LoginDto } from './dto/login.dto.js';
+import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
+import { CurrentUser } from './decorators/current-user.decorator.js';
 let AuthController = class AuthController {
     authService;
     constructor(authService) {
@@ -25,12 +27,8 @@ let AuthController = class AuthController {
     async login(dto) {
         return this.authService.login(dto);
     }
-    async getProfile(phoneQuery, phoneHeader) {
-        const phone = phoneQuery || phoneHeader;
-        if (!phone) {
-            return { success: false, message: 'Phone parameter required' };
-        }
-        return this.authService.getProfile(phone);
+    async getProfile(currentUser) {
+        return this.authService.getProfile(currentUser.id);
     }
 };
 __decorate([
@@ -49,10 +47,10 @@ __decorate([
 ], AuthController.prototype, "login", null);
 __decorate([
     Get('me'),
-    __param(0, Query('phone')),
-    __param(1, Headers('x-user-phone')),
+    UseGuards(JwtAuthGuard),
+    __param(0, CurrentUser()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "getProfile", null);
 AuthController = __decorate([

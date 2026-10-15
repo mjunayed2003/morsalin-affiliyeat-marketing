@@ -10,9 +10,12 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-import { Controller, Get, Post, Patch, Delete, Param, Body, Query } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body, Query, UseGuards } from '@nestjs/common';
 import { ProductsService } from './products.service.js';
 import { CreateProductDto, UpdateProductDto } from './dto/create-product.dto.js';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
+import { RolesGuard } from '../auth/guards/roles.guard.js';
+import { Roles } from '../auth/decorators/roles.decorator.js';
 let ProductsController = class ProductsController {
     productsService;
     constructor(productsService) {
@@ -51,6 +54,8 @@ __decorate([
 ], ProductsController.prototype, "findOne", null);
 __decorate([
     Post(),
+    UseGuards(JwtAuthGuard, RolesGuard),
+    Roles('ADMIN'),
     __param(0, Body()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [CreateProductDto]),
@@ -58,6 +63,8 @@ __decorate([
 ], ProductsController.prototype, "create", null);
 __decorate([
     Patch(':id'),
+    UseGuards(JwtAuthGuard, RolesGuard),
+    Roles('ADMIN'),
     __param(0, Param('id')),
     __param(1, Body()),
     __metadata("design:type", Function),
@@ -66,6 +73,8 @@ __decorate([
 ], ProductsController.prototype, "update", null);
 __decorate([
     Delete(':id'),
+    UseGuards(JwtAuthGuard, RolesGuard),
+    Roles('ADMIN'),
     __param(0, Param('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),

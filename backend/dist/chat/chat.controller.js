@@ -10,10 +10,14 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-import { Controller, Get, Post, Delete, Patch, Body, Query } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Patch, Body, Query, UseGuards } from '@nestjs/common';
 import { ChatService } from './chat.service.js';
 import { ChatGateway } from './chat.gateway.js';
 import { SendMessageDto } from './dto/send-message.dto.js';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
+import { RolesGuard } from '../auth/guards/roles.guard.js';
+import { Roles } from '../auth/decorators/roles.decorator.js';
+import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 let ChatController = class ChatController {
     chatService;
     chatGateway;
@@ -21,11 +25,21 @@ let ChatController = class ChatController {
         this.chatService = chatService;
         this.chatGateway = chatGateway;
     }
-    async getMessages(userId) {
-        return this.chatService.getMessages(userId);
+    async getMessages(currentUser, queryUserId) {
+        if (currentUser.role === 'ADMIN') {
+            return this.chatService.getMessages(queryUserId);
+        }
+        return this.chatService.getMessages(currentUser.id);
     }
-    async createMessage(dto) {
-        const saved = await this.chatService.createMessage(dto);
+    async createMessage(dto, currentUser) {
+        const isSenderAdmin = currentUser.role === 'ADMIN';
+        const enrichedDto = {
+            ...dto,
+            sender: isSenderAdmin ? 'admin' : 'customer',
+            senderName: isSenderAdmin ? (dto.senderName || 'ProductPerks Admin') : (currentUser.name || 'Reviewer'),
+            userId: isSenderAdmin ? (dto.userId || currentUser.id) : currentUser.id,
+        };
+        const saved = await this.chatService.createMessage(enrichedDto);
         if (this.chatGateway.server) {
             this.chatGateway.server.emit('newMessage', saved);
         }
@@ -40,20 +54,23 @@ let ChatController = class ChatController {
 };
 __decorate([
     Get('messages'),
-    __param(0, Query('userId')),
+    __param(0, CurrentUser()),
+    __param(1, Query('userId')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", Promise)
 ], ChatController.prototype, "getMessages", null);
 __decorate([
     Post('messages'),
     __param(0, Body()),
+    __param(1, CurrentUser()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [SendMessageDto]),
+    __metadata("design:paramtypes", [SendMessageDto, Object]),
     __metadata("design:returntype", Promise)
 ], ChatController.prototype, "createMessage", null);
 __decorate([
     Delete('messages'),
+    Roles('ADMIN'),
     __param(0, Query('userId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -68,6 +85,7 @@ __decorate([
 ], ChatController.prototype, "markAsRead", null);
 ChatController = __decorate([
     Controller('chat'),
+    UseGuards(JwtAuthGuard, RolesGuard),
     __metadata("design:paramtypes", [ChatService,
         ChatGateway])
 ], ChatController);

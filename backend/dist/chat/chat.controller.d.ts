@@ -1,11 +1,12 @@
 import { ChatService } from './chat.service.js';
 import { ChatGateway } from './chat.gateway.js';
 import { SendMessageDto } from './dto/send-message.dto.js';
+import { type AuthenticatedUser } from '../auth/decorators/current-user.decorator.js';
 export declare class ChatController {
     private readonly chatService;
     private readonly chatGateway;
     constructor(chatService: ChatService, chatGateway: ChatGateway);
-    getMessages(userId?: string): Promise<{
+    getMessages(currentUser: AuthenticatedUser, queryUserId?: string): Promise<{
         id: any;
         sender: any;
         senderName: any;
@@ -22,7 +23,7 @@ export declare class ChatController {
         userId: any;
         createdAt: any;
     }[]>;
-    createMessage(dto: SendMessageDto): Promise<{
+    createMessage(dto: SendMessageDto, currentUser: AuthenticatedUser): Promise<{
         id: any;
         sender: any;
         senderName: any;

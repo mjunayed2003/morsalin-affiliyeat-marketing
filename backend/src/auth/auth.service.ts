@@ -1,4 +1,5 @@
 import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { LoginDto } from './dto/login.dto.js';
@@ -6,7 +7,10 @@ import bcrypt from 'bcryptjs';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly jwtService: JwtService,
+  ) {}
 
   private normalizePhone(phone: string): string {
     return phone.replace(/[\s\-()]/g, '').trim();
@@ -59,10 +63,19 @@ export class AuthService {
       },
     });
 
+    const token = await this.jwtService.signAsync({
+      sub: user.id,
+      phone: user.phone,
+      role: user.role,
+      name: user.name,
+      email: user.email,
+    });
+
     return {
       success: true,
       message: 'Account created successfully! Welcome to ProductPerks.',
       user,
+      token,
     };
   }
 
@@ -97,17 +110,30 @@ export class AuthService {
       createdAt: user.createdAt,
     };
 
+    const token = await this.jwtService.signAsync({
+      sub: user.id,
+      phone: user.phone,
+      role: user.role,
+      name: user.name,
+      email: user.email,
+    });
+
     return {
       success: true,
       message: `Welcome back, ${user.name}!`,
       user: sanitizedUser,
+      token,
     };
   }
 
-  async getProfile(phone: string) {
-    const cleanPhone = this.normalizePhone(phone);
-    const user = await this.prisma.user.findUnique({
-      where: { phone: cleanPhone },
+  async getProfile(userId: string) {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          { id: userId },
+          { phone: this.normalizePhone(userId) },
+        ],
+      },
       select: {
         id: true,
         name: true,

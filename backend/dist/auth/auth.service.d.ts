@@ -1,9 +1,11 @@
+import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { LoginDto } from './dto/login.dto.js';
 export declare class AuthService {
     private readonly prisma;
-    constructor(prisma: PrismaService);
+    private readonly jwtService;
+    constructor(prisma: PrismaService, jwtService: JwtService);
     private normalizePhone;
     register(dto: RegisterDto): Promise<{
         success: boolean;
@@ -20,6 +22,7 @@ export declare class AuthService {
             role: import("../generated/prisma/enums.js").Role;
             createdAt: Date;
         };
+        token: string;
     }>;
     login(dto: LoginDto): Promise<{
         success: boolean;
@@ -36,8 +39,9 @@ export declare class AuthService {
             role: import("../generated/prisma/enums.js").Role;
             createdAt: Date;
         };
+        token: string;
     }>;
-    getProfile(phone: string): Promise<{
+    getProfile(userId: string): Promise<{
         id: string;
         phone: string;
         name: string;

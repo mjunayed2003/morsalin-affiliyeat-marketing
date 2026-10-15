@@ -10,8 +10,12 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-import { Controller, Get, Param, Query, Patch, Body } from '@nestjs/common';
+import { Controller, Get, Param, Query, Patch, Body, UseGuards, ForbiddenException } from '@nestjs/common';
 import { UsersService } from './users.service.js';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
+import { RolesGuard } from '../auth/guards/roles.guard.js';
+import { Roles } from '../auth/decorators/roles.decorator.js';
+import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 let UsersController = class UsersController {
     usersService;
     constructor(usersService) {
@@ -20,7 +24,10 @@ let UsersController = class UsersController {
     async findAll(role) {
         return this.usersService.findAll(role);
     }
-    async findOne(id) {
+    async findOne(id, currentUser) {
+        if (currentUser.role !== 'ADMIN' && currentUser.id !== id) {
+            throw new ForbiddenException('Access Denied: You can only view your own user account.');
+        }
         return this.usersService.findOne(id);
     }
     async updateRole(id, role) {
@@ -29,6 +36,7 @@ let UsersController = class UsersController {
 };
 __decorate([
     Get(),
+    Roles('ADMIN'),
     __param(0, Query('role')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -37,12 +45,14 @@ __decorate([
 __decorate([
     Get(':id'),
     __param(0, Param('id')),
+    __param(1, CurrentUser()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "findOne", null);
 __decorate([
     Patch(':id/role'),
+    Roles('ADMIN'),
     __param(0, Param('id')),
     __param(1, Body('role')),
     __metadata("design:type", Function),
@@ -51,6 +61,7 @@ __decorate([
 ], UsersController.prototype, "updateRole", null);
 UsersController = __decorate([
     Controller('users'),
+    UseGuards(JwtAuthGuard, RolesGuard),
     __metadata("design:paramtypes", [UsersService])
 ], UsersController);
 export { UsersController };

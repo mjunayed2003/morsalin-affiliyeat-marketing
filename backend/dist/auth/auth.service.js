@@ -8,12 +8,15 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service.js';
 import bcrypt from 'bcryptjs';
 let AuthService = class AuthService {
     prisma;
-    constructor(prisma) {
+    jwtService;
+    constructor(prisma, jwtService) {
         this.prisma = prisma;
+        this.jwtService = jwtService;
     }
     normalizePhone(phone) {
         return phone.replace(/[\s\-()]/g, '').trim();
@@ -58,10 +61,18 @@ let AuthService = class AuthService {
                 createdAt: true,
             },
         });
+        const token = await this.jwtService.signAsync({
+            sub: user.id,
+            phone: user.phone,
+            role: user.role,
+            name: user.name,
+            email: user.email,
+        });
         return {
             success: true,
             message: 'Account created successfully! Welcome to ProductPerks.',
             user,
+            token,
         };
     }
     async login(dto) {
@@ -90,16 +101,28 @@ let AuthService = class AuthService {
             role: user.role,
             createdAt: user.createdAt,
         };
+        const token = await this.jwtService.signAsync({
+            sub: user.id,
+            phone: user.phone,
+            role: user.role,
+            name: user.name,
+            email: user.email,
+        });
         return {
             success: true,
             message: `Welcome back, ${user.name}!`,
             user: sanitizedUser,
+            token,
         };
     }
-    async getProfile(phone) {
-        const cleanPhone = this.normalizePhone(phone);
-        const user = await this.prisma.user.findUnique({
-            where: { phone: cleanPhone },
+    async getProfile(userId) {
+        const user = await this.prisma.user.findFirst({
+            where: {
+                OR: [
+                    { id: userId },
+                    { phone: this.normalizePhone(userId) },
+                ],
+            },
             select: {
                 id: true,
                 name: true,
@@ -121,7 +144,8 @@ let AuthService = class AuthService {
 };
 AuthService = __decorate([
     Injectable(),
-    __metadata("design:paramtypes", [PrismaService])
+    __metadata("design:paramtypes", [PrismaService,
+        JwtService])
 ], AuthService);
 export { AuthService };
 //# sourceMappingURL=auth.service.js.map
