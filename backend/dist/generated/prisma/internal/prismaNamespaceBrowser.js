@@ -1,0 +1,98 @@
+import * as runtime from "@prisma/client/runtime/index-browser";
+export const Decimal = runtime.Decimal;
+export const NullTypes = {
+    DbNull: runtime.NullTypes.DbNull,
+    JsonNull: runtime.NullTypes.JsonNull,
+    AnyNull: runtime.NullTypes.AnyNull,
+};
+export const DbNull = runtime.DbNull;
+export const JsonNull = runtime.JsonNull;
+export const AnyNull = runtime.AnyNull;
+export const ModelName = {
+    User: 'User',
+    Product: 'Product',
+    ChatMessage: 'ChatMessage',
+    Inquiry: 'Inquiry'
+};
+export const TransactionIsolationLevel = runtime.makeStrictEnum({
+    ReadUncommitted: 'ReadUncommitted',
+    ReadCommitted: 'ReadCommitted',
+    RepeatableRead: 'RepeatableRead',
+    Serializable: 'Serializable'
+});
+export const UserScalarFieldEnum = {
+    id: 'id',
+    phone: 'phone',
+    name: 'name',
+    password: 'password',
+    email: 'email',
+    address: 'address',
+    city: 'city',
+    avatar: 'avatar',
+    verified: 'verified',
+    verifiedAt: 'verifiedAt',
+    role: 'role',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+};
+export const ProductScalarFieldEnum = {
+    id: 'id',
+    title: 'title',
+    description: 'description',
+    category: 'category',
+    subCategory: 'subCategory',
+    price: 'price',
+    originalPrice: 'originalPrice',
+    commission: 'commission',
+    commissionAmount: 'commissionAmount',
+    image: 'image',
+    gallery: 'gallery',
+    affiliateCode: 'affiliateCode',
+    features: 'features',
+    rating: 'rating',
+    reviewsCount: 'reviewsCount',
+    badge: 'badge',
+    inStock: 'inStock',
+    store: 'store',
+    amazonUrl: 'amazonUrl',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+};
+export const ChatMessageScalarFieldEnum = {
+    id: 'id',
+    sender: 'sender',
+    senderName: 'senderName',
+    text: 'text',
+    image: 'image',
+    productId: 'productId',
+    productTitle: 'productTitle',
+    productPrice: 'productPrice',
+    productImage: 'productImage',
+    read: 'read',
+    userId: 'userId',
+    createdAt: 'createdAt'
+};
+export const InquiryScalarFieldEnum = {
+    id: 'id',
+    userId: 'userId',
+    productId: 'productId',
+    status: 'status',
+    amazonOrderId: 'amazonOrderId',
+    reviewUrl: 'reviewUrl',
+    notes: 'notes',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+};
+export const SortOrder = {
+    asc: 'asc',
+    desc: 'desc'
+};
+export const QueryMode = {
+    default: 'default',
+    insensitive: 'insensitive'
+};
+export const NullsOrder = {
+    first: 'first',
+    last: 'last'
+};
+//# sourceMappingURL=prismaNamespaceBrowser.js.map

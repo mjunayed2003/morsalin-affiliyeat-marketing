@@ -1,0 +1,42 @@
+export class CreateProductDto {
+    id;
+    title;
+    description;
+    category;
+    subCategory;
+    price;
+    originalPrice;
+    commission;
+    commissionAmount;
+    image;
+    gallery;
+    affiliateCode;
+    features;
+    rating;
+    reviewsCount;
+    badge;
+    inStock;
+    store;
+    amazonUrl;
+}
+export class UpdateProductDto {
+    title;
+    description;
+    category;
+    subCategory;
+    price;
+    originalPrice;
+    commission;
+    commissionAmount;
+    image;
+    gallery;
+    affiliateCode;
+    features;
+    rating;
+    reviewsCount;
+    badge;
+    inStock;
+    store;
+    amazonUrl;
+}
+//# sourceMappingURL=create-product.dto.js.map

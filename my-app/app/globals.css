@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #111827;
+  
+  /* ProductPerks Signature Color Tokens */
+  --perks-green-dark: #1b3b2b;
+  --perks-green-hover: #153022;
+  --perks-green-primary: #15803d;
+  --perks-green-soft: #edf7f0;
+  
+  /* ByteSpace Legacy Tokens */
+  --bytespace-blue: #0d5bff;
+  --bytespace-blue-dark: #0045d8;
+  --bytespace-blue-deep: #0a2e8c;
+  --bytespace-lime: #ccff00;
+  --bytespace-lime-hover: #b8e600;
+  --bytespace-card: #ffffff;
+  --bytespace-border: #e2e8f0;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  overflow-x: hidden;
+}
+
+.font-headline {
+  font-family: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+}
+
+.font-handwriting {
+  font-family: 'Caveat', cursive;
+}
+
+/* Custom Scrollbar for Chat & Modals */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 9999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* ByteSpace Button Utilities */
+.btn-bytespace-lime {
+  background-color: var(--bytespace-lime);
+  color: #0f172a;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.btn-bytespace-lime:hover {
+  background-color: var(--bytespace-lime-hover);
+  transform: translateY(-1px);
+}
+
+.btn-bytespace-blue {
+  background-color: var(--bytespace-blue);
+  color: #ffffff;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.btn-bytespace-blue:hover {
+  background-color: var(--bytespace-blue-dark);
+}

@@ -1,0 +1,108 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  CLIENT
+  ADMIN
+}
+
+enum InquiryStatus {
+  PENDING
+  APPROVED
+  ORDERED
+  REVIEWED
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id           String        @id @default(cuid())
+  phone        String        @unique
+  name         String
+  password     String?
+  email        String?       @unique
+  address      String?
+  city         String?       @default("Dhaka")
+  avatar       String?
+  verified     Boolean       @default(false)
+  verifiedAt   DateTime?
+  role         Role          @default(CLIENT)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  chatMessages ChatMessage[]
+  inquiries    Inquiry[]
+
+  @@map("users")
+}
+
+model Product {
+  id               String        @id
+  title            String
+  description      String
+  category         String
+  subCategory      String?
+  price            Float         @default(0)
+  originalPrice    Float
+  commission       String?
+  commissionAmount Float         @default(0)
+  image            String
+  gallery          String[]      @default([])
+  affiliateCode    String?
+  features         String[]      @default([])
+  rating           Float         @default(5.0)
+  reviewsCount     Int           @default(0)
+  badge            String?
+  inStock          Boolean       @default(true)
+  store            String?
+  amazonUrl        String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  inquiries        Inquiry[]
+
+  @@map("products")
+}
+
+model ChatMessage {
+  id           String   @id @default(cuid())
+  sender       String   // "customer" | "admin"
+  senderName   String?
+  text         String
+  image        String?
+  productId    String?
+  productTitle String?
+  productPrice Float?
+  productImage String?
+  read         Boolean  @default(false)
+  userId       String?
+  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt    DateTime @default(now())
+
+  @@map("chat_messages")
+}
+
+model Inquiry {
+  id             String        @id @default(cuid())
+  userId         String
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId      String
+  product        Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  status         InquiryStatus @default(PENDING)
+  amazonOrderId  String?
+  reviewUrl      String?
+  notes          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@map("inquiries")
+}
