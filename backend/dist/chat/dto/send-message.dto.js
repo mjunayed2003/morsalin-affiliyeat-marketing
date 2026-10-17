@@ -5,5 +5,6 @@ export class SendMessageDto {
     image;
     productInfo;
     userId;
+    localId;
 }
 //# sourceMappingURL=send-message.dto.js.map

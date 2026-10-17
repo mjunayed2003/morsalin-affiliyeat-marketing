@@ -15,21 +15,40 @@ import { useApp } from '@/app/context/AppContext';
 import { ChatMessage } from '@/app/types';
 
 export default function AdminInboxPage() {
-  const { messages, sendAdminReply, clearMessages, showToast } = useApp();
+  const { messages, sendAdminReply, clearMessages, showToast, isTyping, typingSender, emitTyping } = useApp();
   const [replyText, setReplyText] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'all' | 'customer' | 'admin'>('all');
-  const chatEndRef = useRef<HTMLDivElement>(null);
+  const chatFeedRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const typingTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Auto scroll
+  // Auto scroll chat feed internally (does not scroll page)
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, selectedImage]);
+    if (chatFeedRef.current) {
+      chatFeedRef.current.scrollTop = chatFeedRef.current.scrollHeight;
+    }
+  }, [messages, selectedImage, isTyping]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setReplyText(e.target.value);
+    if (emitTyping) {
+      emitTyping(true);
+      if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+      typingTimerRef.current = setTimeout(() => {
+        emitTyping(false);
+      }, 2000);
+    }
+  };
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
     if (!replyText.trim() && !selectedImage) return;
+
+    if (emitTyping) {
+      if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+      emitTyping(false);
+    }
 
     sendAdminReply(replyText.trim(), selectedImage || undefined);
     setReplyText('');
@@ -110,7 +129,7 @@ export default function AdminInboxPage() {
         </div>
 
         {/* Message Thread */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-4 custom-scrollbar bg-slate-50/30">
+        <div ref={chatFeedRef} className="flex-1 overflow-y-auto p-5 space-y-4 custom-scrollbar bg-slate-50/30">
           {filteredMessages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center text-slate-400">
               <FaComments className="w-10 h-10 mb-2 opacity-30" />
@@ -170,7 +189,20 @@ export default function AdminInboxPage() {
               );
             })
           )}
-          <div ref={chatEndRef} />
+
+          {/* Real-time Reviewer Typing Indicator */}
+          {isTyping && typingSender !== 'admin' && (
+            <div className="flex flex-col items-start animate-in fade-in duration-200">
+              <span className="text-[11px] text-slate-400 font-medium mb-1">
+                Reviewer is typing...
+              </span>
+              <div className="bg-white px-3.5 py-2.5 rounded-2xl border border-slate-200 flex items-center gap-1.5 shadow-2xs">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-bounce"></div>
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-bounce [animation-delay:0.2s]"></div>
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-bounce [animation-delay:0.4s]"></div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Reply Form */}
@@ -209,7 +241,7 @@ export default function AdminInboxPage() {
             <input
               type="text"
               value={replyText}
-              onChange={(e) => setReplyText(e.target.value)}
+              onChange={handleInputChange}
               placeholder="Type an official admin reply..."
               className="flex-1 px-4 py-2.5 text-xs bg-slate-50 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#1b3b2b] focus:bg-white transition-all"
             />

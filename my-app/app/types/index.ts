@@ -35,6 +35,8 @@ export interface ChatMessage {
   timestamp: string;
   read: boolean;
   senderName?: string;
+  userId?: string;
+  localId?: string;
 }
 
 export interface User {

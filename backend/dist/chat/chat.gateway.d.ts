@@ -6,6 +6,7 @@ export declare class ChatGateway implements OnGatewayConnection, OnGatewayDiscon
     private readonly chatService;
     server: Server;
     private readonly logger;
+    private readonly lastCustomerMessageTimes;
     constructor(chatService: ChatService);
     handleConnection(client: Socket): void;
     handleDisconnect(client: Socket): void;
@@ -17,6 +18,7 @@ export declare class ChatGateway implements OnGatewayConnection, OnGatewayDiscon
         room: string;
     };
     handleSendMessage(client: Socket, payload: SendMessageDto): Promise<{
+        localId: string | undefined;
         id: any;
         sender: any;
         senderName: any;

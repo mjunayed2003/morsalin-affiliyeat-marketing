@@ -51,6 +51,21 @@ let ChatService = class ChatService {
         return messages.map((m) => this.formatMessage(m));
     }
     async createMessage(dto) {
+        let validUserId = null;
+        if (dto.userId) {
+            try {
+                const existingUser = await this.prisma.user.findUnique({
+                    where: { id: dto.userId },
+                    select: { id: true },
+                });
+                if (existingUser) {
+                    validUserId = existingUser.id;
+                }
+            }
+            catch {
+                validUserId = null;
+            }
+        }
         const created = await this.prisma.chatMessage.create({
             data: {
                 sender: dto.sender,
@@ -62,10 +77,23 @@ let ChatService = class ChatService {
                 productPrice: dto.productInfo?.price !== undefined ? dto.productInfo.price : null,
                 productImage: dto.productInfo?.image || null,
                 read: dto.sender === 'admin',
-                userId: dto.userId || null,
+                userId: validUserId,
             },
         });
-        return this.formatMessage(created);
+        return {
+            ...this.formatMessage(created),
+            localId: dto.localId,
+        };
+    }
+    async getLastCustomerMessage(userId) {
+        const where = { sender: 'customer' };
+        if (userId) {
+            where.userId = userId;
+        }
+        return this.prisma.chatMessage.findFirst({
+            where,
+            orderBy: { createdAt: 'desc' },
+        });
     }
     async clearMessages(userId) {
         const where = {};

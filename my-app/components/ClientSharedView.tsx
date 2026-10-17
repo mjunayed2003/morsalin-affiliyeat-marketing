@@ -39,12 +39,14 @@ export const ClientSharedView: React.FC<ClientSharedViewProps> = ({
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isZoomOpen, setIsZoomOpen] = useState(false);
   const [previewChatImage, setPreviewChatImage] = useState<string | null>(null);
-  const chatEndRef = useRef<HTMLDivElement>(null);
+  const chatFeedRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-scroll chat
+  // Auto-scroll chat feed internally (prevents whole window from jumping)
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (chatFeedRef.current) {
+      chatFeedRef.current.scrollTop = chatFeedRef.current.scrollHeight;
+    }
   }, [messages, selectedImage]);
 
   const discountPercent = Math.round(
@@ -363,7 +365,7 @@ export const ClientSharedView: React.FC<ClientSharedViewProps> = ({
               </div>
 
               {/* Message Feed */}
-              <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-slate-50/60 custom-scrollbar">
+              <div ref={chatFeedRef} className="flex-1 p-4 overflow-y-auto space-y-3 bg-slate-50/60 custom-scrollbar">
                 {messages.map((msg) => {
                   const isCustomer = msg.sender === 'customer';
                   return (
@@ -409,7 +411,6 @@ export const ClientSharedView: React.FC<ClientSharedViewProps> = ({
                     </div>
                   );
                 })}
-                <div ref={chatEndRef} />
               </div>
 
               {/* Quick Prompt suggestions for client */}

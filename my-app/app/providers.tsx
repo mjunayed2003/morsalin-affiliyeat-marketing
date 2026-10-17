@@ -28,6 +28,8 @@ const GlobalModals: React.FC = () => {
     sendCustomerMessage,
     inquiryProduct,
     clearInquiryProduct,
+    isTyping,
+    emitTyping,
     toastMessage,
     showToast
   } = useApp();
@@ -67,6 +69,8 @@ const GlobalModals: React.FC = () => {
         onOpen={openChat}
         messages={messages}
         unreadCount={unreadCount}
+        isTyping={isTyping}
+        onTyping={emitTyping}
         onSendMessage={sendCustomerMessage}
         inquiryProduct={inquiryProduct}
         onClearInquiryProduct={clearInquiryProduct}

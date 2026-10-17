@@ -23,6 +23,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   server: Server;
 
   private readonly logger = new Logger(ChatGateway.name);
+  // Track last message timestamp per customer to enforce 5-hour auto-reply rule
+  private readonly lastCustomerMessageTimes = new Map<string, number>();
 
   constructor(private readonly chatService: ChatService) {}
 
@@ -52,14 +54,44 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     this.logger.log(`💬 Received message from ${payload.sender}: "${payload.text?.slice(0, 30)}..."`);
 
-    // Save message to database
+    // 1. Check 5-hour inactivity rule for customer auto-reply BEFORE saving current message
+    const FIVE_HOURS_MS = 5 * 60 * 60 * 1000;
+    const clientKey = payload.userId || client.id;
+    const lastMemoryTime = this.lastCustomerMessageTimes.get(clientKey);
+    let shouldAutoReply = false;
+    const now = Date.now();
+
+    if (payload.sender === 'customer') {
+      if (!lastMemoryTime || (now - lastMemoryTime >= FIVE_HOURS_MS)) {
+        try {
+          const lastDbMsg = await this.chatService.getLastCustomerMessage(payload.userId);
+          if (!lastDbMsg) {
+            // First message ever
+            shouldAutoReply = true;
+          } else {
+            const elapsed = now - new Date(lastDbMsg.createdAt).getTime();
+            if (elapsed >= FIVE_HOURS_MS) {
+              shouldAutoReply = true;
+            }
+          }
+        } catch {
+          shouldAutoReply = true;
+        }
+      }
+      // Record this message timestamp so subsequent messages within 5 hours get NO auto-reply
+      this.lastCustomerMessageTimes.set(clientKey, now);
+    }
+
+    // 2. Save message to database
     const savedMessage = await this.chatService.createMessage(payload);
 
-    // Broadcast new message to all clients or specific room
-    this.server.emit('newMessage', savedMessage);
+    // 3. Broadcast ONLY to other sockets so the sender does not receive a duplicate
+    client.broadcast.emit('newMessage', savedMessage);
 
-    // If message is from customer, simulate automated intelligent response after 1.5s
-    if (payload.sender === 'customer') {
+    // 4. Send auto-reply ONLY if 5 hours have passed without messaging (first message only)
+    if (shouldAutoReply && payload.sender === 'customer') {
+      this.logger.log(`🤖 5-hour inactivity threshold met: Triggering auto-reply for customer ${clientKey}`);
+
       setTimeout(() => {
         this.server.emit('typing', { isTyping: true, sender: 'admin' });
       }, 500);
@@ -86,6 +118,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         this.server.emit('typing', { isTyping: false, sender: 'admin' });
         this.server.emit('newMessage', autoAdminMessage);
       }, 1600);
+    } else if (payload.sender === 'customer') {
+      this.logger.log(`ℹ️ Auto-reply suppressed: Customer ${clientKey} messaged within the 5-hour window.`);
     }
 
     return savedMessage;

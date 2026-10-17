@@ -4,10 +4,12 @@ export declare class ProductsController {
     private readonly productsService;
     constructor(productsService: ProductsService);
     findAll(category?: string, search?: string): Promise<{
-        category: string;
-        description: string;
-        title: string;
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        title: string;
+        description: string;
+        category: string;
         subCategory: string | null;
         price: number;
         originalPrice: number;
@@ -23,14 +25,14 @@ export declare class ProductsController {
         inStock: boolean;
         store: string | null;
         amazonUrl: string | null;
-        createdAt: Date;
-        updatedAt: Date;
     }[]>;
     findOne(id: string): Promise<{
-        category: string;
-        description: string;
-        title: string;
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        title: string;
+        description: string;
+        category: string;
         subCategory: string | null;
         price: number;
         originalPrice: number;
@@ -46,14 +48,14 @@ export declare class ProductsController {
         inStock: boolean;
         store: string | null;
         amazonUrl: string | null;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
     create(createProductDto: CreateProductDto): Promise<{
-        category: string;
-        description: string;
-        title: string;
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        title: string;
+        description: string;
+        category: string;
         subCategory: string | null;
         price: number;
         originalPrice: number;
@@ -69,14 +71,14 @@ export declare class ProductsController {
         inStock: boolean;
         store: string | null;
         amazonUrl: string | null;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
     update(id: string, updateProductDto: UpdateProductDto): Promise<{
-        category: string;
-        description: string;
-        title: string;
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        title: string;
+        description: string;
+        category: string;
         subCategory: string | null;
         price: number;
         originalPrice: number;
@@ -92,14 +94,14 @@ export declare class ProductsController {
         inStock: boolean;
         store: string | null;
         amazonUrl: string | null;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
     remove(id: string): Promise<{
-        category: string;
-        description: string;
-        title: string;
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        title: string;
+        description: string;
+        category: string;
         subCategory: string | null;
         price: number;
         originalPrice: number;
@@ -115,7 +117,5 @@ export declare class ProductsController {
         inStock: boolean;
         store: string | null;
         amazonUrl: string | null;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
 }

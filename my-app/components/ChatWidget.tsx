@@ -23,6 +23,8 @@ interface ChatWidgetProps {
   onClearInquiryProduct: () => void;
   onSwitchToAdmin: () => void;
   unreadCount?: number;
+  isTyping?: boolean;
+  onTyping?: (isTyping: boolean) => void;
 }
 
 export const ChatWidget: React.FC<ChatWidgetProps> = ({
@@ -34,21 +36,35 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
   inquiryProduct,
   onClearInquiryProduct,
   onSwitchToAdmin,
-  unreadCount = 0
+  unreadCount = 0,
+  isTyping = false,
+  onTyping,
 }) => {
   const pathname = usePathname();
   const [inputText, setInputText] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [previewModalImage, setPreviewModalImage] = useState<string | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatFeedRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Auto-scroll on new message (Must be called before any early return to satisfy Rules of Hooks)
-  useEffect(() => {
-    if (isOpen) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputText(e.target.value);
+    if (onTyping) {
+      onTyping(true);
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(() => {
+        onTyping(false);
+      }, 2000);
     }
-  }, [messages, isOpen, selectedImage]);
+  };
+
+  // Auto-scroll inside chat feed internally
+  useEffect(() => {
+    if (isOpen && chatFeedRef.current) {
+      chatFeedRef.current.scrollTop = chatFeedRef.current.scrollHeight;
+    }
+  }, [messages, isOpen, selectedImage, isTyping]);
 
   // If already on full /chat page or any /admin route, don't show floating widget
   if (pathname === '/chat' || pathname?.startsWith('/admin')) return null;
@@ -94,6 +110,10 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
     setInputText('');
     setSelectedImage(null);
     onClearInquiryProduct();
+    if (onTyping) {
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      onTyping(false);
+    }
   };
 
   const handleQuickQuestion = (question: string) => {
@@ -101,7 +121,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
   };
 
   // Generate WhatsApp destination URL
-  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '';
+  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '+880 1873-597814';
   const cleanPhone = whatsappNumber.replace(/[^0-9]/g, '');
   const defaultWhatsAppText = inquiryProduct
     ? `Hello ProductPerks! I am inquiring about this Amazon product:\n• ${inquiryProduct.title}\n• Price: $${inquiryProduct.price}\n• Store: ${inquiryProduct.store || 'Amazon Store'}`
@@ -276,7 +296,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
           )}
 
           {/* Messages Body */}
-          <div className="flex-1 p-3.5 overflow-y-auto space-y-3.5 bg-stone-50/60 custom-scrollbar">
+          <div ref={chatFeedRef} className="flex-1 p-3.5 overflow-y-auto space-y-3.5 bg-stone-50/60 custom-scrollbar">
             {messages.map((msg) => {
               const isCustomer = msg.sender === 'customer';
               return (
@@ -345,7 +365,19 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
                 </div>
               );
             })}
-            <div ref={messagesEndRef} />
+            {/* Typing Indicator */}
+            {isTyping && (
+              <div className="flex flex-col items-start animate-in fade-in duration-200">
+                <span className="text-[10px] text-slate-500 mb-1 px-1 font-medium">
+                  ProductPerks Admin
+                </span>
+                <div className="bg-white rounded-2xl px-3.5 py-2.5 border border-stone-200 flex items-center gap-1.5 shadow-xs">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-bounce"></div>
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-bounce [animation-delay:0.2s]"></div>
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-bounce [animation-delay:0.4s]"></div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Quick FAQ Suggestion Chips */}
@@ -418,7 +450,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
               type="text"
               placeholder={inquiryProduct ? "Ask about this Amazon product or request review link..." : "Type your message to admin..."}
               value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
+              onChange={handleInputChange}
               className="flex-1 bg-stone-50 text-slate-900 text-xs sm:text-sm px-4 py-2.5 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-[#1b3b2b]/20 focus:border-[#1b3b2b] placeholder:text-slate-400 font-medium"
             />
 

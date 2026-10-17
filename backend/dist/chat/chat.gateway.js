@@ -20,6 +20,7 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
     chatService;
     server;
     logger = new Logger(ChatGateway_1.name);
+    lastCustomerMessageTimes = new Map();
     constructor(chatService) {
         this.chatService = chatService;
     }
@@ -37,9 +38,35 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
     }
     async handleSendMessage(client, payload) {
         this.logger.log(`💬 Received message from ${payload.sender}: "${payload.text?.slice(0, 30)}..."`);
-        const savedMessage = await this.chatService.createMessage(payload);
-        this.server.emit('newMessage', savedMessage);
+        const FIVE_HOURS_MS = 5 * 60 * 60 * 1000;
+        const clientKey = payload.userId || client.id;
+        const lastMemoryTime = this.lastCustomerMessageTimes.get(clientKey);
+        let shouldAutoReply = false;
+        const now = Date.now();
         if (payload.sender === 'customer') {
+            if (!lastMemoryTime || (now - lastMemoryTime >= FIVE_HOURS_MS)) {
+                try {
+                    const lastDbMsg = await this.chatService.getLastCustomerMessage(payload.userId);
+                    if (!lastDbMsg) {
+                        shouldAutoReply = true;
+                    }
+                    else {
+                        const elapsed = now - new Date(lastDbMsg.createdAt).getTime();
+                        if (elapsed >= FIVE_HOURS_MS) {
+                            shouldAutoReply = true;
+                        }
+                    }
+                }
+                catch {
+                    shouldAutoReply = true;
+                }
+            }
+            this.lastCustomerMessageTimes.set(clientKey, now);
+        }
+        const savedMessage = await this.chatService.createMessage(payload);
+        client.broadcast.emit('newMessage', savedMessage);
+        if (shouldAutoReply && payload.sender === 'customer') {
+            this.logger.log(`🤖 5-hour inactivity threshold met: Triggering auto-reply for customer ${clientKey}`);
             setTimeout(() => {
                 this.server.emit('typing', { isTyping: true, sender: 'admin' });
             }, 500);
@@ -64,6 +91,9 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
                 this.server.emit('typing', { isTyping: false, sender: 'admin' });
                 this.server.emit('newMessage', autoAdminMessage);
             }, 1600);
+        }
+        else if (payload.sender === 'customer') {
+            this.logger.log(`ℹ️ Auto-reply suppressed: Customer ${clientKey} messaged within the 5-hour window.`);
         }
         return savedMessage;
     }

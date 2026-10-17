@@ -10,4 +10,5 @@ export declare class SendMessageDto {
         image: string;
     };
     userId?: string;
+    localId?: string;
 }

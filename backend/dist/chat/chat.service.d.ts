@@ -22,6 +22,7 @@ export declare class ChatService {
         createdAt: any;
     }[]>;
     createMessage(dto: SendMessageDto): Promise<{
+        localId: string | undefined;
         id: any;
         sender: any;
         senderName: any;
@@ -38,6 +39,20 @@ export declare class ChatService {
         userId: any;
         createdAt: any;
     }>;
+    getLastCustomerMessage(userId?: string): Promise<{
+        id: string;
+        createdAt: Date;
+        image: string | null;
+        sender: string;
+        senderName: string | null;
+        text: string;
+        productId: string | null;
+        productTitle: string | null;
+        productPrice: number | null;
+        productImage: string | null;
+        read: boolean;
+        userId: string | null;
+    } | null>;
     clearMessages(userId?: string): Promise<{
         success: boolean;
         message: string;

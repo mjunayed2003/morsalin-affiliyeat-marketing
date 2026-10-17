@@ -30,7 +30,9 @@ export default function ChatPage() {
     openChatWithProduct,
     products, 
     clearMessages,
-    openDetailModal
+    openDetailModal,
+    isTyping: realIsTyping,
+    emitTyping,
   } = useApp();
 
   const { user, isAuthenticated, openAuthModal } = useAuth();
@@ -39,14 +41,18 @@ export default function ChatPage() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [previewModalImage, setPreviewModalImage] = useState<string | null>(null);
   const [showProductPicker, setShowProductPicker] = useState(false);
-  const [isTyping, setIsTyping] = useState(false);
+  const [localTyping, setLocalTyping] = useState(false);
+  const isTyping = realIsTyping || localTyping;
+  const typingTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatFeedRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Auto scroll to bottom
+  // Auto scroll messages container internally without scrolling the entire window
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (chatFeedRef.current) {
+      chatFeedRef.current.scrollTop = chatFeedRef.current.scrollHeight;
+    }
   }, [messages, isTyping, selectedImage]);
 
   // Handle Image Selection
@@ -93,23 +99,39 @@ export default function ChatPage() {
     setSelectedImage(null);
     clearInquiryProduct();
 
-    // Show simulated typing indicator for admin reply
-    setIsTyping(true);
+    if (emitTyping) {
+      if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+      emitTyping(false);
+    }
+
+    // Brief local typing fallback while socket response is underway
+    setLocalTyping(true);
     setTimeout(() => {
-      setIsTyping(false);
-    }, 1400);
+      setLocalTyping(false);
+    }, 1800);
   };
 
   const handleQuickQuestion = (question: string) => {
     sendCustomerMessage(question);
-    setIsTyping(true);
+    setLocalTyping(true);
     setTimeout(() => {
-      setIsTyping(false);
-    }, 1400);
+      setLocalTyping(false);
+    }, 1800);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputText(e.target.value);
+    if (emitTyping) {
+      emitTyping(true);
+      if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+      typingTimerRef.current = setTimeout(() => {
+        emitTyping(false);
+      }, 2000);
+    }
   };
 
   // WhatsApp quick url
-  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '';
+  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '+880 1873-597814';
   const cleanPhone = whatsappNumber.replace(/[^0-9]/g, '');
   const defaultWhatsAppText = inquiryProduct
     ? `Hello ProductPerks! I am inquiring about this Amazon product:\n• ${inquiryProduct.title}\n• Price: $${inquiryProduct.price}\n• Store: ${inquiryProduct.store || 'Amazon Store'}`
@@ -223,7 +245,7 @@ export default function ChatPage() {
         <div className="flex-1 bg-white border-x border-stone-200/90 flex flex-col justify-between overflow-hidden min-h-[440px] h-[60vh] sm:h-[65vh] shadow-sm">
           
           {/* Messages Scroll Area */}
-          <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-stone-50/40">
+          <div ref={chatFeedRef} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-stone-50/40">
             
             {/* Welcome Banner */}
             <div className="text-center my-2">
@@ -344,8 +366,6 @@ export default function ChatPage() {
                 </div>
               </div>
             )}
-
-            <div ref={messagesEndRef} />
           </div>
 
           {/* Quick FAQ Suggestion Chips */}
@@ -465,7 +485,7 @@ export default function ChatPage() {
               type="text"
               placeholder={inquiryProduct ? `Ask about "${inquiryProduct.title}"...` : "Write message to ProductPerks Support..."}
               value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
+              onChange={handleInputChange}
               className="flex-1 bg-stone-50 text-slate-900 text-xs sm:text-sm px-4 py-2.5 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-[#1b3b2b]/15 focus:border-[#1b3b2b] font-medium transition-all"
             />
 

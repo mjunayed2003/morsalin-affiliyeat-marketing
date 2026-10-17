@@ -62,7 +62,7 @@ export const ClientProductView: React.FC<ClientProductViewProps> = ({ productId 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [previewChatImage, setPreviewChatImage] = useState<string | null>(null);
   const [isCopied, setIsCopied] = useState(false);
-  const chatEndRef = useRef<HTMLDivElement>(null);
+  const chatFeedRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Reset active image when productId changes
@@ -70,9 +70,11 @@ export const ClientProductView: React.FC<ClientProductViewProps> = ({ productId 
     setActiveImageIndex(0);
   }, [productId]);
 
-  // Auto-scroll chat
+  // Auto-scroll inside chat feed only (prevents whole page from jumping down to bottom)
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (chatFeedRef.current) {
+      chatFeedRef.current.scrollTop = chatFeedRef.current.scrollHeight;
+    }
   }, [messages, selectedImage]);
 
   if (!product) {
@@ -704,7 +706,7 @@ export const ClientProductView: React.FC<ClientProductViewProps> = ({ productId 
               </div>
 
               {/* Message Feed */}
-              <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-[#fbfbfa] custom-scrollbar">
+              <div ref={chatFeedRef} className="flex-1 p-4 overflow-y-auto space-y-3 bg-[#fbfbfa] custom-scrollbar">
                 {messages.map((msg) => {
                   const isCustomer = msg.sender === 'customer';
                   return (
@@ -750,7 +752,6 @@ export const ClientProductView: React.FC<ClientProductViewProps> = ({ productId 
                     </div>
                   );
                 })}
-                <div ref={chatEndRef} />
               </div>
 
               {/* Quick Prompt suggestions for client */}

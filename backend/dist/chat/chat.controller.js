@@ -17,6 +17,7 @@ import { SendMessageDto } from './dto/send-message.dto.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../auth/guards/roles.guard.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
+import { Public } from '../auth/decorators/public.decorator.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 let ChatController = class ChatController {
     chatService;
@@ -26,18 +27,24 @@ let ChatController = class ChatController {
         this.chatGateway = chatGateway;
     }
     async getMessages(currentUser, queryUserId) {
-        if (currentUser.role === 'ADMIN') {
+        if (currentUser?.role === 'ADMIN') {
             return this.chatService.getMessages(queryUserId);
         }
-        return this.chatService.getMessages(currentUser.id);
+        if (currentUser) {
+            return this.chatService.getMessages(currentUser.id);
+        }
+        return this.chatService.getMessages(queryUserId);
     }
     async createMessage(dto, currentUser) {
-        const isSenderAdmin = currentUser.role === 'ADMIN';
+        const isSenderAdmin = currentUser?.role === 'ADMIN';
         const enrichedDto = {
             ...dto,
-            sender: isSenderAdmin ? 'admin' : 'customer',
-            senderName: isSenderAdmin ? (dto.senderName || 'ProductPerks Admin') : (currentUser.name || 'Reviewer'),
-            userId: isSenderAdmin ? (dto.userId || currentUser.id) : currentUser.id,
+            sender: isSenderAdmin ? 'admin' : (dto.sender || 'customer'),
+            senderName: isSenderAdmin
+                ? (dto.senderName || 'ProductPerks Admin')
+                : (currentUser?.name || dto.senderName || 'Reviewer'),
+            userId: isSenderAdmin ? (dto.userId || currentUser?.id) : (currentUser?.id || dto.userId),
+            localId: dto.localId,
         };
         const saved = await this.chatService.createMessage(enrichedDto);
         if (this.chatGateway.server) {
@@ -54,6 +61,7 @@ let ChatController = class ChatController {
 };
 __decorate([
     Get('messages'),
+    Public(),
     __param(0, CurrentUser()),
     __param(1, Query('userId')),
     __metadata("design:type", Function),
@@ -62,6 +70,7 @@ __decorate([
 ], ChatController.prototype, "getMessages", null);
 __decorate([
     Post('messages'),
+    Public(),
     __param(0, Body()),
     __param(1, CurrentUser()),
     __metadata("design:type", Function),
