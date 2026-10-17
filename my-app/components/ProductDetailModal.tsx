@@ -9,11 +9,17 @@ import {
   FaShieldHalved, 
   FaClock, 
   FaComments,
-  FaArrowUpRightFromSquare
+  FaArrowUpRightFromSquare,
+  FaCopy,
+  FaShareNodes,
+  FaLink,
+  FaTelegram,
+  FaLock
 } from 'react-icons/fa6';
-import { FaFacebookMessenger, FaAmazon, FaStore } from 'react-icons/fa';
+import { FaFacebookMessenger, FaAmazon, FaStore, FaWhatsapp } from 'react-icons/fa';
 import { FiX } from 'react-icons/fi';
 import { Product } from '../app/types';
+import { useAuth } from '@/app/context/AuthContext';
 
 interface ProductDetailModalProps {
   product: Product | null;
@@ -30,13 +36,40 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   onInquire,
   onOpenShare
 }) => {
+  const { isAuthenticated, openAuthModal } = useAuth();
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [isCopied, setIsCopied] = useState(false);
 
   useEffect(() => {
     setActiveImageIndex(0);
   }, [product?.id]);
 
   if (!isOpen || !product) return null;
+
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://productperks.com';
+  const productPageUrl = `${origin}/p/${product.id}`;
+  const cleanPhone = '8801873597814';
+  const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(
+    `Hello! I want to order/review: ${product.title}\nProduct: ${productPageUrl}`
+  )}`;
+  const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(productPageUrl)}&text=${encodeURIComponent(
+    `🔥 Free Amazon Review Perk: ${product.title}`
+  )}`;
+
+  const handleAmazonClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!isAuthenticated) {
+      e.preventDefault();
+      openAuthModal('login');
+    }
+  };
+
+  const handleCopyProductLink = () => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(productPageUrl);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2500);
+    }
+  };
 
   const galleryImages = (product.gallery && product.gallery.length > 0)
     ? product.gallery
@@ -161,24 +194,98 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 </p>
 
                 {product.amazonUrl && (
-                  <div className="pt-2 border-t border-stone-200/80">
+                  <div className="pt-2 border-t border-stone-200/80 space-y-2">
                     <a
                       href={product.amazonUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 w-full bg-[#ff9900] hover:bg-[#ea8b00] active:scale-[0.99] text-slate-950 font-black py-2.5 px-4 rounded-xl text-xs sm:text-sm shadow-sm transition-all cursor-pointer border border-[#e08500]"
+                      onClick={handleAmazonClick}
+                      className={`flex items-center justify-center gap-2 w-full font-black py-2.5 px-4 rounded-xl text-xs sm:text-sm shadow-sm transition-all cursor-pointer border ${
+                        isAuthenticated
+                          ? 'bg-[#ff9900] hover:bg-[#ea8b00] active:scale-[0.99] text-slate-950 border-[#e08500]'
+                          : 'bg-amber-100 hover:bg-amber-200 text-amber-950 border-amber-300'
+                      }`}
+                      title={isAuthenticated ? 'View Product on Amazon' : 'Sign in to access Amazon review link'}
                     >
                       <FaAmazon className="w-4 h-4 text-slate-950 shrink-0" />
-                      <span>View Product on Amazon</span>
-                      <FaArrowUpRightFromSquare className="w-3 h-3 opacity-75 shrink-0" />
+                      <span>{isAuthenticated ? 'View Product on Amazon' : 'Sign In to View on Amazon'}</span>
+                      {isAuthenticated ? (
+                        <FaArrowUpRightFromSquare className="w-3 h-3 opacity-75 shrink-0" />
+                      ) : (
+                        <FaLock className="w-3.5 h-3.5 text-amber-900 shrink-0" />
+                      )}
                     </a>
                     {product.store && (
-                      <p className="text-[11px] text-slate-500 text-center mt-1">
+                      <p className="text-[11px] text-slate-500 text-center">
                         Sold by <span className="font-bold text-slate-800">{product.store}</span> on Amazon
                       </p>
                     )}
                   </div>
                 )}
+
+                {/* WhatsApp & Telegram Order Links */}
+                <div className="flex items-center gap-2">
+                  <a
+                    href={whatsappUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 font-bold py-2 px-3 rounded-xl text-xs transition-colors cursor-pointer"
+                  >
+                    <FaWhatsapp className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>WhatsApp Order</span>
+                  </a>
+                  <a
+                    href={telegramUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center gap-1.5 bg-sky-50 hover:bg-sky-100 border border-sky-200 text-sky-800 font-bold py-2 px-3 rounded-xl text-xs transition-colors cursor-pointer"
+                  >
+                    <FaTelegram className="w-3.5 h-3.5 text-[#229ED9]" />
+                    <span>Telegram</span>
+                  </a>
+                </div>
+
+                {/* Website Product Link & Copy/Share Box */}
+                <div className="p-3 bg-stone-50 rounded-xl border border-stone-200/80 space-y-2">
+                  <div className="flex items-center justify-between text-[11px] font-bold text-slate-700">
+                    <span className="flex items-center gap-1.5">
+                      <FaLink className="w-3 h-3 text-[#1b3b2b]" />
+                      <span>Website Product Link (Share with anyone):</span>
+                    </span>
+                    {isCopied && (
+                      <span className="text-emerald-700 flex items-center gap-1">
+                        <FaCheck className="w-3 h-3" />
+                        <span>Copied!</span>
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="text"
+                      readOnly
+                      value={productPageUrl}
+                      className="flex-1 bg-white text-slate-700 text-xs px-3 py-2 rounded-lg border border-stone-200 font-mono select-all focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleCopyProductLink}
+                      className={`px-3 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 shrink-0 ${
+                        isCopied ? 'bg-emerald-600 text-white' : 'bg-[#1b3b2b] hover:bg-[#28573f] text-white'
+                      }`}
+                    >
+                      {isCopied ? <FaCheck className="w-3 h-3" /> : <FaCopy className="w-3 h-3" />}
+                      <span>{isCopied ? 'Copied' : 'Copy Link'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onOpenShare(product)}
+                      className="px-3 py-2 rounded-lg text-xs font-bold bg-[#0d5bff] hover:bg-[#0047d4] text-white transition-all cursor-pointer flex items-center gap-1 shrink-0"
+                    >
+                      <FaShareNodes className="w-3 h-3" />
+                      <span>Share</span>
+                    </button>
+                  </div>
+                </div>
               </div>
 
               {/* Description */}

@@ -48,8 +48,10 @@ export default function ProductsPage() {
     closeDetailModal, 
     closeShareModal, 
     openChatWithProduct, 
-    openShareModal 
+    openShareModal,
+    showToast
   } = useApp();
+  const { isAuthenticated, openAuthModal } = useAuth();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -295,12 +297,23 @@ export default function ProductsPage() {
                           href={prod.amazonUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="py-2.5 px-3 rounded-xl font-bold text-xs bg-[#fff8e7] hover:bg-[#ff9900] text-[#92400e] hover:text-slate-950 border border-amber-300 hover:border-[#e08500] transition-all duration-200 inline-flex items-center gap-1.5 shadow-2xs cursor-pointer shrink-0"
-                          title={`View on Amazon (${prod.store || 'Amazon'})`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!isAuthenticated) {
+                              e.preventDefault();
+                              showToast('Please sign in to view the official Amazon product link.');
+                              openAuthModal('login');
+                            }
+                          }}
+                          className={`py-2.5 px-3 rounded-xl font-bold text-xs border transition-all duration-200 inline-flex items-center gap-1.5 shadow-2xs cursor-pointer shrink-0 ${
+                            isAuthenticated
+                              ? 'bg-[#fff8e7] hover:bg-[#ff9900] text-[#92400e] hover:text-slate-950 border-amber-300 hover:border-[#e08500]'
+                              : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-200'
+                          }`}
+                          title={isAuthenticated ? `View on Amazon (${prod.store || 'Amazon'})` : 'Sign in to access Amazon review link'}
                         >
                           <FaAmazon className="w-3.5 h-3.5 text-[#e08500]" />
-                          <span>Amazon</span>
+                          <span>{isAuthenticated ? 'Amazon' : 'Amazon 🔒'}</span>
                         </a>
                       )}
                     </div>

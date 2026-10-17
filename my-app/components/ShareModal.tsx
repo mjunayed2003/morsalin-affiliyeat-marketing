@@ -9,7 +9,8 @@ import {
   FaCircleInfo, 
   FaCircleCheck, 
   FaImage,
-  FaFileLines
+  FaFileLines,
+  FaTelegram
 } from 'react-icons/fa6';
 import { FaFacebookMessenger, FaWhatsapp, FaAmazon } from 'react-icons/fa';
 import { FiX } from 'react-icons/fi';
@@ -134,6 +135,12 @@ export const ShareModal: React.FC<ShareModalProps> = ({
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
   };
 
+  // Open Telegram Share
+  const handleTelegramShare = () => {
+    const text = `🔥 *${product.title}*\nPrice: $${product.price}\nView details: ${shareableUrl}`;
+    window.open(`https://t.me/share/url?url=${encodeURIComponent(shareableUrl)}&text=${encodeURIComponent(text)}`, '_blank');
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
       <div className="relative w-full max-w-xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden my-6">
@@ -195,24 +202,34 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                   </div>
                 </div>
 
-                {/* Messenger Snippet Details */}
+                {/* Social Snippet Details */}
                 <div className="p-3.5 bg-white">
-                  <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">
-                    AFFILIHUB.COM
+                  <p className="text-[10px] text-emerald-700 uppercase font-bold tracking-wider">
+                    PRODUCTPERKS.COM • AMAZON REVIEW PERK
                   </p>
                   <h4 className="font-bold text-slate-900 text-sm leading-snug line-clamp-2 mt-0.5">
                     {product.title}
                   </h4>
                   <p className="text-xs text-slate-600 line-clamp-1 mt-1">
-                    Special Price: ${product.price.toLocaleString()} • Regular: ${product.originalPrice.toLocaleString()} • Cash on Delivery
+                    100% Free Amazon Review Item • Est. Retail: ${product.originalPrice.toLocaleString()} • Tested & Kept Free
                   </p>
                 </div>
               </div>
 
-              <div className="text-center mt-2.5">
+              <div className="flex items-center justify-between mt-2.5 px-1 flex-wrap gap-2">
                 <span className="text-[11px] text-slate-500 font-medium">
-                  When shared on Messenger, clients will see this rich preview card with the image.
+                  When shared on WhatsApp, Messenger or Telegram, this rich card with the product image appears.
                 </span>
+                <a
+                  href={activeImage}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[11px] font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 shrink-0 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-md transition-colors"
+                  title="View / Save full product image"
+                >
+                  <FaImage className="w-3 h-3 text-blue-600" />
+                  <span>View Product Image</span>
+                </a>
               </div>
             </div>
           </div>
@@ -287,6 +304,15 @@ export const ShareModal: React.FC<ShareModalProps> = ({
               >
                 <FaWhatsapp className="w-4 h-4" />
                 <span>Share via WhatsApp</span>
+              </button>
+
+              {/* Direct Telegram Button */}
+              <button
+                onClick={handleTelegramShare}
+                className="flex items-center justify-center gap-2 bg-[#229ED9] hover:bg-[#1d87ba] active:scale-98 text-white p-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-xs"
+              >
+                <FaTelegram className="w-4 h-4" />
+                <span>Share via Telegram</span>
               </button>
 
               {/* Copy Ready-to-paste Caption */}
