@@ -1,6 +1,8 @@
+import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module.js';
-async function bootstrap() {
+let cachedServer = null;
+export async function createNestApp() {
     const app = await NestFactory.create(AppModule);
     app.enableCors({
         origin: true,
@@ -8,9 +10,20 @@ async function bootstrap() {
         credentials: true,
     });
     app.setGlobalPrefix('api');
+    return app;
+}
+export default async function handler(req, res) {
+    if (!cachedServer) {
+        const app = await createNestApp();
+        await app.init();
+        cachedServer = app.getHttpAdapter().getInstance();
+    }
+    return cachedServer(req, res);
+}
+if (!process.env.VERCEL) {
+    const app = await createNestApp();
     const port = process.env.PORT ?? 3001;
     await app.listen(port);
-    console.log(`🚀 NestJS server with Prisma 7 is running on: http://localhost:${port}/api`);
+    console.log(`🚀 NestJS server running on: http://localhost:${port}/api`);
 }
-await bootstrap();
 //# sourceMappingURL=main.js.map

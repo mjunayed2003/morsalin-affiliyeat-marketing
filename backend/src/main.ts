@@ -1,9 +1,14 @@
+import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module.js';
+import type { Express } from 'express';
+import type { INestApplication } from '@nestjs/common';
 
-async function bootstrap() {
+let cachedServer: Express | null = null;
+
+export async function createNestApp(): Promise<INestApplication> {
   const app = await NestFactory.create(AppModule);
-  
+
   // Enable CORS for frontend integration
   app.enableCors({
     origin: true,
@@ -14,9 +19,24 @@ async function bootstrap() {
   // Global API route prefix
   app.setGlobalPrefix('api');
 
-  const port = process.env.PORT ?? 3001;
-  await app.listen(port);
-  console.log(`🚀 NestJS server with Prisma 7 is running on: http://localhost:${port}/api`);
+  return app;
 }
 
-await bootstrap();
+// Serverless handler for Vercel deployment
+export default async function handler(req: any, res: any) {
+  if (!cachedServer) {
+    const app = await createNestApp();
+    await app.init();
+    cachedServer = app.getHttpAdapter().getInstance() as Express;
+  }
+  return cachedServer(req, res);
+}
+
+// Standalone execution for local development and containerized hosting
+if (!process.env.VERCEL) {
+  const app = await createNestApp();
+  const port = process.env.PORT ?? 3001;
+  await app.listen(port);
+  console.log(`🚀 NestJS server running on: http://localhost:${port}/api`);
+}
+
