@@ -28,7 +28,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://productperks.com';
+  const siteUrl = 
+    process.env.NEXT_PUBLIC_SITE_URL || 
+    process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/, '') || 
+    'https://morsalin-affiliyeat-marketing.vercel.app';
   const pageUrl = `${siteUrl}/p/${product.id}`;
   const imageUrl = product.image;
 
