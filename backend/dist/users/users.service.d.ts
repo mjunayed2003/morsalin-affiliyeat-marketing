@@ -4,8 +4,10 @@ export declare class UsersService {
     constructor(prisma: PrismaService);
     findAll(role?: string): Promise<{
         id: string;
-        phone: string;
+        createdAt: Date;
+        updatedAt: Date;
         name: string;
+        phone: string;
         email: string | null;
         address: string | null;
         city: string | null;
@@ -13,30 +15,17 @@ export declare class UsersService {
         verified: boolean;
         verifiedAt: Date | null;
         role: import("../generated/prisma/enums.js").Role;
-        createdAt: Date;
-        updatedAt: Date;
     }[]>;
     findOne(id: string): Promise<{
         id: string;
-        phone: string;
-        name: string;
-        email: string | null;
-        address: string | null;
-        city: string | null;
-        avatar: string | null;
-        verified: boolean;
-        verifiedAt: Date | null;
-        role: import("../generated/prisma/enums.js").Role;
         createdAt: Date;
         updatedAt: Date;
         inquiries: ({
             product: {
-                id: string;
-                createdAt: Date;
-                updatedAt: Date;
-                title: string;
-                description: string;
                 category: string;
+                description: string;
+                title: string;
+                id: string;
                 subCategory: string | null;
                 price: number;
                 originalPrice: number;
@@ -52,6 +41,8 @@ export declare class UsersService {
                 inStock: boolean;
                 store: string | null;
                 amazonUrl: string | null;
+                createdAt: Date;
+                updatedAt: Date;
             };
         } & {
             id: string;
@@ -64,11 +55,22 @@ export declare class UsersService {
             reviewUrl: string | null;
             notes: string | null;
         })[];
+        name: string;
+        phone: string;
+        email: string | null;
+        address: string | null;
+        city: string | null;
+        avatar: string | null;
+        verified: boolean;
+        verifiedAt: Date | null;
+        role: import("../generated/prisma/enums.js").Role;
     }>;
     updateRole(id: string, role: 'CLIENT' | 'ADMIN'): Promise<{
         id: string;
-        phone: string;
+        createdAt: Date;
+        updatedAt: Date;
         name: string;
+        phone: string;
         password: string | null;
         email: string | null;
         address: string | null;
@@ -77,7 +79,5 @@ export declare class UsersService {
         verified: boolean;
         verifiedAt: Date | null;
         role: import("../generated/prisma/enums.js").Role;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
 }

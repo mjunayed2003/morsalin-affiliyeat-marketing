@@ -3,6 +3,7 @@ export { Prisma };
 export * as $Enums from './enums.js';
 export * from './enums.js';
 export type User = Prisma.UserModel;
+export type EmailOtp = Prisma.EmailOtpModel;
 export type Product = Prisma.ProductModel;
 export type ChatMessage = Prisma.ChatMessageModel;
 export type Inquiry = Prisma.InquiryModel;

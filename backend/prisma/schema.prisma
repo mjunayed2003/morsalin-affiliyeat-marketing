@@ -45,6 +45,19 @@ model User {
   @@map("users")
 }
 
+model EmailOtp {
+  id        String   @id @default(cuid())
+  email     String
+  code      String
+  type      String   // "REGISTER" | "FORGOT_PASSWORD"
+  data      String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email, type])
+  @@map("email_otps")
+}
+
 model Product {
   id               String        @id
   title            String

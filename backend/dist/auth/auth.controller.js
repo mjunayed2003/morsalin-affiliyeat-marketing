@@ -14,12 +14,25 @@ import { Controller, Post, Get, Body, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { LoginDto } from './dto/login.dto.js';
+import { SendRegisterOtpDto, VerifyRegisterOtpDto, SendForgotPasswordOtpDto, ResetPasswordDto, } from './dto/otp-auth.dto.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
 import { CurrentUser } from './decorators/current-user.decorator.js';
 let AuthController = class AuthController {
     authService;
     constructor(authService) {
         this.authService = authService;
+    }
+    async sendRegisterOtp(dto) {
+        return this.authService.sendRegisterOtp(dto);
+    }
+    async verifyRegisterOtp(dto) {
+        return this.authService.verifyRegisterOtp(dto);
+    }
+    async sendForgotPasswordOtp(dto) {
+        return this.authService.sendForgotPasswordOtp(dto);
+    }
+    async resetPassword(dto) {
+        return this.authService.resetPassword(dto);
     }
     async register(dto) {
         return this.authService.register(dto);
@@ -31,6 +44,34 @@ let AuthController = class AuthController {
         return this.authService.getProfile(currentUser.id);
     }
 };
+__decorate([
+    Post('send-register-otp'),
+    __param(0, Body()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [SendRegisterOtpDto]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "sendRegisterOtp", null);
+__decorate([
+    Post('verify-register-otp'),
+    __param(0, Body()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [VerifyRegisterOtpDto]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "verifyRegisterOtp", null);
+__decorate([
+    Post('send-forgot-password-otp'),
+    __param(0, Body()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [SendForgotPasswordOtpDto]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "sendForgotPasswordOtp", null);
+__decorate([
+    Post('reset-password'),
+    __param(0, Body()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [ResetPasswordDto]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "resetPassword", null);
 __decorate([
     Post('register'),
     __param(0, Body()),

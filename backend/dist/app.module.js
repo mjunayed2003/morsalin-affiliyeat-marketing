@@ -14,6 +14,7 @@ import { UsersModule } from './users/users.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { ChatModule } from './chat/chat.module.js';
 import { InquiriesModule } from './inquiries/inquiries.module.js';
+import { MailModule } from './mail/mail.module.js';
 let AppModule = class AppModule {
 };
 AppModule = __decorate([
@@ -28,6 +29,7 @@ AppModule = __decorate([
             AuthModule,
             ChatModule,
             InquiriesModule,
+            MailModule,
         ],
         controllers: [AppController],
         providers: [AppService],

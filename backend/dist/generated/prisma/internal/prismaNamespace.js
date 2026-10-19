@@ -25,6 +25,7 @@ export const JsonNull = runtime.JsonNull;
 export const AnyNull = runtime.AnyNull;
 export const ModelName = {
     User: 'User',
+    EmailOtp: 'EmailOtp',
     Product: 'Product',
     ChatMessage: 'ChatMessage',
     Inquiry: 'Inquiry'
@@ -49,6 +50,15 @@ export const UserScalarFieldEnum = {
     role: 'role',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
+};
+export const EmailOtpScalarFieldEnum = {
+    id: 'id',
+    email: 'email',
+    code: 'code',
+    type: 'type',
+    data: 'data',
+    expiresAt: 'expiresAt',
+    createdAt: 'createdAt'
 };
 export const ProductScalarFieldEnum = {
     id: 'id',

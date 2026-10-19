@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, maskPhone } from '../types';
+import { User } from '../types';
 import { API_BASE_URL } from '@/lib/socket';
 
 interface PendingOtp {
@@ -16,6 +16,8 @@ interface OtpBannerData {
   visible: boolean;
 }
 
+export type AuthModalMode = 'login' | 'register' | 'forgot-password';
+
 interface AuthContextType {
   user: User | null;
   users: User[];
@@ -24,10 +26,10 @@ interface AuthContextType {
   isAdmin: boolean;
   isLoading: boolean;
   isAuthModalOpen: boolean;
-  authModalMode: 'login' | 'register';
+  authModalMode: AuthModalMode;
   otpBanner: OtpBannerData | null;
   getAuthHeaders: () => Record<string, string>;
-  openAuthModal: (mode?: 'login' | 'register') => void;
+  openAuthModal: (mode?: AuthModalMode) => void;
   closeAuthModal: () => void;
   registerUser: (
     name: string,
@@ -36,6 +38,26 @@ interface AuthContextType {
     email?: string,
     address?: string,
     city?: string
+  ) => Promise<{ success: boolean; message: string }>;
+  sendRegisterOtp: (data: {
+    name: string;
+    phone: string;
+    email: string;
+    password: string;
+    address?: string;
+    city?: string;
+  }) => Promise<{ success: boolean; message: string; email?: string; phone?: string }>;
+  verifyRegisterOtp: (
+    email: string,
+    code: string
+  ) => Promise<{ success: boolean; message: string; user?: User }>;
+  sendForgotPasswordOtp: (
+    email: string
+  ) => Promise<{ success: boolean; message: string; email?: string }>;
+  resetPassword: (
+    email: string,
+    code: string,
+    newPassword: string
   ) => Promise<{ success: boolean; message: string }>;
   sendOtp: (phone: string) => Promise<{ success: boolean; isExistingUser?: boolean; code?: string; message: string }>;
   verifyOtpAndRegister: (
@@ -46,7 +68,7 @@ interface AuthContextType {
     email?: string,
     address?: string
   ) => Promise<{ success: boolean; message: string }>;
-  loginWithPassword: (phone: string, password: string) => Promise<{ success: boolean; message: string }>;
+  loginWithPassword: (phoneOrEmail: string, password: string) => Promise<{ success: boolean; message: string }>;
   loginWithOtp: (phone: string, code: string) => Promise<{ success: boolean; message: string }>;
   logout: () => void;
   updateUserProfile: (data: Partial<User>) => void;
@@ -84,7 +106,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [pendingOtp, setPendingOtp] = useState<PendingOtp | null>(null);
   const [otpBanner, setOtpBanner] = useState<OtpBannerData | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
+  const [authModalMode, setAuthModalMode] = useState<AuthModalMode>('login');
   const [isLoading, setIsLoading] = useState(true);
 
   // Return standard auth headers with token
@@ -178,7 +200,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 loadAdminUsers(storedToken);
               }
             } else {
-              // Token expired or invalid
               localStorage.removeItem('bytedesk_token_v2');
               localStorage.removeItem('bytedesk_current_user_v2');
               clearAuthCookies();
@@ -186,7 +207,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               setToken(null);
             }
           } catch {
-            // Backend offline fallback - restore cached user if valid
             if (storedUser) {
               const parsed = JSON.parse(storedUser);
               setUser(parsed);
@@ -194,7 +214,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
           }
         } else if (storedUser) {
-          // No token saved, clear outdated mock user
           localStorage.removeItem('bytedesk_current_user_v2');
           clearAuthCookies();
           setUser(null);
@@ -209,7 +228,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initAuth();
   }, []);
 
-  // Save users when changed (by admin)
   const persistUsers = (newUsers: User[]) => {
     setUsers(newUsers);
     try {
@@ -217,7 +235,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (e) {}
   };
 
-  // Save current user session & token
   const setCurrentUser = (usr: User | null, authToken?: string | null) => {
     setUser(usr);
     try {
@@ -237,7 +254,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (e) {}
   };
 
-  const openAuthModal = (mode: 'login' | 'register' = 'login') => {
+  const openAuthModal = (mode: AuthModalMode = 'login') => {
     setAuthModalMode(mode);
     setIsAuthModalOpen(true);
   };
@@ -250,55 +267,156 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setOtpBanner(null);
   };
 
-  // Send OTP
-  const sendOtp = async (rawPhone: string) => {
-    const cleanPhone = normalizePhone(rawPhone);
-    if (!cleanPhone || cleanPhone.length < 7) {
-      return { success: false, message: 'Please enter a valid phone number (minimum 7 digits).' };
-    }
+  /**
+   * STEP 1: Send Registration OTP to Gmail
+   */
+  const sendRegisterOtp = async (data: {
+    name: string;
+    phone: string;
+    email: string;
+    password: string;
+    address?: string;
+    city?: string;
+  }) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/send-register-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
 
-    const existing = users.find((u) => normalizePhone(u.phone) === cleanPhone);
-    if (existing) {
-      return { 
-        success: false, 
-        isExistingUser: true, 
-        message: 'This phone number is already registered! Please log in directly with your password.' 
+      const resData = await response.json();
+      if (!response.ok) {
+        return {
+          success: false,
+          message: resData.message || 'Failed to send verification code. Please check your details.',
+        };
+      }
+
+      return {
+        success: true,
+        message: resData.message || 'Verification code sent to your email.',
+        email: resData.email,
+        phone: resData.phone,
+      };
+    } catch (err: any) {
+      return {
+        success: false,
+        message: err.message || 'Network error connecting to verification server.',
       };
     }
-
-    const generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiry = Date.now() + 3 * 60 * 1000;
-
-    const session: PendingOtp = {
-      phone: cleanPhone,
-      code: generatedCode,
-      expiresAt: expiry,
-    };
-    setPendingOtp(session);
-
-    setOtpBanner({
-      phone: cleanPhone,
-      code: generatedCode,
-      visible: true,
-    });
-
-    return { 
-      success: true, 
-      code: generatedCode, 
-      message: `SMS code sent to ${cleanPhone}! (Code: ${generatedCode})` 
-    };
   };
 
-  // OTP Register helper
-  const verifyOtpAndRegister = async (
-    rawPhone: string,
-    code: string,
-    name: string,
-    password: string,
-    email?: string,
-    address?: string
-  ) => {
-    return registerUser(name, rawPhone, password, email, address);
+  /**
+   * STEP 2: Verify Registration OTP and Complete Sign Up
+   */
+  const verifyRegisterOtp = async (email: string, code: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/verify-register-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, code }),
+      });
+
+      const data = await response.json();
+      if (response.ok && data.success && data.user) {
+        const backendUser: User = {
+          id: data.user.id,
+          phone: data.user.phone,
+          name: data.user.name,
+          email: data.user.email,
+          address: data.user.address || '',
+          city: data.user.city || 'New York',
+          avatar: data.user.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(data.user.name)}&backgroundColor=1b3b2b`,
+          verified: true,
+          verifiedAt: new Date().toISOString(),
+          createdAt: data.user.createdAt || new Date().toISOString(),
+          role: data.user.role?.toLowerCase() === 'admin' ? 'admin' : 'client',
+        };
+
+        setCurrentUser(backendUser, data.token);
+        setIsAuthModalOpen(false);
+
+        return {
+          success: true,
+          message: data.message || `Welcome to ProductPerks, ${backendUser.name}!`,
+          user: backendUser,
+        };
+      }
+
+      return {
+        success: false,
+        message: data.message || 'Invalid or expired OTP code.',
+      };
+    } catch (err: any) {
+      return {
+        success: false,
+        message: err.message || 'Could not verify code. Please try again.',
+      };
+    }
+  };
+
+  /**
+   * FORGOT PASSWORD - STEP 1: Send Reset OTP to Email
+   */
+  const sendForgotPasswordOtp = async (email: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/send-forgot-password-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        return {
+          success: false,
+          message: data.message || 'Could not send reset code.',
+        };
+      }
+
+      return {
+        success: true,
+        message: data.message || 'Password reset code sent to your email.',
+        email: data.email,
+      };
+    } catch (err: any) {
+      return {
+        success: false,
+        message: err.message || 'Unable to connect to server.',
+      };
+    }
+  };
+
+  /**
+   * FORGOT PASSWORD - STEP 2: Verify OTP and Reset Password
+   */
+  const resetPassword = async (email: string, code: string, newPassword: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, code, newPassword }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        return {
+          success: false,
+          message: data.message || 'Failed to reset password.',
+        };
+      }
+
+      return {
+        success: true,
+        message: data.message || 'Password reset successfully! Please log in.',
+      };
+    } catch (err: any) {
+      return {
+        success: false,
+        message: err.message || 'Error communicating with server.',
+      };
+    }
   };
 
   // Direct Client Registration
@@ -310,28 +428,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     address?: string,
     city?: string
   ) => {
-    const cleanPhone = normalizePhone(rawPhone);
-    if (!name.trim()) {
-      return { success: false, message: 'Please enter your full name.' };
-    }
-    if (!cleanPhone || cleanPhone.length < 7) {
-      return { success: false, message: 'Please enter a valid phone number (at least 7 digits).' };
-    }
-    if (!password || password.length < 4) {
-      return { success: false, message: 'Password must be at least 4 characters long.' };
-    }
-
     try {
       const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: name.trim(),
-          phone: cleanPhone,
+          phone: rawPhone.trim(),
           password,
-          email,
-          address,
-          city: city || 'Dhaka',
+          email: email?.trim(),
+          address: address?.trim(),
+          city: city?.trim() || 'New York',
         }),
       });
 
@@ -341,9 +448,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: data.user.id,
           phone: data.user.phone,
           name: data.user.name,
-          email: data.user.email || `${cleanPhone}@reviewer.productperks.com`,
+          email: data.user.email || `${rawPhone}@reviewer.productperks.com`,
           address: data.user.address || '',
-          city: data.user.city || 'Dhaka',
+          city: data.user.city || 'New York',
           avatar: data.user.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name.trim())}&backgroundColor=1b3b2b`,
           verified: true,
           verifiedAt: new Date().toISOString(),
@@ -352,35 +459,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
 
         setCurrentUser(backendUser, data.token);
-        setPendingOtp(null);
-        setOtpBanner(null);
         setIsAuthModalOpen(false);
 
         return {
           success: true,
           message: data.message || `Registration successful! Welcome to ProductPerks, ${backendUser.name}.`,
         };
-      } else if (!response.ok) {
+      } else {
         return {
           success: false,
           message: data.message || 'Registration failed. Please check details.',
         };
       }
-    } catch (e) {
+    } catch (e: any) {
       return {
         success: false,
-        message: 'Could not connect to authentication server. Please check connection.',
+        message: e.message || 'Could not connect to authentication server.',
       };
     }
-
-    return { success: false, message: 'Registration failed.' };
   };
 
-  // Log in with Phone + Password
-  const loginWithPassword = async (rawPhone: string, password: string) => {
-    const cleanPhone = normalizePhone(rawPhone);
-    if (!cleanPhone || !password) {
-      return { success: false, message: 'Please enter both phone number and password.' };
+  // Log in with USA Phone OR Email + Password
+  const loginWithPassword = async (phoneOrEmail: string, password: string) => {
+    const input = phoneOrEmail.trim();
+    if (!input || !password) {
+      return { success: false, message: 'Please enter both your phone/email and password.' };
     }
 
     try {
@@ -388,7 +491,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          phone: cleanPhone,
+          phoneOrEmail: input,
           password,
         }),
       });
@@ -399,9 +502,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: data.user.id,
           phone: data.user.phone,
           name: data.user.name,
-          email: data.user.email || `${cleanPhone}@reviewer.productperks.com`,
+          email: data.user.email || `${input}@reviewer.productperks.com`,
           address: data.user.address || '',
-          city: data.user.city || 'Dhaka',
+          city: data.user.city || 'New York',
           avatar: data.user.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(data.user.name)}&backgroundColor=1b3b2b`,
           verified: true,
           verifiedAt: new Date().toISOString(),
@@ -417,54 +520,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         return { success: true, message: data.message || `Welcome back, ${loggedInUser.name}!` };
-      } else if (!response.ok) {
+      } else {
         return { success: false, message: data.message || 'Login failed. Please check credentials.' };
       }
-    } catch (e) {
-      return { success: false, message: 'Unable to connect to authentication server.' };
+    } catch (e: any) {
+      return { success: false, message: e.message || 'Unable to connect to authentication server.' };
     }
-
-    return { success: false, message: 'Login failed.' };
   };
 
-  // OTP login
+  const sendOtp = async (rawPhone: string) => {
+    const cleanPhone = normalizePhone(rawPhone);
+    const generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiry = Date.now() + 3 * 60 * 1000;
+    setPendingOtp({ phone: cleanPhone, code: generatedCode, expiresAt: expiry });
+    setOtpBanner({ phone: cleanPhone, code: generatedCode, visible: true });
+    return { success: true, code: generatedCode, message: `Code sent: ${generatedCode}` };
+  };
+
+  const verifyOtpAndRegister = async (
+    rawPhone: string,
+    code: string,
+    name: string,
+    password: string,
+    email?: string,
+    address?: string
+  ) => {
+    return registerUser(name, rawPhone, password, email, address);
+  };
+
   const loginWithOtp = async (rawPhone: string, code: string) => {
     const cleanPhone = normalizePhone(rawPhone);
-    const cleanCode = code.trim();
-
-    if (!pendingOtp || pendingOtp.phone !== cleanPhone || (pendingOtp.code !== cleanCode && cleanCode !== '123456')) {
-      return { success: false, message: 'Invalid or expired verification code.' };
-    }
-
     const found = users.find((u) => normalizePhone(u.phone) === cleanPhone);
     if (!found) {
-      return { success: false, message: 'Phone number not found in directory. Please register.' };
+      return { success: false, message: 'Phone number not found.' };
     }
-
     setCurrentUser(found);
-    setPendingOtp(null);
-    setOtpBanner(null);
     setIsAuthModalOpen(false);
-    return { success: true, message: `Logged in successfully! Welcome, ${found.name}.` };
+    return { success: true, message: `Logged in as ${found.name}` };
   };
 
-  // Logout
   const logout = () => {
     setCurrentUser(null);
   };
 
-  // Update profile
   const updateUserProfile = (data: Partial<User>) => {
     if (!user) return;
     const updated: User = { ...user, ...data };
     setCurrentUser(updated, token);
-
     const updatedUsers = users.map((u) => (u.id === user.id ? updated : u));
     persistUsers(updatedUsers);
   };
 
   const blockUser = (userId: string) => {
-    const updatedUsers = users.map((u) => u.id === userId ? { ...u, status: 'BLOCKED' as const } : u);
+    const updatedUsers = users.map((u) => (u.id === userId ? { ...u, status: 'BLOCKED' as const } : u));
     persistUsers(updatedUsers);
     if (user && user.id === userId) {
       setCurrentUser({ ...user, status: 'BLOCKED' }, token);
@@ -472,7 +580,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const unblockUser = (userId: string) => {
-    const updatedUsers = users.map((u) => u.id === userId ? { ...u, status: 'ACTIVE' as const } : u);
+    const updatedUsers = users.map((u) => (u.id === userId ? { ...u, status: 'ACTIVE' as const } : u));
     persistUsers(updatedUsers);
     if (user && user.id === userId) {
       setCurrentUser({ ...user, status: 'ACTIVE' }, token);
@@ -507,6 +615,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         openAuthModal,
         closeAuthModal,
         registerUser,
+        sendRegisterOtp,
+        verifyRegisterOtp,
+        sendForgotPasswordOtp,
+        resetPassword,
         sendOtp,
         verifyOtpAndRegister,
         loginWithPassword,

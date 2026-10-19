@@ -161,6 +161,7 @@ export type FieldRef<Model, FieldType> = runtime.FieldRef<Model, FieldType>;
 type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRef<Model, FieldType>;
 export declare const ModelName: {
     readonly User: "User";
+    readonly EmailOtp: "EmailOtp";
     readonly Product: "Product";
     readonly ChatMessage: "ChatMessage";
     readonly Inquiry: "Inquiry";
@@ -176,7 +177,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         omit: GlobalOmitOptions;
     };
     meta: {
-        modelProps: "user" | "product" | "chatMessage" | "inquiry";
+        modelProps: "user" | "emailOtp" | "product" | "chatMessage" | "inquiry";
         txIsolationLevel: TransactionIsolationLevel;
     };
     model: {
@@ -251,6 +252,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
                 count: {
                     args: Prisma.UserCountArgs<ExtArgs>;
                     result: runtime.Types.Utils.Optional<Prisma.UserCountAggregateOutputType> | number;
+                };
+            };
+        };
+        EmailOtp: {
+            payload: Prisma.$EmailOtpPayload<ExtArgs>;
+            fields: Prisma.EmailOtpFieldRefs;
+            operations: {
+                findUnique: {
+                    args: Prisma.EmailOtpFindUniqueArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$EmailOtpPayload> | null;
+                };
+                findUniqueOrThrow: {
+                    args: Prisma.EmailOtpFindUniqueOrThrowArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$EmailOtpPayload>;
+                };
+                findFirst: {
+                    args: Prisma.EmailOtpFindFirstArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$EmailOtpPayload> | null;
+                };
+                findFirstOrThrow: {
+                    args: Prisma.EmailOtpFindFirstOrThrowArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$EmailOtpPayload>;
+                };
+                findMany: {
+                    args: Prisma.EmailOtpFindManyArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$EmailOtpPayload>[];
+                };
+                create: {
+                    args: Prisma.EmailOtpCreateArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$EmailOtpPayload>;
+                };
+                createMany: {
+                    args: Prisma.EmailOtpCreateManyArgs<ExtArgs>;
+                    result: BatchPayload;
+                };
+                createManyAndReturn: {
+                    args: Prisma.EmailOtpCreateManyAndReturnArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$EmailOtpPayload>[];
+                };
+                delete: {
+                    args: Prisma.EmailOtpDeleteArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$EmailOtpPayload>;
+                };
+                update: {
+                    args: Prisma.EmailOtpUpdateArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$EmailOtpPayload>;
+                };
+                deleteMany: {
+                    args: Prisma.EmailOtpDeleteManyArgs<ExtArgs>;
+                    result: BatchPayload;
+                };
+                updateMany: {
+                    args: Prisma.EmailOtpUpdateManyArgs<ExtArgs>;
+                    result: BatchPayload;
+                };
+                updateManyAndReturn: {
+                    args: Prisma.EmailOtpUpdateManyAndReturnArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$EmailOtpPayload>[];
+                };
+                upsert: {
+                    args: Prisma.EmailOtpUpsertArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$EmailOtpPayload>;
+                };
+                aggregate: {
+                    args: Prisma.EmailOtpAggregateArgs<ExtArgs>;
+                    result: runtime.Types.Utils.Optional<Prisma.AggregateEmailOtp>;
+                };
+                groupBy: {
+                    args: Prisma.EmailOtpGroupByArgs<ExtArgs>;
+                    result: runtime.Types.Utils.Optional<Prisma.EmailOtpGroupByOutputType>[];
+                };
+                count: {
+                    args: Prisma.EmailOtpCountArgs<ExtArgs>;
+                    result: runtime.Types.Utils.Optional<Prisma.EmailOtpCountAggregateOutputType> | number;
                 };
             };
         };
@@ -523,6 +598,16 @@ export declare const UserScalarFieldEnum: {
     readonly updatedAt: "updatedAt";
 };
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum];
+export declare const EmailOtpScalarFieldEnum: {
+    readonly id: "id";
+    readonly email: "email";
+    readonly code: "code";
+    readonly type: "type";
+    readonly data: "data";
+    readonly expiresAt: "expiresAt";
+    readonly createdAt: "createdAt";
+};
+export type EmailOtpScalarFieldEnum = (typeof EmailOtpScalarFieldEnum)[keyof typeof EmailOtpScalarFieldEnum];
 export declare const ProductScalarFieldEnum: {
     readonly id: "id";
     readonly title: "title";
@@ -631,6 +716,7 @@ export interface PrismaClientOptionsWithAdapter extends PrismaClientBaseOptions 
 export type PrismaClientOptions = PrismaClientOptionsWithAccelerateUrl | PrismaClientOptionsWithAdapter;
 export type GlobalOmitConfig = {
     user?: Prisma.UserOmit;
+    emailOtp?: Prisma.EmailOtpOmit;
     product?: Prisma.ProductOmit;
     chatMessage?: Prisma.ChatMessageOmit;
     inquiry?: Prisma.InquiryOmit;
