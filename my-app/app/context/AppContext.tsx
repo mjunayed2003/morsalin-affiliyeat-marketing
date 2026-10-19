@@ -111,10 +111,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (e) {}
   };
 
-  // Initialize from Backend & LocalStorage fallback
+  // 1. Initialize Catalog & Socket.IO on mount
   useEffect(() => {
     try {
-      // 1. Fetch public products from Backend API
+      // Fetch public products from Backend API
       fetch(`${API_BASE_URL}/products`)
         .then((res) => res.json())
         .then((data) => {
@@ -133,51 +133,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           }
         });
 
-      // 2. Initial message fetch
-      const syncMessages = async () => {
-        try {
-          const chatFetchUrl = `${API_BASE_URL}/chat/messages`;
-          const res = await fetch(chatFetchUrl, {
-            headers: getAuthHeaders(),
-          });
-          if (res.ok) {
-            const data = await res.json();
-            if (Array.isArray(data)) {
-              setMessages((prev) => {
-                const serverIds = new Set(data.map((m: any) => m.id));
-                // Preserve pending optimistic messages that haven't received server response
-                const pendingOptimistic = prev.filter(
-                  (m) =>
-                    (m.id.startsWith('msg-') || (m.localId && m.localId.startsWith('msg-'))) &&
-                    !serverIds.has(m.id)
-                );
-                const merged = dedupeMessages([...data, ...pendingOptimistic]);
-                try {
-                  localStorage.setItem('product_perks_messages_v1', JSON.stringify(merged));
-                } catch {}
-                return merged;
-              });
-            }
-          }
-        } catch {
-          const storedMsgs = localStorage.getItem('product_perks_messages_v1');
-          if (storedMsgs) {
-            try {
-              const parsed = JSON.parse(storedMsgs);
-              if (Array.isArray(parsed) && parsed.length > 0) {
-                setMessages(dedupeMessages(parsed));
-              }
-            } catch (e) {}
-          }
-        }
-      };
-
-      syncMessages();
-
-      // Background sync every 3 seconds to ensure client sees admin messages without delay
-      const pollInterval = setInterval(syncMessages, 3000);
-
-      // 3. Connect Socket.IO for real-time instant chat events
+      // Connect Socket.IO for real-time instant chat events
       const socket = getSocket();
       if (socket) {
         socket.emit('joinRoom', { roomId: 'general_support' });
@@ -210,7 +166,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             return dedupeMessages([...prev, newMsg]);
           });
 
-          if (newMsg.sender === 'admin' || (user?.role === 'admin' && newMsg.sender === 'customer')) {
+          if (newMsg.sender === 'admin') {
             playChime();
           }
         };
@@ -224,19 +180,62 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         socket.on('typing', handleTypingEvent);
 
         return () => {
-          clearInterval(pollInterval);
           socket.off('newMessage', handleNewMessage);
           socket.off('typing', handleTypingEvent);
-        };
-      } else {
-        return () => {
-          clearInterval(pollInterval);
         };
       }
     } catch (e) {
       console.warn('AppContext init error:', e);
     }
-  }, [user]);
+  }, []);
+
+  // 2. Sync chat messages with backend database & continuous polling
+  useEffect(() => {
+    const syncMessages = async () => {
+      try {
+        const chatFetchUrl = `${API_BASE_URL}/chat/messages`;
+        const res = await fetch(chatFetchUrl, {
+          headers: getAuthHeaders(),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data)) {
+            setMessages((prev) => {
+              const serverIds = new Set(data.map((m: any) => m.id));
+              // Preserve pending optimistic messages that haven't received server response
+              const pendingOptimistic = prev.filter(
+                (m) =>
+                  (m.id.startsWith('msg-') || (m.localId && m.localId.startsWith('msg-'))) &&
+                  !serverIds.has(m.id)
+              );
+              const merged = dedupeMessages([...data, ...pendingOptimistic]);
+              try {
+                localStorage.setItem('product_perks_messages_v1', JSON.stringify(merged));
+              } catch {}
+              return merged;
+            });
+          }
+        }
+      } catch {
+        const storedMsgs = localStorage.getItem('product_perks_messages_v1');
+        if (storedMsgs) {
+          try {
+            const parsed = JSON.parse(storedMsgs);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setMessages(dedupeMessages(parsed));
+            }
+          } catch (e) {}
+        }
+      }
+    };
+
+    syncMessages();
+    const pollInterval = setInterval(syncMessages, 3000);
+
+    return () => {
+      clearInterval(pollInterval);
+    };
+  }, [user?.id]);
 
   // Save to LocalStorage as cache
   useEffect(() => {
