@@ -25,14 +25,14 @@ export class ChatController {
     private readonly chatGateway: ChatGateway,
   ) {}
 
-  // Admin sees all messages (or filtered by user); Client sees their own; Guest sees by queryUserId or general
+  // Admin sees all messages (or filtered by user); Client sees their own + general; Guest sees by queryUserId or general
   @Get('messages')
   @Public()
   async getMessages(
     @CurrentUser() currentUser?: AuthenticatedUser,
     @Query('userId') queryUserId?: string,
   ) {
-    if (currentUser?.role === 'ADMIN') {
+    if (currentUser?.role?.toUpperCase() === 'ADMIN') {
       return this.chatService.getMessages(queryUserId);
     }
     if (currentUser) {
@@ -48,19 +48,37 @@ export class ChatController {
     @Body() dto: SendMessageDto,
     @CurrentUser() currentUser?: AuthenticatedUser,
   ) {
-    const isSenderAdmin = currentUser?.role === 'ADMIN';
+    const isSenderAdmin = 
+      currentUser?.role?.toUpperCase() === 'ADMIN' || 
+      dto.sender === 'admin';
+
+    let resolvedUserId: string | null = null;
+
+    if (isSenderAdmin) {
+      // If admin specifies a customer's ID (not the admin's own ID)
+      if (dto.userId && dto.userId !== currentUser?.id) {
+        resolvedUserId = dto.userId;
+      } else {
+        // Automatically link admin reply to the active customer conversation
+        const lastCustomer = await this.chatService.getLastCustomerMessage();
+        resolvedUserId = lastCustomer?.userId || null;
+      }
+    } else {
+      resolvedUserId = currentUser?.id || dto.userId || null;
+    }
+
     const enrichedDto: SendMessageDto = {
       ...dto,
       sender: isSenderAdmin ? 'admin' : (dto.sender || 'customer'),
       senderName: isSenderAdmin
-        ? (dto.senderName || 'ProductPerks Admin')
+        ? (dto.senderName || currentUser?.name || 'ProductPerks Admin')
         : (currentUser?.name || dto.senderName || 'Reviewer'),
-      userId: isSenderAdmin ? (dto.userId || currentUser?.id) : (currentUser?.id || dto.userId),
+      userId: resolvedUserId || undefined,
       localId: dto.localId,
     };
 
     const saved = await this.chatService.createMessage(enrichedDto);
-    // Broadcast via socket.io gateway
+    // Broadcast to all connected sockets
     if (this.chatGateway.server) {
       this.chatGateway.server.emit('newMessage', saved);
     }

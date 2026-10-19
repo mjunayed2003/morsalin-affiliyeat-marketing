@@ -33,7 +33,7 @@ interface AppContextType {
   deleteProduct: (productId: string) => void;
   resetProducts: () => void;
   sendCustomerMessage: (text: string, image?: string, productInfo?: { title: string; price: number; image: string }) => void;
-  sendAdminReply: (text: string, image?: string) => void;
+  sendAdminReply: (text: string, image?: string, targetUserId?: string) => void;
   emitTyping: (isTyping: boolean) => void;
   clearMessages: () => void;
   getProductById: (id: string) => Product | undefined;
@@ -133,23 +133,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           }
         });
 
-      // 2. Fetch authenticated messages if token is available
-      const chatFetchUrl = `${API_BASE_URL}/chat/messages`;
-      fetch(chatFetchUrl, {
-        headers: getAuthHeaders(),
-      })
-        .then((res) => {
-          if (res.ok) return res.json();
-          return null;
-        })
-        .then((data) => {
-          if (Array.isArray(data) && data.length > 0) {
-            const clean = dedupeMessages(data);
-            setMessages(clean);
-            localStorage.setItem('product_perks_messages_v1', JSON.stringify(clean));
+      // 2. Initial message fetch
+      const syncMessages = async () => {
+        try {
+          const chatFetchUrl = `${API_BASE_URL}/chat/messages`;
+          const res = await fetch(chatFetchUrl, {
+            headers: getAuthHeaders(),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data)) {
+              setMessages((prev) => {
+                const serverIds = new Set(data.map((m: any) => m.id));
+                // Preserve pending optimistic messages that haven't received server response
+                const pendingOptimistic = prev.filter(
+                  (m) =>
+                    (m.id.startsWith('msg-') || (m.localId && m.localId.startsWith('msg-'))) &&
+                    !serverIds.has(m.id)
+                );
+                const merged = dedupeMessages([...data, ...pendingOptimistic]);
+                try {
+                  localStorage.setItem('product_perks_messages_v1', JSON.stringify(merged));
+                } catch {}
+                return merged;
+              });
+            }
           }
-        })
-        .catch(() => {
+        } catch {
           const storedMsgs = localStorage.getItem('product_perks_messages_v1');
           if (storedMsgs) {
             try {
@@ -159,19 +169,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               }
             } catch (e) {}
           }
-        });
+        }
+      };
 
-      // 3. Connect Socket.IO for real-time chat
+      syncMessages();
+
+      // Background sync every 3 seconds to ensure client sees admin messages without delay
+      const pollInterval = setInterval(syncMessages, 3000);
+
+      // 3. Connect Socket.IO for real-time instant chat events
       const socket = getSocket();
       if (socket) {
         socket.emit('joinRoom', { roomId: 'general_support' });
 
         const handleNewMessage = (newMsg: ChatMessage) => {
           setMessages((prev) => {
-            // Already present by primary ID
             if (prev.some((m) => m.id === newMsg.id)) return prev;
 
-            // Replace optimistic local message with confirmed database record
             if (newMsg.localId) {
               const idx = prev.findIndex((m) => m.id === newMsg.localId || m.localId === newMsg.localId);
               if (idx !== -1) {
@@ -181,7 +195,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               }
             }
 
-            // Fallback match for recent optimistic message by text and sender
             const fallbackIdx = prev.findIndex(
               (m) =>
                 m.sender === newMsg.sender &&
@@ -197,7 +210,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             return dedupeMessages([...prev, newMsg]);
           });
 
-          // Play notification chime for incoming messages from the other side
           if (newMsg.sender === 'admin' || (user?.role === 'admin' && newMsg.sender === 'customer')) {
             playChime();
           }
@@ -212,14 +224,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         socket.on('typing', handleTypingEvent);
 
         return () => {
+          clearInterval(pollInterval);
           socket.off('newMessage', handleNewMessage);
           socket.off('typing', handleTypingEvent);
+        };
+      } else {
+        return () => {
+          clearInterval(pollInterval);
         };
       }
     } catch (e) {
       console.warn('AppContext init error:', e);
     }
-  }, []);
+  }, [user]);
 
   // Save to LocalStorage as cache
   useEffect(() => {
@@ -369,10 +386,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const sendAdminReply = (text: string, image?: string) => {
+  const sendAdminReply = (text: string, image?: string, targetUserId?: string) => {
     const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const localId = `msg-${Date.now()}`;
     const senderName = user?.name || 'ProductPerks Admin';
+
+    // Target the specific customer or the most recent customer in the chat
+    const lastCustomerMsg = [...messages].reverse().find((m) => m.sender === 'customer' && m.userId);
+    const resolvedUserId = targetUserId || lastCustomerMsg?.userId || null;
+
     const newMsg: ChatMessage = {
       id: localId,
       localId,
@@ -382,7 +404,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       image,
       timestamp: timeNow,
       read: true,
-      userId: user?.id,
+      userId: resolvedUserId || undefined,
     };
     setMessages((prev) => dedupeMessages([...prev, newMsg]));
 
@@ -391,7 +413,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       senderName,
       text,
       image,
-      userId: user?.id,
+      userId: resolvedUserId,
       localId,
     };
 

@@ -27,7 +27,7 @@ let ChatController = class ChatController {
         this.chatGateway = chatGateway;
     }
     async getMessages(currentUser, queryUserId) {
-        if (currentUser?.role === 'ADMIN') {
+        if (currentUser?.role?.toUpperCase() === 'ADMIN') {
             return this.chatService.getMessages(queryUserId);
         }
         if (currentUser) {
@@ -36,14 +36,28 @@ let ChatController = class ChatController {
         return this.chatService.getMessages(queryUserId);
     }
     async createMessage(dto, currentUser) {
-        const isSenderAdmin = currentUser?.role === 'ADMIN';
+        const isSenderAdmin = currentUser?.role?.toUpperCase() === 'ADMIN' ||
+            dto.sender === 'admin';
+        let resolvedUserId = null;
+        if (isSenderAdmin) {
+            if (dto.userId && dto.userId !== currentUser?.id) {
+                resolvedUserId = dto.userId;
+            }
+            else {
+                const lastCustomer = await this.chatService.getLastCustomerMessage();
+                resolvedUserId = lastCustomer?.userId || null;
+            }
+        }
+        else {
+            resolvedUserId = currentUser?.id || dto.userId || null;
+        }
         const enrichedDto = {
             ...dto,
             sender: isSenderAdmin ? 'admin' : (dto.sender || 'customer'),
             senderName: isSenderAdmin
-                ? (dto.senderName || 'ProductPerks Admin')
+                ? (dto.senderName || currentUser?.name || 'ProductPerks Admin')
                 : (currentUser?.name || dto.senderName || 'Reviewer'),
-            userId: isSenderAdmin ? (dto.userId || currentUser?.id) : (currentUser?.id || dto.userId),
+            userId: resolvedUserId || undefined,
             localId: dto.localId,
         };
         const saved = await this.chatService.createMessage(enrichedDto);

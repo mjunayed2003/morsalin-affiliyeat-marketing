@@ -82,11 +82,19 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.lastCustomerMessageTimes.set(clientKey, now);
     }
 
+    // If admin replies, ensure it targets the active customer thread
+    if (payload.sender === 'admin' && !payload.userId) {
+      const lastCustomer = await this.chatService.getLastCustomerMessage();
+      if (lastCustomer?.userId) {
+        payload.userId = lastCustomer.userId;
+      }
+    }
+
     // 2. Save message to database
     const savedMessage = await this.chatService.createMessage(payload);
 
-    // 3. Broadcast ONLY to other sockets so the sender does not receive a duplicate
-    client.broadcast.emit('newMessage', savedMessage);
+    // 3. Broadcast to all sockets so client and admin see it in real-time
+    this.server.emit('newMessage', savedMessage);
 
     // 4. Send auto-reply ONLY if 5 hours have passed without messaging (first message only)
     if (shouldAutoReply && payload.sender === 'customer') {

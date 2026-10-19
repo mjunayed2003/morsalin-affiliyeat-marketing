@@ -63,8 +63,14 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
             }
             this.lastCustomerMessageTimes.set(clientKey, now);
         }
+        if (payload.sender === 'admin' && !payload.userId) {
+            const lastCustomer = await this.chatService.getLastCustomerMessage();
+            if (lastCustomer?.userId) {
+                payload.userId = lastCustomer.userId;
+            }
+        }
         const savedMessage = await this.chatService.createMessage(payload);
-        client.broadcast.emit('newMessage', savedMessage);
+        this.server.emit('newMessage', savedMessage);
         if (shouldAutoReply && payload.sender === 'customer') {
             this.logger.log(`🤖 5-hour inactivity threshold met: Triggering auto-reply for customer ${clientKey}`);
             setTimeout(() => {
