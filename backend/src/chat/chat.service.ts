@@ -15,7 +15,9 @@ export class ChatService {
     return {
       id: msg.id,
       sender: msg.sender,
-      senderName: msg.senderName,
+      senderName: msg.user?.name || msg.senderName,
+      userPhone: msg.user?.phone || undefined,
+      userEmail: msg.user?.email || undefined,
       text: msg.text,
       image: msg.image || undefined,
       productInfo: msg.productTitle
@@ -41,6 +43,16 @@ export class ChatService {
 
     const messages = await this.prisma.chatMessage.findMany({
       where,
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+            email: true,
+          },
+        },
+      },
       orderBy: { createdAt: 'asc' },
     });
 
@@ -75,6 +87,16 @@ export class ChatService {
         productImage: dto.productInfo?.image || null,
         read: dto.sender === 'admin',
         userId: validUserId,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+            email: true,
+          },
+        },
       },
     });
 

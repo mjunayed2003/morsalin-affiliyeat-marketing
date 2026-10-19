@@ -10,6 +10,8 @@ export declare class ChatController {
         id: any;
         sender: any;
         senderName: any;
+        userPhone: any;
+        userEmail: any;
         text: any;
         image: any;
         productInfo: {
@@ -28,6 +30,8 @@ export declare class ChatController {
         id: any;
         sender: any;
         senderName: any;
+        userPhone: any;
+        userEmail: any;
         text: any;
         image: any;
         productInfo: {

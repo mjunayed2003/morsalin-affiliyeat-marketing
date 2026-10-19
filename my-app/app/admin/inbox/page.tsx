@@ -1,34 +1,204 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { 
   FaComments, 
   FaPaperPlane, 
   FaImage, 
-  FaCheck, 
   FaTrashCan,
   FaPhone,
   FaClock,
-  FaStore
+  FaUser,
+  FaMagnifyingGlass,
+  FaShieldHalved,
+  FaEnvelope,
+  FaCircleCheck,
+  FaArrowLeft
 } from 'react-icons/fa6';
+import { FiX } from 'react-icons/fi';
 import { useApp } from '@/app/context/AppContext';
-import { ChatMessage } from '@/app/types';
+import { useAuth } from '@/app/context/AuthContext';
+import { ChatMessage, User } from '@/app/types';
+
+function formatPhone(phone?: string): string {
+  if (!phone) return 'No Phone';
+  const digits = phone.replace(/\D/g, '');
+  const usDigits = digits.length > 10 && digits.startsWith('1') ? digits.slice(1) : digits;
+  if (usDigits.length === 10) {
+    return `+1 (${usDigits.slice(0, 3)}) ${usDigits.slice(3, 6)}-${usDigits.slice(6)}`;
+  }
+  return phone;
+}
+
+function formatRelativeTime(dateString?: string): string {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+}
+
+interface ConversationItem {
+  id: string; // userId or 'guest'
+  name: string;
+  phone: string;
+  email?: string;
+  avatar?: string;
+  lastMessage?: ChatMessage;
+  lastMessageTime: number; // timestamp in ms for sorting
+  unreadCount: number;
+  totalMessages: number;
+  isGuest?: boolean;
+}
 
 export default function AdminInboxPage() {
   const { messages, sendAdminReply, clearMessages, showToast, isTyping, typingSender, emitTyping } = useApp();
+  const { users } = useAuth();
+
+  const [selectedConversationId, setSelectedConversationId] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [replyText, setReplyText] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'all' | 'customer' | 'admin'>('all');
+  const [mobileShowChat, setMobileShowChat] = useState(false);
+
   const chatFeedRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const typingTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Auto scroll chat feed internally (does not scroll page)
+  // Group and sort conversations: NEWEST MESSAGE ALWAYS ON TOP
+  const conversations = useMemo(() => {
+    const convMap = new Map<string, ConversationItem>();
+
+    // 1. Seed conversations from registered users
+    users.forEach((usr) => {
+      convMap.set(usr.id, {
+        id: usr.id,
+        name: usr.name || 'Registered User',
+        phone: usr.phone || '',
+        email: usr.email,
+        avatar: usr.avatar,
+        lastMessageTime: new Date(usr.createdAt || 0).getTime(),
+        unreadCount: 0,
+        totalMessages: 0,
+      });
+    });
+
+    // 2. Aggregate messages per user & discover unknown/guest users
+    messages.forEach((msg) => {
+      const convId = msg.userId || 'guest';
+
+      if (!convMap.has(convId)) {
+        if (convId === 'guest') {
+          convMap.set('guest', {
+            id: 'guest',
+            name: 'Guest Visitors (Unregistered)',
+            phone: 'General Support',
+            lastMessageTime: 0,
+            unreadCount: 0,
+            totalMessages: 0,
+            isGuest: true,
+          });
+        } else {
+          convMap.set(convId, {
+            id: convId,
+            name: msg.senderName || msg.userPhone || 'Reviewer',
+            phone: msg.userPhone || '',
+            email: msg.userEmail,
+            lastMessageTime: 0,
+            unreadCount: 0,
+            totalMessages: 0,
+          });
+        }
+      }
+
+      const item = convMap.get(convId)!;
+      item.totalMessages += 1;
+
+      // Update phone/name from message metadata if missing
+      if (!item.phone && msg.userPhone) item.phone = msg.userPhone;
+      if (item.name === 'Reviewer' && msg.senderName && msg.senderName !== 'Reviewer') {
+        item.name = msg.senderName;
+      }
+
+      const msgTime = new Date(msg.createdAt || Date.now()).getTime();
+      if (!item.lastMessage || msgTime >= item.lastMessageTime) {
+        item.lastMessage = msg;
+        item.lastMessageTime = msgTime;
+      }
+
+      if (msg.sender === 'customer' && !msg.read) {
+        item.unreadCount += 1;
+      }
+    });
+
+    // 3. Sort list: Conversation with latest message / activity appears on top
+    const list = Array.from(convMap.values());
+    list.sort((a, b) => {
+      // Prioritize conversations that actually have messages
+      if (a.lastMessage && !b.lastMessage) return -1;
+      if (!a.lastMessage && b.lastMessage) return 1;
+      return b.lastMessageTime - a.lastMessageTime;
+    });
+
+    return list;
+  }, [users, messages]);
+
+  // Filter conversations by search input (Name, Phone, Email)
+  const filteredConversations = useMemo(() => {
+    if (!searchQuery.trim()) return conversations;
+    const q = searchQuery.toLowerCase().trim();
+    return conversations.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        c.phone.toLowerCase().includes(q) ||
+        (c.email && c.email.toLowerCase().includes(q))
+    );
+  }, [conversations, searchQuery]);
+
+  // Set initial selected conversation
+  useEffect(() => {
+    if (!selectedConversationId && conversations.length > 0) {
+      setSelectedConversationId(conversations[0].id);
+    }
+  }, [conversations, selectedConversationId]);
+
+  // Active selected conversation data
+  const activeConversation = useMemo(() => {
+    return conversations.find((c) => c.id === selectedConversationId) || conversations[0] || null;
+  }, [conversations, selectedConversationId]);
+
+  // Messages filtered for the active conversation
+  const activeMessages = useMemo(() => {
+    if (!activeConversation) return [];
+    const isGuest = activeConversation.id === 'guest';
+
+    return messages.filter((m) => {
+      const matchConv = isGuest ? !m.userId : m.userId === activeConversation.id;
+      if (!matchConv) return false;
+
+      if (activeTab === 'customer') return m.sender === 'customer';
+      if (activeTab === 'admin') return m.sender === 'admin';
+      return true;
+    });
+  }, [messages, activeConversation, activeTab]);
+
+  // Auto scroll chat feed internally when messages change
   useEffect(() => {
     if (chatFeedRef.current) {
       chatFeedRef.current.scrollTop = chatFeedRef.current.scrollHeight;
     }
-  }, [messages, selectedImage, isTyping]);
+  }, [activeMessages, selectedImage, isTyping]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setReplyText(e.target.value);
@@ -50,10 +220,12 @@ export default function AdminInboxPage() {
       emitTyping(false);
     }
 
-    sendAdminReply(replyText.trim(), selectedImage || undefined);
+    const targetUserId = activeConversation && !activeConversation.isGuest ? activeConversation.id : undefined;
+
+    sendAdminReply(replyText.trim(), selectedImage || undefined, targetUserId);
     setReplyText('');
     setSelectedImage(null);
-    showToast('Admin reply sent to reviewer.');
+    showToast(`Reply sent to ${activeConversation?.name || 'Reviewer'}.`);
   };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -68,195 +240,420 @@ export default function AdminInboxPage() {
     e.target.value = '';
   };
 
-  const filteredMessages = messages.filter((m) => {
-    if (activeTab === 'customer') return m.sender === 'customer';
-    if (activeTab === 'admin') return m.sender === 'admin';
-    return true;
-  });
-
   return (
-    <div className="space-y-6 max-w-5xl">
+    <div className="space-y-4 max-w-7xl mx-auto font-sans">
       
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Top Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-            Support & Customer Inbox
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+              Support & Reviewer Inbox
+            </h1>
+            <span className="bg-emerald-100 text-emerald-800 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-200">
+              Live Real-Time
+            </span>
+          </div>
           <p className="text-xs text-slate-500 mt-1">
-            Real-time chat inquiries from reviewers about Amazon products, delivery, and review verification.
+            Real-time chat inquiries from reviewers. User with the newest message automatically appears at the top.
           </p>
         </div>
 
         <button
           onClick={() => {
-            if (confirm('Are you sure you want to clear chat history?')) {
+            if (confirm('Are you sure you want to clear this conversation history?')) {
               clearMessages();
             }
           }}
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 px-3 py-1.5 rounded-xl border border-rose-200 transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 px-3.5 py-2 rounded-xl border border-rose-200 transition-colors cursor-pointer w-fit"
         >
-          <FaTrashCan className="w-3 h-3" />
+          <FaTrashCan className="w-3.5 h-3.5" />
           <span>Clear Chat History</span>
         </button>
       </div>
 
-      {/* Main Chat Box Container */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden flex flex-col h-[600px]">
+      {/* Main Two-Pane Chat Container */}
+      <div className="bg-white rounded-3xl border border-stone-200 shadow-sm overflow-hidden flex flex-col md:flex-row h-[720px]">
         
-        {/* Chat Header Filter Bar */}
-        <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between bg-slate-50/70 text-xs">
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-slate-700">Filter View:</span>
-            {['all', 'customer', 'admin'].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab as any)}
-                className={`px-2.5 py-1 rounded-lg font-semibold uppercase text-[10px] tracking-wider transition-all ${
-                  activeTab === tab
-                    ? 'bg-white text-slate-900 shadow-2xs font-bold'
-                    : 'text-slate-500 hover:text-slate-900'
-                }`}
-              >
-                {tab === 'all' ? 'All Messages' : tab === 'customer' ? 'Customer Inquiries' : 'Admin Replies'}
-              </button>
-            ))}
+        {/* ========================================================= */}
+        {/* LEFT PANE: USER LIST WITH PHONE NUMBERS                   */}
+        {/* ========================================================= */}
+        <div className={`w-full md:w-[360px] lg:w-[400px] border-r border-stone-200 flex flex-col shrink-0 bg-stone-50/50 ${mobileShowChat ? 'hidden md:flex' : 'flex'}`}>
+          
+          {/* Search Header */}
+          <div className="p-3.5 border-b border-stone-200 bg-white space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                <FaComments className="w-3.5 h-3.5 text-[#1b3b2b]" />
+                Conversations ({conversations.length})
+              </span>
+              <span className="text-[11px] text-slate-500 font-medium">
+                Sorted by Latest
+              </span>
+            </div>
+
+            {/* Search Input */}
+            <div className="relative">
+              <FaMagnifyingGlass className="w-3.5 h-3.5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Search user name or phone..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-stone-50 pl-9 pr-3.5 py-2 text-xs rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-[#1b3b2b]/15 focus:border-[#1b3b2b] text-slate-900 font-medium transition-all"
+              />
+            </div>
           </div>
 
-          <span className="text-[11px] text-slate-400 font-mono">
-            {messages.length} messages logged
-          </span>
-        </div>
+          {/* User Conversations List */}
+          <div className="flex-1 overflow-y-auto divide-y divide-stone-100">
+            {filteredConversations.length === 0 ? (
+              <div className="p-8 text-center text-slate-400 text-xs">
+                <FaUser className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                <p className="font-semibold">No users found</p>
+                <p className="text-[11px] mt-0.5">Try a different name or phone number.</p>
+              </div>
+            ) : (
+              filteredConversations.map((conv) => {
+                const isSelected = activeConversation?.id === conv.id;
+                const hasUnread = conv.unreadCount > 0;
 
-        {/* Message Thread */}
-        <div ref={chatFeedRef} className="flex-1 overflow-y-auto p-5 space-y-4 custom-scrollbar bg-slate-50/30">
-          {filteredMessages.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-center text-slate-400">
-              <FaComments className="w-10 h-10 mb-2 opacity-30" />
-              <p className="text-xs font-medium">No messages found in this filter.</p>
-            </div>
-          ) : (
-            filteredMessages.map((msg) => {
-              const isAdmin = msg.sender === 'admin';
-              return (
-                <div
-                  key={msg.id}
-                  className={`flex flex-col ${isAdmin ? 'items-end' : 'items-start'}`}
-                >
-                  <div className="flex items-center gap-2 mb-1 text-[11px] text-slate-400 font-medium">
-                    <span>{isAdmin ? 'Owner / Admin' : msg.senderName || 'Reviewer'}</span>
-                    <span>•</span>
-                    <span>{msg.timestamp}</span>
-                  </div>
-
-                  {/* Attached Product Box */}
-                  {msg.productInfo && (
-                    <div className="mb-2 p-2.5 rounded-xl bg-white border border-slate-200 shadow-2xs flex items-center gap-3 max-w-sm">
-                      <img
-                        src={msg.productInfo.image}
-                        alt={msg.productInfo.title}
-                        className="w-10 h-10 rounded-lg object-cover shrink-0"
-                      />
-                      <div className="min-w-0">
-                        <p className="text-xs font-bold text-slate-900 truncate">
-                          {msg.productInfo.title}
-                        </p>
-                        <p className="text-[11px] text-emerald-700 font-semibold">
-                          Price: ${msg.productInfo.price} (Free Perk)
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Image Attachment */}
-                  {msg.image && (
-                    <div className="mb-2 rounded-xl overflow-hidden max-w-xs border border-slate-200 shadow-xs">
-                      <img src={msg.image} alt="User upload" className="w-full h-auto max-h-48 object-cover" />
-                    </div>
-                  )}
-
-                  {/* Bubble */}
-                  <div
-                    className={`max-w-md px-4 py-2.5 rounded-2xl text-xs leading-relaxed ${
-                      isAdmin
-                        ? 'bg-[#1b3b2b] text-white rounded-br-xs shadow-xs'
-                        : 'bg-white text-slate-800 border border-slate-200 rounded-bl-xs shadow-2xs'
+                return (
+                  <button
+                    key={conv.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedConversationId(conv.id);
+                      setMobileShowChat(true);
+                    }}
+                    className={`w-full text-left p-3.5 transition-all flex items-start gap-3 cursor-pointer ${
+                      isSelected
+                        ? 'bg-emerald-50/80 border-l-4 border-[#1b3b2b] shadow-2xs'
+                        : 'hover:bg-white bg-transparent'
                     }`}
                   >
-                    {msg.text}
-                  </div>
-                </div>
-              );
-            })
-          )}
+                    {/* User Avatar */}
+                    <div className="relative shrink-0">
+                      <div className={`w-11 h-11 rounded-2xl flex items-center justify-center font-bold text-sm shadow-2xs ${
+                        isSelected 
+                          ? 'bg-[#1b3b2b] text-white' 
+                          : conv.isGuest
+                          ? 'bg-amber-100 text-amber-800'
+                          : 'bg-stone-200 text-slate-700'
+                      }`}>
+                        {conv.isGuest ? 'G' : conv.name.slice(0, 1).toUpperCase()}
+                      </div>
+                      {conv.totalMessages > 0 && (
+                        <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white"></span>
+                      )}
+                    </div>
 
-          {/* Real-time Reviewer Typing Indicator */}
-          {isTyping && typingSender !== 'admin' && (
-            <div className="flex flex-col items-start animate-in fade-in duration-200">
-              <span className="text-[11px] text-slate-400 font-medium mb-1">
-                Reviewer is typing...
-              </span>
-              <div className="bg-white px-3.5 py-2.5 rounded-2xl border border-slate-200 flex items-center gap-1.5 shadow-2xs">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-bounce"></div>
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-bounce [animation-delay:0.2s]"></div>
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-bounce [animation-delay:0.4s]"></div>
-              </div>
-            </div>
-          )}
+                    {/* User Details */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-1 mb-0.5">
+                        <span className={`text-xs font-bold truncate ${
+                          isSelected ? 'text-[#1b3b2b]' : 'text-slate-900'
+                        }`}>
+                          {conv.name}
+                        </span>
+                        
+                        <span className="text-[10px] text-slate-400 shrink-0 font-medium">
+                          {formatRelativeTime(conv.lastMessage?.createdAt)}
+                        </span>
+                      </div>
+
+                      {/* Phone Number Display (PROMINENT) */}
+                      <div className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-800 mb-1">
+                        <FaPhone className="w-2.5 h-2.5 text-emerald-600 shrink-0" />
+                        <span className="font-mono tracking-tight truncate">
+                          {formatPhone(conv.phone)}
+                        </span>
+                        {conv.phone && conv.phone.startsWith('+1') && (
+                          <span className="text-[9px] bg-emerald-100/80 text-emerald-700 px-1 py-0.2 rounded font-bold">
+                            🇺🇸 USA
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Last Message Snippet */}
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-[11px] text-slate-500 truncate font-normal">
+                          {conv.lastMessage ? (
+                            <span>
+                              {conv.lastMessage.sender === 'admin' ? (
+                                <strong className="text-slate-700">You: </strong>
+                              ) : null}
+                              {conv.lastMessage.text || (conv.lastMessage.image ? '📷 [Photo Attached]' : 'Inquiry message')}
+                            </span>
+                          ) : (
+                            <span className="italic text-slate-400">No chat messages yet</span>
+                          )}
+                        </p>
+
+                        {hasUnread && (
+                          <span className="bg-rose-500 text-white font-bold text-[10px] px-1.5 py-0.5 rounded-full shrink-0">
+                            {conv.unreadCount}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })
+            )}
+          </div>
         </div>
 
-        {/* Reply Form */}
-        <form onSubmit={handleSend} className="p-3 border-t border-slate-200 bg-white space-y-2">
-          {selectedImage && (
-            <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 border border-slate-200 w-fit">
-              <img src={selectedImage} alt="Attachment" className="w-8 h-8 rounded-lg object-cover" />
-              <span className="text-xs text-slate-600 font-medium">Photo attached</span>
+        {/* ========================================================= */}
+        {/* RIGHT PANE: ACTIVE CONVERSATION THREAD                    */}
+        {/* ========================================================= */}
+        <div className={`flex-1 flex flex-col bg-white min-w-0 ${!mobileShowChat ? 'hidden md:flex' : 'flex'}`}>
+          
+          {/* Active Conversation Top Bar */}
+          <div className="p-3.5 sm:p-4 border-b border-stone-200 bg-white flex items-center justify-between gap-3 shrink-0">
+            <div className="flex items-center gap-3 min-w-0">
+              
+              {/* Mobile Back Button */}
               <button
                 type="button"
-                onClick={() => setSelectedImage(null)}
-                className="text-slate-400 hover:text-rose-600 text-xs ml-1"
+                onClick={() => setMobileShowChat(false)}
+                className="md:hidden p-2 text-slate-500 hover:text-slate-900 rounded-lg hover:bg-stone-100 cursor-pointer"
               >
-                ✕
+                <FaArrowLeft className="w-4 h-4" />
               </button>
+
+              <div className="relative shrink-0">
+                <div className="w-10 h-10 rounded-2xl bg-[#1b3b2b] text-white flex items-center justify-center font-bold text-sm shadow-xs">
+                  {activeConversation?.isGuest ? 'G' : (activeConversation?.name?.slice(0, 1) || 'U').toUpperCase()}
+                </div>
+                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white"></span>
+              </div>
+
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-sm sm:text-base font-bold text-slate-900 truncate">
+                    {activeConversation?.name || 'Reviewer'}
+                  </h2>
+                  <span className="text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-200/80 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider shrink-0">
+                    {activeConversation?.isGuest ? 'Guest' : 'Verified Reviewer'}
+                  </span>
+                </div>
+
+                {/* Prominent Phone & Email Bar */}
+                <div className="flex items-center gap-3 text-xs text-slate-600 mt-0.5 flex-wrap">
+                  <span className="flex items-center gap-1 font-semibold text-emerald-800">
+                    <FaPhone className="w-3 h-3 text-emerald-600" />
+                    <span>{formatPhone(activeConversation?.phone)}</span>
+                  </span>
+
+                  {activeConversation?.email && (
+                    <span className="flex items-center gap-1 text-slate-500 text-[11px] truncate">
+                      <FaEnvelope className="w-3 h-3 text-slate-400" />
+                      <span className="truncate">{activeConversation.email}</span>
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
-          )}
 
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="p-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
-              title="Attach photo"
-            >
-              <FaImage className="w-4 h-4" />
-            </button>
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleImageSelect}
-              accept="image/*"
-              className="hidden"
-            />
-
-            <input
-              type="text"
-              value={replyText}
-              onChange={handleInputChange}
-              placeholder="Type an official admin reply..."
-              className="flex-1 px-4 py-2.5 text-xs bg-slate-50 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#1b3b2b] focus:bg-white transition-all"
-            />
-
-            <button
-              type="submit"
-              className="p-2.5 rounded-xl bg-[#1b3b2b] hover:bg-[#142e20] text-white shadow-xs transition-all active:scale-95 cursor-pointer"
-              title="Send reply"
-            >
-              <FaPaperPlane className="w-4 h-4" />
-            </button>
+            {/* Filter Toggle */}
+            <div className="hidden sm:flex items-center gap-1 bg-stone-100 p-1 rounded-xl text-[11px] shrink-0">
+              {(['all', 'customer', 'admin'] as const).map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
+                    activeTab === tab
+                      ? 'bg-white text-slate-900 shadow-2xs font-bold'
+                      : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  {tab === 'all' ? 'All' : tab === 'customer' ? 'Customer' : 'Admin'}
+                </button>
+              ))}
+            </div>
           </div>
-        </form>
+
+          {/* Messages Feed */}
+          <div ref={chatFeedRef} className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5 bg-stone-50/40">
+            {activeMessages.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-center text-slate-400">
+                <FaComments className="w-12 h-12 mb-2 opacity-30 text-emerald-800" />
+                <p className="text-xs font-bold text-slate-700">No chat history with this user</p>
+                <p className="text-[11px] text-slate-400 mt-0.5 max-w-xs">
+                  Type a reply below to start the conversation with {activeConversation?.name}.
+                </p>
+              </div>
+            ) : (
+              activeMessages.map((msg) => {
+                const isAdmin = msg.sender === 'admin';
+
+                return (
+                  <div
+                    key={msg.id}
+                    className={`flex flex-col ${isAdmin ? 'items-end' : 'items-start'} space-y-1 animate-in fade-in duration-100`}
+                  >
+                    <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-medium px-1">
+                      <span>{isAdmin ? 'Admin (You)' : msg.senderName || activeConversation?.name || 'Reviewer'}</span>
+                      <span>•</span>
+                      <span>{msg.timestamp}</span>
+                    </div>
+
+                    {/* Attached Product Box */}
+                    {msg.productInfo && (
+                      <div className="mb-1 p-2 rounded-xl bg-white border border-stone-200 shadow-2xs flex items-center gap-2.5 max-w-sm">
+                        <img
+                          src={msg.productInfo.image}
+                          alt={msg.productInfo.title}
+                          className="w-10 h-10 rounded-lg object-cover shrink-0 border border-stone-200"
+                        />
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-slate-900 truncate">
+                            {msg.productInfo.title}
+                          </p>
+                          <p className="text-[11px] text-emerald-700 font-bold">
+                            Price: ${msg.productInfo.price} (Free Perk)
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Attached Image */}
+                    {msg.image && (
+                      <div className="mb-1 rounded-xl overflow-hidden max-w-xs border border-stone-200 shadow-2xs">
+                        <img 
+                          src={msg.image} 
+                          alt="Attachment" 
+                          onClick={() => setPreviewImage(msg.image || null)}
+                          className="w-full h-auto max-h-48 object-cover cursor-pointer hover:opacity-95" 
+                        />
+                      </div>
+                    )}
+
+                    {/* Text Bubble */}
+                    <div
+                      className={`max-w-md px-4 py-2.5 rounded-2xl text-xs sm:text-sm leading-relaxed ${
+                        isAdmin
+                          ? 'bg-[#1b3b2b] text-white rounded-br-xs shadow-xs font-normal'
+                          : 'bg-white text-slate-800 border border-stone-200 rounded-bl-xs shadow-2xs font-normal'
+                      }`}
+                    >
+                      {msg.text}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+
+            {/* Real-Time Reviewer Typing Indicator */}
+            {isTyping && typingSender !== 'admin' && (
+              <div className="flex flex-col items-start animate-in fade-in duration-150">
+                <span className="text-[10px] text-slate-400 font-medium mb-1">
+                  {activeConversation?.name || 'Reviewer'} is typing...
+                </span>
+                <div className="bg-white px-3 py-2 rounded-2xl border border-stone-200 flex items-center gap-1.5 shadow-2xs">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-bounce"></div>
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-bounce [animation-delay:0.2s]"></div>
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-bounce [animation-delay:0.4s]"></div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Replying Status & Form */}
+          <div className="border-t border-stone-200 bg-white">
+            
+            {/* Recipient Indicator */}
+            <div className="px-4 py-1.5 bg-stone-50/80 border-b border-stone-100 flex items-center justify-between text-[11px] text-slate-600">
+              <span className="flex items-center gap-1.5 font-medium truncate">
+                <span>Replying to:</span>
+                <strong className="text-slate-900">{activeConversation?.name}</strong>
+                <span className="text-emerald-700 font-mono font-semibold">({formatPhone(activeConversation?.phone)})</span>
+              </span>
+              <span className="text-slate-400 text-[10px]">
+                Target ID: {activeConversation?.id.slice(0, 10)}...
+              </span>
+            </div>
+
+            {/* Attached Photo Preview */}
+            {selectedImage && (
+              <div className="px-4 py-2 bg-emerald-50 border-b border-emerald-100 flex items-center gap-3">
+                <img src={selectedImage} alt="Attachment" className="w-10 h-10 rounded-lg object-cover border border-emerald-200" />
+                <span className="text-xs text-emerald-900 font-medium">Image attached</span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedImage(null)}
+                  className="text-slate-400 hover:text-rose-600 text-xs ml-auto cursor-pointer"
+                >
+                  ✕ Remove
+                </button>
+              </div>
+            )}
+
+            {/* Input Form */}
+            <form onSubmit={handleSend} className="p-3 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="p-2.5 rounded-xl border border-stone-200 text-slate-500 hover:bg-stone-50 hover:text-[#1b3b2b] transition-colors cursor-pointer shrink-0"
+                title="Attach photo"
+              >
+                <FaImage className="w-4 h-4" />
+              </button>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleImageSelect}
+                accept="image/*"
+                className="hidden"
+              />
+
+              <input
+                type="text"
+                value={replyText}
+                onChange={handleInputChange}
+                placeholder={`Type reply to ${activeConversation?.name || 'Reviewer'}...`}
+                className="flex-1 px-4 py-2.5 text-xs sm:text-sm bg-stone-50 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-[#1b3b2b]/15 focus:border-[#1b3b2b] transition-all font-medium"
+              />
+
+              <button
+                type="submit"
+                disabled={!replyText.trim() && !selectedImage}
+                className="px-4 py-2.5 rounded-xl bg-[#1b3b2b] hover:bg-[#142e20] active:scale-95 disabled:opacity-40 disabled:pointer-events-none text-white shadow-xs transition-all cursor-pointer font-bold text-xs sm:text-sm flex items-center gap-1.5 shrink-0"
+                title="Send reply"
+              >
+                <span>Send</span>
+                <FaPaperPlane className="w-3.5 h-3.5" />
+              </button>
+            </form>
+          </div>
+
+        </div>
 
       </div>
+
+      {/* Lightbox Modal for Zooming Photos */}
+      {previewImage && (
+        <div 
+          onClick={() => setPreviewImage(null)}
+          className="fixed inset-0 z-60 bg-black/85 flex items-center justify-center p-4 backdrop-blur-xs cursor-pointer animate-in fade-in"
+        >
+          <div className="relative max-w-3xl max-h-[85vh]">
+            <button
+              onClick={() => setPreviewImage(null)}
+              className="absolute -top-10 right-0 text-white bg-slate-800 p-2 rounded-full hover:bg-slate-700 cursor-pointer"
+            >
+              <FiX className="w-5 h-5" />
+            </button>
+            <img
+              src={previewImage}
+              alt="Zoomed Attachment"
+              className="max-h-[80vh] w-auto object-contain rounded-2xl shadow-2xl"
+            />
+          </div>
+        </div>
+      )}
 
     </div>
   );

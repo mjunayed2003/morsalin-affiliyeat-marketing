@@ -8,6 +8,8 @@ export declare class ChatService {
         id: any;
         sender: any;
         senderName: any;
+        userPhone: any;
+        userEmail: any;
         text: any;
         image: any;
         productInfo: {
@@ -26,6 +28,8 @@ export declare class ChatService {
         id: any;
         sender: any;
         senderName: any;
+        userPhone: any;
+        userEmail: any;
         text: any;
         image: any;
         productInfo: {
@@ -41,8 +45,8 @@ export declare class ChatService {
     }>;
     getLastCustomerMessage(userId?: string): Promise<{
         id: string;
-        image: string | null;
         createdAt: Date;
+        image: string | null;
         sender: string;
         senderName: string | null;
         text: string;
