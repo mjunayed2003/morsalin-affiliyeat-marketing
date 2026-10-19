@@ -9,6 +9,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { ChatService } from './chat.service.js';
 import { SendMessageDto } from './dto/send-message.dto.js';
 
@@ -26,7 +27,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   // Track last message timestamp per customer to enforce 5-hour auto-reply rule
   private readonly lastCustomerMessageTimes = new Map<string, number>();
 
-  constructor(private readonly chatService: ChatService) {}
+  constructor(
+    private readonly chatService: ChatService,
+    private readonly jwtService: JwtService,
+  ) {}
 
   handleConnection(client: Socket) {
     this.logger.log(`⚡ Client connected via Socket.IO: ${client.id}`);
@@ -36,23 +40,105 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.logger.log(`🔌 Client disconnected from Socket.IO: ${client.id}`);
   }
 
+  /**
+   * Helper to resolve authenticated user from socket handshake or event payload
+   */
+  private async resolveSocketUser(client: Socket, directToken?: string) {
+    try {
+      const token =
+        directToken ||
+        client.handshake.auth?.token ||
+        (client.handshake.headers?.authorization
+          ? client.handshake.headers.authorization.replace(/^Bearer\s+/i, '')
+          : null);
+
+      if (!token) return null;
+
+      const payload = await this.jwtService.verifyAsync(token, {
+        secret:
+          process.env.JWT_SECRET ||
+          'morsalin_affiliate_super_secure_jwt_token_secret_key_2026_x87123',
+      });
+
+      return {
+        id: (payload.sub || payload.id) as string,
+        phone: payload.phone as string,
+        role: payload.role as string,
+        name: payload.name as string,
+        email: payload.email as string,
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * STRICT ROOM JOIN CONTROL:
+   * - admin_room can ONLY be joined by verified ADMIN
+   * - room_{userId} can ONLY be joined by that exact user or an ADMIN
+   */
   @SubscribeMessage('joinRoom')
-  handleJoinRoom(
+  async handleJoinRoom(
     @ConnectedSocket() client: Socket,
-    @MessageBody() payload: { roomId?: string; userId?: string },
+    @MessageBody() payload: { roomId?: string; userId?: string; token?: string },
   ) {
-    const room = payload.roomId || (payload.userId ? `room_${payload.userId}` : 'general_support');
-    client.join(room);
-    this.logger.log(`Client ${client.id} joined room: ${room}`);
-    return { event: 'joinedRoom', room };
+    const user = await this.resolveSocketUser(client, payload?.token);
+    const isAdmin = user?.role?.toUpperCase() === 'ADMIN';
+
+    if (payload.roomId === 'admin_room') {
+      if (isAdmin) {
+        client.join('admin_room');
+        this.logger.log(`🛡️ Admin ${user?.name || client.id} joined admin_room`);
+      } else {
+        this.logger.warn(`🚫 Unauthorized attempt by ${client.id} to join admin_room rejected`);
+      }
+    }
+
+    if (payload.userId) {
+      if (isAdmin || (user && user.id === payload.userId)) {
+        const userRoom = `room_${payload.userId}`;
+        client.join(userRoom);
+        this.logger.log(`🔒 User ${user?.name || client.id} joined private room: ${userRoom}`);
+      } else {
+        this.logger.warn(`🚫 Unauthorized attempt by ${client.id} to join room_${payload.userId} rejected`);
+      }
+    }
+
+    return { event: 'joinedRoom' };
   }
 
   @SubscribeMessage('sendMessage')
   async handleSendMessage(
     @ConnectedSocket() client: Socket,
-    @MessageBody() payload: SendMessageDto,
+    @MessageBody() payload: SendMessageDto & { token?: string },
   ) {
-    this.logger.log(`💬 Received message from ${payload.sender}: "${payload.text?.slice(0, 30)}..."`);
+    const user = await this.resolveSocketUser(client, payload?.token);
+    const isAdmin = user?.role?.toUpperCase() === 'ADMIN';
+
+    // Strictly enforce sender role & identity from verified token
+    if (isAdmin) {
+      payload.sender = 'admin';
+      payload.senderName = payload.senderName || user?.name || 'ProductPerks Admin';
+      if (!payload.userId) {
+        const lastCustomer = await this.chatService.getLastCustomerMessage();
+        if (lastCustomer?.userId) {
+          payload.userId = lastCustomer.userId;
+        }
+      }
+    } else {
+      payload.sender = 'customer';
+      if (user) {
+        payload.userId = user.id;
+        payload.senderName = user.name || payload.senderName || 'Reviewer';
+      } else {
+        // Unauthenticated client cannot spoof any registered userId
+        delete payload.userId;
+      }
+    }
+
+    this.logger.log(
+      `💬 Message from ${payload.sender} (${payload.senderName}): "${payload.text?.slice(0, 30)}..."`,
+    );
 
     // 1. Check 5-hour inactivity rule for customer auto-reply BEFORE saving current message
     const FIVE_HOURS_MS = 5 * 60 * 60 * 1000;
@@ -66,7 +152,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         try {
           const lastDbMsg = await this.chatService.getLastCustomerMessage(payload.userId);
           if (!lastDbMsg) {
-            // First message ever
             shouldAutoReply = true;
           } else {
             const elapsed = now - new Date(lastDbMsg.createdAt).getTime();
@@ -78,30 +163,32 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           shouldAutoReply = true;
         }
       }
-      // Record this message timestamp so subsequent messages within 5 hours get NO auto-reply
       this.lastCustomerMessageTimes.set(clientKey, now);
-    }
-
-    // If admin replies, ensure it targets the active customer thread
-    if (payload.sender === 'admin' && !payload.userId) {
-      const lastCustomer = await this.chatService.getLastCustomerMessage();
-      if (lastCustomer?.userId) {
-        payload.userId = lastCustomer.userId;
-      }
     }
 
     // 2. Save message to database
     const savedMessage = await this.chatService.createMessage(payload);
 
-    // 3. Broadcast to all sockets so client and admin see it in real-time
-    this.server.emit('newMessage', savedMessage);
+    // 3. Broadcast STRICTLY to the target user's private room and the admin room
+    if (savedMessage.userId) {
+      this.server
+        .to(`room_${savedMessage.userId}`)
+        .to('admin_room')
+        .emit('newMessage', savedMessage);
+    } else {
+      this.server.to('admin_room').emit('newMessage', savedMessage);
+    }
 
     // 4. Send auto-reply ONLY if 5 hours have passed without messaging (first message only)
     if (shouldAutoReply && payload.sender === 'customer') {
       this.logger.log(`🤖 5-hour inactivity threshold met: Triggering auto-reply for customer ${clientKey}`);
 
       setTimeout(() => {
-        this.server.emit('typing', { isTyping: true, sender: 'admin' });
+        if (payload.userId) {
+          this.server.to(`room_${payload.userId}`).to('admin_room').emit('typing', { isTyping: true, sender: 'admin', userId: payload.userId });
+        } else {
+          this.server.to('admin_room').emit('typing', { isTyping: true, sender: 'admin' });
+        }
       }, 500);
 
       setTimeout(async () => {
@@ -123,22 +210,40 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           userId: payload.userId,
         });
 
-        this.server.emit('typing', { isTyping: false, sender: 'admin' });
-        this.server.emit('newMessage', autoAdminMessage);
+        if (payload.userId) {
+          this.server.to(`room_${payload.userId}`).to('admin_room').emit('typing', { isTyping: false, sender: 'admin', userId: payload.userId });
+          this.server.to(`room_${payload.userId}`).to('admin_room').emit('newMessage', autoAdminMessage);
+        } else {
+          this.server.to('admin_room').emit('typing', { isTyping: false, sender: 'admin' });
+          this.server.to('admin_room').emit('newMessage', autoAdminMessage);
+        }
       }, 1600);
-    } else if (payload.sender === 'customer') {
-      this.logger.log(`ℹ️ Auto-reply suppressed: Customer ${clientKey} messaged within the 5-hour window.`);
     }
 
     return savedMessage;
   }
 
   @SubscribeMessage('typing')
-  handleTyping(
+  async handleTyping(
     @ConnectedSocket() client: Socket,
-    @MessageBody() payload: { isTyping: boolean; sender: string },
+    @MessageBody() payload: { isTyping: boolean; sender: string; userId?: string; token?: string },
   ) {
-    client.broadcast.emit('typing', payload);
+    const user = await this.resolveSocketUser(client, payload?.token);
+    const isAdmin = user?.role?.toUpperCase() === 'ADMIN';
+    const targetUserId = isAdmin ? payload.userId : (user?.id || payload.userId);
+
+    if (targetUserId) {
+      this.server.to(`room_${targetUserId}`).to('admin_room').emit('typing', {
+        isTyping: payload.isTyping,
+        sender: isAdmin ? 'admin' : 'customer',
+        userId: targetUserId,
+      });
+    } else {
+      this.server.to('admin_room').emit('typing', {
+        isTyping: payload.isTyping,
+        sender: 'customer',
+      });
+    }
   }
 
   @SubscribeMessage('markAsRead')

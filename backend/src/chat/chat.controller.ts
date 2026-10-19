@@ -25,32 +25,42 @@ export class ChatController {
     private readonly chatGateway: ChatGateway,
   ) {}
 
-  // Admin sees all messages (or filtered by user); Client sees their own + general; Guest sees by queryUserId or general
+  /**
+   * STRICT CHAT PRIVACY & ISOLATION:
+   * - Admin can view all messages or filter by specific user
+   * - A Client can ONLY view their own private messages (matching currentUser.id)
+   * - Unauthenticated visitors receive [] (cannot scrape or view any chat)
+   */
   @Get('messages')
   @Public()
   async getMessages(
     @CurrentUser() currentUser?: AuthenticatedUser,
     @Query('userId') queryUserId?: string,
   ) {
-    if (currentUser?.role?.toUpperCase() === 'ADMIN') {
-      return this.chatService.getMessages(queryUserId);
+    const isAdmin = currentUser?.role?.toUpperCase() === 'ADMIN';
+
+    if (isAdmin) {
+      return this.chatService.getMessages(queryUserId, true);
     }
+
     if (currentUser) {
-      return this.chatService.getMessages(currentUser.id);
+      // Non-admin client is strictly locked to their own user ID (ignores query tampering)
+      return this.chatService.getMessages(currentUser.id, false);
     }
-    return this.chatService.getMessages(queryUserId);
+
+    // Unauthenticated visitors have no access to private chat threads
+    return [];
   }
 
-  // Authenticated user or guest sends message
+  // Authenticated user or admin sends message
   @Post('messages')
   @Public()
   async createMessage(
     @Body() dto: SendMessageDto,
     @CurrentUser() currentUser?: AuthenticatedUser,
   ) {
-    const isSenderAdmin = 
-      currentUser?.role?.toUpperCase() === 'ADMIN' || 
-      dto.sender === 'admin';
+    // Only verified admin token can send as admin
+    const isSenderAdmin = currentUser?.role?.toUpperCase() === 'ADMIN';
 
     let resolvedUserId: string | null = null;
 
@@ -59,17 +69,19 @@ export class ChatController {
       if (dto.userId && dto.userId !== currentUser?.id) {
         resolvedUserId = dto.userId;
       } else {
-        // Automatically link admin reply to the active customer conversation
         const lastCustomer = await this.chatService.getLastCustomerMessage();
         resolvedUserId = lastCustomer?.userId || null;
       }
+    } else if (currentUser) {
+      // Client is strictly locked to their own verified user ID
+      resolvedUserId = currentUser.id;
     } else {
-      resolvedUserId = currentUser?.id || dto.userId || null;
+      resolvedUserId = null;
     }
 
     const enrichedDto: SendMessageDto = {
       ...dto,
-      sender: isSenderAdmin ? 'admin' : (dto.sender || 'customer'),
+      sender: isSenderAdmin ? 'admin' : 'customer',
       senderName: isSenderAdmin
         ? (dto.senderName || currentUser?.name || 'ProductPerks Admin')
         : (currentUser?.name || dto.senderName || 'Reviewer'),
@@ -78,18 +90,37 @@ export class ChatController {
     };
 
     const saved = await this.chatService.createMessage(enrichedDto);
-    // Broadcast to all connected sockets
+
+    // Broadcast ONLY to the specific user's private room and the admin room
     if (this.chatGateway.server) {
-      this.chatGateway.server.emit('newMessage', saved);
+      if (saved.userId) {
+        this.chatGateway.server
+          .to(`room_${saved.userId}`)
+          .to('admin_room')
+          .emit('newMessage', saved);
+      } else {
+        this.chatGateway.server.to('admin_room').emit('newMessage', saved);
+      }
     }
+
     return saved;
   }
 
-  // Admin Only: Clear conversation history
+  // Clear conversation history (Admin can clear for a user; Client can clear only their own)
   @Delete('messages')
-  @Roles('ADMIN')
-  async clearMessages(@Query('userId') userId?: string) {
-    return this.chatService.clearMessages(userId);
+  @Public()
+  async clearMessages(
+    @CurrentUser() currentUser?: AuthenticatedUser,
+    @Query('userId') queryUserId?: string,
+  ) {
+    const isAdmin = currentUser?.role?.toUpperCase() === 'ADMIN';
+    if (isAdmin) {
+      return this.chatService.clearMessages(queryUserId);
+    }
+    if (currentUser) {
+      return this.chatService.clearMessages(currentUser.id);
+    }
+    return { success: false, message: 'Authentication required' };
   }
 
   // Authenticated user marks messages as read

@@ -4,7 +4,7 @@ export declare class ChatService {
     private readonly prisma;
     constructor(prisma: PrismaService);
     private formatMessage;
-    getMessages(userId?: string): Promise<{
+    getMessages(userId?: string, isAdmin?: boolean): Promise<{
         id: any;
         sender: any;
         senderName: any;

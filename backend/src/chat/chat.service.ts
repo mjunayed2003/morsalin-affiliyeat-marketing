@@ -35,10 +35,22 @@ export class ChatService {
     };
   }
 
-  async getMessages(userId?: string) {
+  /**
+   * Strictly isolated message fetching:
+   * - Clients can ONLY see messages matching their exact userId
+   * - Admins can see a specific user's thread (if userId passed) or all messages (for admin inbox)
+   * - Unauthenticated guests without a userId get []
+   */
+  async getMessages(userId?: string, isAdmin: boolean = false) {
+    if (!isAdmin && !userId) {
+      return [];
+    }
+
     const where: any = {};
     if (userId) {
-      where.OR = [{ userId }, { userId: null }];
+      where.userId = userId;
+    } else if (!isAdmin) {
+      return [];
     }
 
     const messages = await this.prisma.chatMessage.findMany({

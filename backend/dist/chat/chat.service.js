@@ -41,10 +41,16 @@ let ChatService = class ChatService {
             createdAt: msg.createdAt,
         };
     }
-    async getMessages(userId) {
+    async getMessages(userId, isAdmin = false) {
+        if (!isAdmin && !userId) {
+            return [];
+        }
         const where = {};
         if (userId) {
-            where.OR = [{ userId }, { userId: null }];
+            where.userId = userId;
+        }
+        else if (!isAdmin) {
+            return [];
         }
         const messages = await this.prisma.chatMessage.findMany({
             where,

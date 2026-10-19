@@ -45,7 +45,7 @@ export declare class ChatController {
         userId: any;
         createdAt: any;
     }>;
-    clearMessages(userId?: string): Promise<{
+    clearMessages(currentUser?: AuthenticatedUser, queryUserId?: string): Promise<{
         success: boolean;
         message: string;
     }>;

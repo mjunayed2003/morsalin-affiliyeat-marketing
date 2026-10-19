@@ -111,7 +111,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (e) {}
   };
 
-  // 1. Initialize Catalog & Socket.IO on mount
+  // Helper to get user-specific localStorage cache key so different accounts never collide
+  const getMessagesStorageKey = (u?: { id: string; role: string } | null) => {
+    if (!u) return null;
+    return u.role === 'admin' ? 'product_perks_messages_admin' : `product_perks_messages_${u.id}`;
+  };
+
+  // 1. Initialize Catalog & Socket.IO on mount / user change
   useEffect(() => {
     try {
       // Fetch public products from Backend API
@@ -136,9 +142,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       // Connect Socket.IO for real-time instant chat events
       const socket = getSocket();
       if (socket) {
-        socket.emit('joinRoom', { roomId: 'general_support' });
+        const token = typeof window !== 'undefined' ? localStorage.getItem('bytedesk_token_v2') : null;
+        if (user?.role === 'admin') {
+          socket.emit('joinRoom', { roomId: 'admin_room', token: token || undefined });
+        } else if (user?.id) {
+          socket.emit('joinRoom', { userId: user.id, token: token || undefined });
+        }
 
         const handleNewMessage = (newMsg: ChatMessage) => {
+          // STRICT ISOLATION: A client MUST NEVER accept or display messages belonging to another user
+          const isAdmin = user?.role === 'admin';
+          if (!isAdmin) {
+            if (!user?.id || !newMsg.userId || newMsg.userId !== user.id) {
+              return; // Discard any message not strictly belonging to this client
+            }
+          }
+
           setMessages((prev) => {
             if (prev.some((m) => m.id === newMsg.id)) return prev;
 
@@ -166,12 +185,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             return dedupeMessages([...prev, newMsg]);
           });
 
-          if (newMsg.sender === 'admin') {
+          if (newMsg.sender === 'admin' || (user?.role === 'admin' && newMsg.sender === 'customer')) {
             playChime();
           }
         };
 
-        const handleTypingEvent = (data: { isTyping: boolean; sender: string }) => {
+        const handleTypingEvent = (data: { isTyping: boolean; sender: string; userId?: string }) => {
+          const isAdmin = user?.role === 'admin';
+          if (!isAdmin && user?.id && data.userId && data.userId !== user.id) {
+            return;
+          }
           setIsTyping(Boolean(data?.isTyping));
           setTypingSender(data?.sender || null);
         };
@@ -187,10 +210,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (e) {
       console.warn('AppContext init error:', e);
     }
-  }, []);
+  }, [user?.id, user?.role]);
 
   // 2. Sync chat messages with backend database & continuous polling
   useEffect(() => {
+    // If not logged in, client has no private messages to display
+    if (!user) {
+      setMessages([]);
+      return;
+    }
+
+    const storageKey = getMessagesStorageKey(user);
+
+    // Initial populate from user's isolated local cache if available
+    if (storageKey) {
+      try {
+        const stored = localStorage.getItem(storageKey);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const isAdmin = user.role === 'admin';
+            const filtered = isAdmin ? parsed : parsed.filter((m: any) => m.userId === user.id);
+            setMessages(dedupeMessages(filtered));
+          }
+        }
+      } catch {}
+    }
+
     const syncMessages = async () => {
       try {
         const chatFetchUrl = `${API_BASE_URL}/chat/messages`;
@@ -200,31 +246,46 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data)) {
+            // Strict isolation: Non-admin users strictly get their own messages
+            const isAdmin = user?.role === 'admin';
+            const isolatedData = isAdmin
+              ? data
+              : data.filter((m: any) => m.userId === user.id);
+
             setMessages((prev) => {
-              const serverIds = new Set(data.map((m: any) => m.id));
-              // Preserve pending optimistic messages that haven't received server response
+              const serverIds = new Set(isolatedData.map((m: any) => m.id));
+              // Preserve pending optimistic messages for this user
               const pendingOptimistic = prev.filter(
                 (m) =>
                   (m.id.startsWith('msg-') || (m.localId && m.localId.startsWith('msg-'))) &&
-                  !serverIds.has(m.id)
+                  !serverIds.has(m.id) &&
+                  (isAdmin || m.userId === user.id)
               );
-              const merged = dedupeMessages([...data, ...pendingOptimistic]);
-              try {
-                localStorage.setItem('product_perks_messages_v1', JSON.stringify(merged));
-              } catch {}
+              const merged = dedupeMessages([...isolatedData, ...pendingOptimistic]);
+              if (storageKey) {
+                try {
+                  localStorage.setItem(storageKey, JSON.stringify(merged));
+                } catch {}
+              }
               return merged;
             });
           }
         }
       } catch {
-        const storedMsgs = localStorage.getItem('product_perks_messages_v1');
-        if (storedMsgs) {
-          try {
-            const parsed = JSON.parse(storedMsgs);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-              setMessages(dedupeMessages(parsed));
-            }
-          } catch (e) {}
+        if (storageKey) {
+          const storedMsgs = localStorage.getItem(storageKey);
+          if (storedMsgs) {
+            try {
+              const parsed = JSON.parse(storedMsgs);
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                const isAdmin = user?.role === 'admin';
+                const filtered = isAdmin
+                  ? parsed
+                  : parsed.filter((m: any) => m.userId === user.id);
+                setMessages(dedupeMessages(filtered));
+              }
+            } catch (e) {}
+          }
         }
       }
     };
@@ -235,7 +296,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return () => {
       clearInterval(pollInterval);
     };
-  }, [user?.id]);
+  }, [user?.id, user?.role]);
 
   // Save to LocalStorage as cache
   useEffect(() => {
@@ -245,10 +306,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [products]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem('product_perks_messages_v1', JSON.stringify(messages));
-    } catch (e) {}
-  }, [messages]);
+    if (!user) return;
+    const storageKey = getMessagesStorageKey(user);
+    if (storageKey && messages.length > 0) {
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(messages));
+      } catch (e) {}
+    }
+  }, [messages, user?.id, user?.role]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -317,9 +382,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const emitTyping = (typingState: boolean) => {
     const socket = getSocket();
     if (socket && socket.connected) {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('bytedesk_token_v2') : null;
       socket.emit('typing', {
         isTyping: typingState,
         sender: user?.role === 'admin' ? 'admin' : 'customer',
+        userId: user?.id,
+        token: token || undefined,
       });
     }
   };
@@ -332,6 +400,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const localId = `msg-${Date.now()}`;
     const senderName = user?.name || (isAuthenticated ? 'Registered Reviewer' : 'Reviewer');
+    const token = typeof window !== 'undefined' ? localStorage.getItem('bytedesk_token_v2') : null;
+
     const newMsg: ChatMessage = {
       id: localId,
       localId,
@@ -354,6 +424,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       productInfo,
       userId: user?.id,
       localId,
+      token: token || undefined,
     };
 
     // Emit in real-time via Socket.IO
@@ -389,6 +460,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const localId = `msg-${Date.now()}`;
     const senderName = user?.name || 'ProductPerks Admin';
+    const token = typeof window !== 'undefined' ? localStorage.getItem('bytedesk_token_v2') : null;
 
     // Target the specific customer or the most recent customer in the chat
     const lastCustomerMsg = [...messages].reverse().find((m) => m.sender === 'customer' && m.userId);
@@ -414,6 +486,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       image,
       userId: resolvedUserId,
       localId,
+      token: token || undefined,
     };
 
     const socket = getSocket();

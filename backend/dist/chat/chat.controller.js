@@ -16,7 +16,6 @@ import { ChatGateway } from './chat.gateway.js';
 import { SendMessageDto } from './dto/send-message.dto.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../auth/guards/roles.guard.js';
-import { Roles } from '../auth/decorators/roles.decorator.js';
 import { Public } from '../auth/decorators/public.decorator.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 let ChatController = class ChatController {
@@ -27,17 +26,17 @@ let ChatController = class ChatController {
         this.chatGateway = chatGateway;
     }
     async getMessages(currentUser, queryUserId) {
-        if (currentUser?.role?.toUpperCase() === 'ADMIN') {
-            return this.chatService.getMessages(queryUserId);
+        const isAdmin = currentUser?.role?.toUpperCase() === 'ADMIN';
+        if (isAdmin) {
+            return this.chatService.getMessages(queryUserId, true);
         }
         if (currentUser) {
-            return this.chatService.getMessages(currentUser.id);
+            return this.chatService.getMessages(currentUser.id, false);
         }
-        return this.chatService.getMessages(queryUserId);
+        return [];
     }
     async createMessage(dto, currentUser) {
-        const isSenderAdmin = currentUser?.role?.toUpperCase() === 'ADMIN' ||
-            dto.sender === 'admin';
+        const isSenderAdmin = currentUser?.role?.toUpperCase() === 'ADMIN';
         let resolvedUserId = null;
         if (isSenderAdmin) {
             if (dto.userId && dto.userId !== currentUser?.id) {
@@ -48,12 +47,15 @@ let ChatController = class ChatController {
                 resolvedUserId = lastCustomer?.userId || null;
             }
         }
+        else if (currentUser) {
+            resolvedUserId = currentUser.id;
+        }
         else {
-            resolvedUserId = currentUser?.id || dto.userId || null;
+            resolvedUserId = null;
         }
         const enrichedDto = {
             ...dto,
-            sender: isSenderAdmin ? 'admin' : (dto.sender || 'customer'),
+            sender: isSenderAdmin ? 'admin' : 'customer',
             senderName: isSenderAdmin
                 ? (dto.senderName || currentUser?.name || 'ProductPerks Admin')
                 : (currentUser?.name || dto.senderName || 'Reviewer'),
@@ -62,12 +64,27 @@ let ChatController = class ChatController {
         };
         const saved = await this.chatService.createMessage(enrichedDto);
         if (this.chatGateway.server) {
-            this.chatGateway.server.emit('newMessage', saved);
+            if (saved.userId) {
+                this.chatGateway.server
+                    .to(`room_${saved.userId}`)
+                    .to('admin_room')
+                    .emit('newMessage', saved);
+            }
+            else {
+                this.chatGateway.server.to('admin_room').emit('newMessage', saved);
+            }
         }
         return saved;
     }
-    async clearMessages(userId) {
-        return this.chatService.clearMessages(userId);
+    async clearMessages(currentUser, queryUserId) {
+        const isAdmin = currentUser?.role?.toUpperCase() === 'ADMIN';
+        if (isAdmin) {
+            return this.chatService.clearMessages(queryUserId);
+        }
+        if (currentUser) {
+            return this.chatService.clearMessages(currentUser.id);
+        }
+        return { success: false, message: 'Authentication required' };
     }
     async markAsRead(ids) {
         return this.chatService.markAsRead(ids);
@@ -93,10 +110,11 @@ __decorate([
 ], ChatController.prototype, "createMessage", null);
 __decorate([
     Delete('messages'),
-    Roles('ADMIN'),
-    __param(0, Query('userId')),
+    Public(),
+    __param(0, CurrentUser()),
+    __param(1, Query('userId')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", Promise)
 ], ChatController.prototype, "clearMessages", null);
 __decorate([
