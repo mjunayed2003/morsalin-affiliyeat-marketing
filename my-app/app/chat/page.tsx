@@ -14,7 +14,8 @@ import {
   FaCheck,
   FaPhone,
   FaBagShopping,
-  FaLock
+  FaLock,
+  FaUser
 } from 'react-icons/fa6';
 import { FaWhatsapp, FaAmazon } from 'react-icons/fa';
 import { FiX } from 'react-icons/fi';
@@ -35,13 +36,18 @@ export default function ChatPage() {
     emitTyping,
   } = useApp();
 
-  const { user, isAuthenticated, openAuthModal } = useAuth();
+  const { user, isAuthenticated, openAuthModal, startGuestChat } = useAuth();
 
   const [inputText, setInputText] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [previewModalImage, setPreviewModalImage] = useState<string | null>(null);
   const [showProductPicker, setShowProductPicker] = useState(false);
   const [localTyping, setLocalTyping] = useState(false);
+  const [guestName, setGuestName] = useState('');
+  const [guestPhone, setGuestPhone] = useState('');
+  const [guestSubmitting, setGuestSubmitting] = useState(false);
+  const [guestError, setGuestError] = useState<string | null>(null);
+  const [authViewTab, setAuthViewTab] = useState<'guest' | 'login'>('guest');
   const isTyping = realIsTyping || localTyping;
   const typingTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -140,6 +146,32 @@ export default function ChatPage() {
     ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(defaultWhatsAppText)}`
     : `https://api.whatsapp.com/send?text=${encodeURIComponent(defaultWhatsAppText)}`;
 
+  const handleStartGuestChat = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setGuestError(null);
+    if (!guestName.trim()) {
+      setGuestError('Please enter your full name.');
+      return;
+    }
+    const cleanDigits = guestPhone.replace(/\D/g, '');
+    if (!guestPhone.trim() || cleanDigits.length < 6) {
+      setGuestError('Please enter a valid phone number (at least 6 digits).');
+      return;
+    }
+
+    setGuestSubmitting(true);
+    try {
+      const res = await startGuestChat(guestName.trim(), guestPhone.trim());
+      if (!res.success) {
+        setGuestError(res.message);
+      }
+    } catch (err: any) {
+      setGuestError(err.message || 'Error connecting to chat.');
+    } finally {
+      setGuestSubmitting(false);
+    }
+  };
+
   // Unauthenticated view
   if (!isAuthenticated || !user) {
     return (
@@ -150,21 +182,125 @@ export default function ChatPage() {
           {/* Brand Header */}
           <div className="text-center max-w-lg mb-6 space-y-2.5">
             <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-800 border border-emerald-200 px-3.5 py-1 rounded-full text-xs font-bold">
-              <FaLock className="w-3 h-3 text-[#1b3b2b]" />
-              <span>Reviewer Chat Desk</span>
+              <FaComments className="w-3.5 h-3.5 text-[#1b3b2b]" />
+              <span>Reviewer Chat Support Desk</span>
             </div>
             <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight">
-              Please Log In to Chat with Support
+              Start Live Chat Support
             </h1>
             <p className="text-xs sm:text-sm text-slate-600 max-w-md mx-auto leading-relaxed">
-              Log in or register with your phone number and password to discuss Amazon product testing and claim your review perks.
+              Chat with our team directly without logging in. Just enter your name and phone number to begin!
             </p>
           </div>
 
-          <AuthCard 
-            title="Access Reviewer Desk"
-            subtitle="Register or log in to sync your product inquiries and chat history."
-          />
+          {authViewTab === 'guest' ? (
+            <div className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-8 border border-stone-200/80 shadow-xl space-y-5 animate-in fade-in duration-200">
+              <div className="flex items-center justify-between pb-3 border-b border-stone-100">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-xl bg-[#1b3b2b] text-white flex items-center justify-center shadow-xs">
+                    <FaComments className="w-5 h-5 text-emerald-300" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm text-slate-900">Direct Live Chat</h3>
+                    <p className="text-[11px] text-slate-500 font-medium">No account required</p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                  Instant
+                </span>
+              </div>
+
+              {guestError && (
+                <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium text-center">
+                  {guestError}
+                </div>
+              )}
+
+              <form onSubmit={handleStartGuestChat} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
+                    Your Full Name
+                  </label>
+                  <div className="relative">
+                    <FaUser className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-3.5 h-3.5" />
+                    <input
+                      type="text"
+                      required
+                      value={guestName}
+                      onChange={(e) => setGuestName(e.target.value)}
+                      placeholder="e.g. Morsalin"
+                      className="w-full bg-stone-50/80 text-slate-900 pl-10 pr-3.5 py-3 rounded-xl border border-stone-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#1b3b2b]/25 focus:border-[#1b3b2b] transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
+                    Phone Number
+                  </label>
+                  <div className="relative">
+                    <FaPhone className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-3.5 h-3.5" />
+                    <input
+                      type="tel"
+                      required
+                      value={guestPhone}
+                      onChange={(e) => setGuestPhone(e.target.value)}
+                      placeholder="e.g. 01340376081 or +1..."
+                      className="w-full bg-stone-50/80 text-slate-900 pl-10 pr-3.5 py-3 rounded-xl border border-stone-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#1b3b2b]/25 focus:border-[#1b3b2b] transition-all"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={guestSubmitting}
+                  className="w-full bg-[#1b3b2b] hover:bg-[#142e20] active:scale-98 disabled:opacity-60 text-white py-3.5 px-5 rounded-xl font-bold text-sm shadow-md shadow-emerald-950/15 transition-all cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <span>{guestSubmitting ? 'Starting Chat Session...' : 'Start Live Chat Now'}</span>
+                  <FaPaperPlane className="w-3.5 h-3.5 text-emerald-300" />
+                </button>
+              </form>
+
+              <div className="pt-2 border-t border-stone-100 flex flex-col items-center gap-2 text-xs text-slate-500">
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full bg-[#25D366] hover:bg-[#20ba59] text-white py-2.5 px-4 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
+                >
+                  <FaWhatsapp className="w-4 h-4" />
+                  <span>Chat on WhatsApp Directly</span>
+                </a>
+
+                <div className="flex items-center gap-1 pt-1">
+                  <span>Already have an account?</span>
+                  <button
+                    type="button"
+                    onClick={() => setAuthViewTab('login')}
+                    className="font-bold text-[#1b3b2b] hover:underline cursor-pointer"
+                  >
+                    Log In with Password
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="w-full max-w-md space-y-3">
+              <AuthCard 
+                title="Access Reviewer Desk"
+                subtitle="Sign in with your phone or email to sync your chat history."
+              />
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => setAuthViewTab('guest')}
+                  className="text-xs font-bold text-[#1b3b2b] hover:underline cursor-pointer"
+                >
+                  ← Back to Direct Chat with Name & Phone
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );

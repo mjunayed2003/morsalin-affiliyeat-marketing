@@ -8,7 +8,9 @@ import {
   FaImage, 
   FaShieldHalved,
   FaCircleCheck,
-  FaLock
+  FaLock,
+  FaUser,
+  FaPhone
 } from 'react-icons/fa6';
 import { FaWhatsapp } from 'react-icons/fa';
 import { FiX } from 'react-icons/fi';
@@ -43,13 +45,43 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
   onTyping,
 }) => {
   const pathname = usePathname();
-  const { user, isAuthenticated, openAuthModal } = useAuth();
+  const { user, isAuthenticated, openAuthModal, startGuestChat } = useAuth();
   const [inputText, setInputText] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [previewModalImage, setPreviewModalImage] = useState<string | null>(null);
+  const [guestName, setGuestName] = useState('');
+  const [guestPhone, setGuestPhone] = useState('');
+  const [guestSubmitting, setGuestSubmitting] = useState(false);
+  const [guestError, setGuestError] = useState<string | null>(null);
   const chatFeedRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleStartGuestChat = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setGuestError(null);
+    if (!guestName.trim()) {
+      setGuestError('Please enter your full name.');
+      return;
+    }
+    const cleanDigits = guestPhone.replace(/\D/g, '');
+    if (!guestPhone.trim() || cleanDigits.length < 6) {
+      setGuestError('Please enter a valid phone number (at least 6 digits).');
+      return;
+    }
+
+    setGuestSubmitting(true);
+    try {
+      const res = await startGuestChat(guestName.trim(), guestPhone.trim());
+      if (!res.success) {
+        setGuestError(res.message);
+      }
+    } catch (err: any) {
+      setGuestError(err.message || 'Error connecting to chat.');
+    } finally {
+      setGuestSubmitting(false);
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputText(e.target.value);
@@ -272,39 +304,99 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
           </div>
 
           {!isAuthenticated || !user ? (
-            <div className="flex-1 p-6 flex flex-col items-center justify-center text-center bg-stone-50/70 space-y-4">
-              <div className="w-14 h-14 rounded-2xl bg-emerald-100 text-[#1b3b2b] flex items-center justify-center text-2xl shadow-inner">
-                <FaLock className="w-6 h-6" />
-              </div>
-              <div className="space-y-1.5 max-w-xs">
-                <h4 className="font-bold text-slate-900 text-sm sm:text-base">
-                  Sign In for Live Support Chat
-                </h4>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Log in or register so the admin can send you private Amazon review perks and product test orders.
-                </p>
-              </div>
-              <div className="w-full space-y-2 pt-2 max-w-xs">
-                <button
-                  type="button"
-                  onClick={() => {
-                    onClose();
-                    openAuthModal('login');
-                  }}
-                  className="w-full bg-[#1b3b2b] hover:bg-[#142e20] text-white py-2.5 px-4 rounded-xl font-bold text-xs shadow-md transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-2"
-                >
-                  <FaCircleCheck className="w-3.5 h-3.5 text-emerald-300" />
-                  <span>Log In / Register</span>
-                </button>
-                <a
-                  href={whatsappUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full bg-[#25D366] hover:bg-[#20ba59] text-white py-2 px-4 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
-                >
-                  <FaWhatsapp className="w-3.5 h-3.5" />
-                  <span>Chat on WhatsApp Directly</span>
-                </a>
+            <div className="flex-1 p-5 sm:p-6 flex flex-col justify-between bg-stone-50/60 overflow-y-auto">
+              <div className="space-y-4 my-auto">
+                {/* Header Icon & Intro */}
+                <div className="text-center space-y-1.5">
+                  <div className="w-12 h-12 rounded-2xl bg-[#1b3b2b] text-white flex items-center justify-center mx-auto shadow-md shadow-emerald-950/20">
+                    <FaComments className="w-5 h-5 text-emerald-300" />
+                  </div>
+                  <h4 className="font-bold text-slate-900 text-base sm:text-lg">
+                    Live Chat Support Desk
+                  </h4>
+                  <p className="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed">
+                    Chat with admin directly. Just enter your name and phone number to start.
+                  </p>
+                </div>
+
+                {/* Guest Form */}
+                <form onSubmit={handleStartGuestChat} className="space-y-3 max-w-xs mx-auto w-full pt-1">
+                  {guestError && (
+                    <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs text-center font-medium">
+                      {guestError}
+                    </div>
+                  )}
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider block">
+                      Your Name
+                    </label>
+                    <div className="relative">
+                      <FaUser className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-3.5 h-3.5" />
+                      <input
+                        type="text"
+                        required
+                        value={guestName}
+                        onChange={(e) => setGuestName(e.target.value)}
+                        placeholder="e.g. Morsalin"
+                        className="w-full bg-white text-slate-900 pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#1b3b2b]/25 focus:border-[#1b3b2b] shadow-2xs"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider block">
+                      Phone Number
+                    </label>
+                    <div className="relative">
+                      <FaPhone className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-3.5 h-3.5" />
+                      <input
+                        type="tel"
+                        required
+                        value={guestPhone}
+                        onChange={(e) => setGuestPhone(e.target.value)}
+                        placeholder="e.g. 01340376081"
+                        className="w-full bg-white text-slate-900 pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#1b3b2b]/25 focus:border-[#1b3b2b] shadow-2xs"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={guestSubmitting}
+                    className="w-full bg-[#1b3b2b] hover:bg-[#142e20] active:scale-98 disabled:opacity-60 text-white py-2.5 px-4 rounded-xl font-bold text-xs shadow-md shadow-emerald-950/15 transition-all cursor-pointer flex items-center justify-center gap-2 mt-2"
+                  >
+                    <span>{guestSubmitting ? 'Starting Chat...' : 'Start Live Chat'}</span>
+                    <FaPaperPlane className="w-3 h-3 text-emerald-300" />
+                  </button>
+                </form>
+
+                {/* Alternative Quick Options */}
+                <div className="space-y-2 pt-2 border-t border-slate-200/80 max-w-xs mx-auto w-full text-center">
+                  <a
+                    href={whatsappUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full bg-[#25D366] hover:bg-[#20ba59] text-white py-2 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
+                  >
+                    <FaWhatsapp className="w-3.5 h-3.5" />
+                    <span>Chat on WhatsApp Directly</span>
+                  </a>
+
+                  <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500 pt-1">
+                    <span>Have a password?</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onClose();
+                        openAuthModal('login');
+                      }}
+                      className="font-bold text-[#1b3b2b] hover:underline cursor-pointer"
+                    >
+                      Log In
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           ) : (

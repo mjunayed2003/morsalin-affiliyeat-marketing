@@ -88,4 +88,21 @@ export declare class AuthService {
         verified: boolean;
         role: import("../generated/prisma/enums.js").Role;
     }>;
+    guestLogin(dto: {
+        name: string;
+        phone: string;
+    }): Promise<{
+        success: boolean;
+        user: {
+            id: string;
+            name: string;
+            phone: string;
+            email: string | null;
+            role: import("../generated/prisma/enums.js").Role;
+            avatar: string | null;
+            isGuest: boolean;
+        };
+        token: string;
+        message: string;
+    }>;
 }

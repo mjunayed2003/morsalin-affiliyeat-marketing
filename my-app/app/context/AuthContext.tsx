@@ -78,6 +78,7 @@ interface AuthContextType {
   deleteUser: (userId: string) => void;
   getUserById: (userId: string) => User | undefined;
   toggleUserReviewPermission: (userId: string, allow?: boolean) => void;
+  startGuestChat: (name: string, phone: string) => Promise<{ success: boolean; message: string }>;
 }
 
 const DEFAULT_USERS: User[] = [
@@ -730,6 +731,74 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const startGuestChat = async (name: string, phone: string) => {
+    try {
+      const cleanName = name.trim();
+      const cleanPhone = phone.trim();
+      if (!cleanName) return { success: false, message: 'Please enter your name.' };
+      if (!cleanPhone || cleanPhone.replace(/\D/g, '').length < 6) {
+        return { success: false, message: 'Please enter a valid phone number (at least 6 digits).' };
+      }
+
+      const response = await fetch(`${API_BASE_URL}/auth/guest`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: cleanName, phone: cleanPhone }),
+      });
+
+      const data = await response.json();
+      if (response.ok && data.success && data.user) {
+        const guestUserObj: User = {
+          id: data.user.id,
+          phone: data.user.phone,
+          name: data.user.name,
+          email: data.user.email || `${cleanPhone}@guest.freeproducts.online`,
+          address: data.user.address || '',
+          city: data.user.city || 'Dhaka',
+          avatar: data.user.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(cleanName)}&backgroundColor=1b3b2b`,
+          verified: false,
+          verifiedAt: data.user.verifiedAt || undefined,
+          createdAt: new Date().toISOString(),
+          role: 'client',
+          canReview: false,
+        };
+
+        setCurrentUser(guestUserObj, data.token);
+        return { success: true, message: data.message || 'Chat profile ready!' };
+      } else {
+        const fallbackId = `guest_${Date.now()}`;
+        const fallbackUser: User = {
+          id: fallbackId,
+          phone: cleanPhone,
+          name: cleanName,
+          avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(cleanName)}&backgroundColor=1b3b2b`,
+          verified: false,
+          verifiedAt: undefined,
+          createdAt: new Date().toISOString(),
+          role: 'client',
+          canReview: false,
+        };
+        setCurrentUser(fallbackUser, null);
+        return { success: true, message: 'Welcome to chat support!' };
+      }
+    } catch (err: any) {
+      const fallbackId = `guest_${Date.now()}`;
+      const fallbackUser: User = {
+        id: fallbackId,
+        phone: phone.trim(),
+        name: name.trim(),
+        avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name.trim())}&backgroundColor=1b3b2b`,
+        verified: false,
+        verifiedAt: undefined,
+        createdAt: new Date().toISOString(),
+        role: 'client',
+        canReview: false,
+      };
+      setCurrentUser(fallbackUser, null);
+      return { success: true, message: 'Welcome to chat support!' };
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -762,6 +831,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         deleteUser,
         getUserById,
         toggleUserReviewPermission,
+        startGuestChat,
       }}
     >
       {children}

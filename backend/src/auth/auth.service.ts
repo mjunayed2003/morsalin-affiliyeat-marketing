@@ -491,4 +491,76 @@ export class AuthService {
 
     return user;
   }
+
+  /**
+   * Guest Chat Access: allows users to start chatting without prior registration.
+   * Collects Name & Phone, finds or creates user in database, and issues valid session JWT token.
+   */
+  async guestLogin(dto: { name: string; phone: string }) {
+    if (!dto.name || !dto.name.trim()) {
+      throw new BadRequestException('Please provide your name.');
+    }
+    if (!dto.phone || !dto.phone.trim()) {
+      throw new BadRequestException('Please provide your phone number.');
+    }
+
+    const cleanName = dto.name.trim();
+    const cleanDigits = dto.phone.replace(/\D/g, '');
+    if (cleanDigits.length < 6) {
+      throw new BadRequestException('Please enter a valid phone number (at least 6 digits).');
+    }
+    const cleanPhone = dto.phone.trim().startsWith('+') ? `+${cleanDigits}` : dto.phone.trim();
+
+    // Check if user already exists with this phone
+    let user = await this.prisma.user.findUnique({
+      where: { phone: cleanPhone },
+    });
+
+    if (user) {
+      // Guard: Admin account must log in with full credentials
+      if (user.role === 'ADMIN') {
+        throw new BadRequestException('This phone belongs to an administrator. Please log in with password.');
+      }
+      // Update name if current name was empty or generic
+      if (cleanName && (!user.name || user.name === 'Reviewer' || user.name === 'Customer')) {
+        user = await this.prisma.user.update({
+          where: { id: user.id },
+          data: { name: cleanName },
+        });
+      }
+    } else {
+      user = await this.prisma.user.create({
+        data: {
+          name: cleanName,
+          phone: cleanPhone,
+          role: 'CLIENT',
+          verified: false,
+        },
+      });
+    }
+
+    const token = this.jwtService.sign({
+      id: user.id,
+      sub: user.id,
+      phone: user.phone,
+      name: user.name,
+      role: user.role,
+      isGuest: true,
+    });
+
+    return {
+      success: true,
+      user: {
+        id: user.id,
+        name: user.name,
+        phone: user.phone,
+        email: user.email,
+        role: user.role,
+        avatar: user.avatar,
+        isGuest: true,
+      },
+      token,
+      message: `Welcome to Live Chat, ${user.name}!`,
+    };
+  }
 }

@@ -1,6 +1,7 @@
 import { AuthService } from './auth.service.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { LoginDto } from './dto/login.dto.js';
+import { GuestLoginDto } from './dto/guest-login.dto.js';
 import { SendRegisterOtpDto, VerifyRegisterOtpDto, SendForgotPasswordOtpDto, ResetPasswordDto } from './dto/otp-auth.dto.js';
 import { type AuthenticatedUser } from './decorators/current-user.decorator.js';
 export declare class AuthController {
@@ -71,6 +72,20 @@ export declare class AuthController {
             createdAt: Date;
         };
         token: string;
+    }>;
+    guestLogin(dto: GuestLoginDto): Promise<{
+        success: boolean;
+        user: {
+            id: string;
+            name: string;
+            phone: string;
+            email: string | null;
+            role: import("../generated/prisma/enums.js").Role;
+            avatar: string | null;
+            isGuest: boolean;
+        };
+        token: string;
+        message: string;
     }>;
     getProfile(currentUser: AuthenticatedUser): Promise<{
         id: string;

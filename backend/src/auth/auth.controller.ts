@@ -2,6 +2,7 @@ import { Controller, Post, Get, Body, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { LoginDto } from './dto/login.dto.js';
+import { GuestLoginDto } from './dto/guest-login.dto.js';
 import {
   SendRegisterOtpDto,
   VerifyRegisterOtpDto,
@@ -43,6 +44,11 @@ export class AuthController {
   @Post('login')
   async login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
+  }
+
+  @Post('guest')
+  async guestLogin(@Body() dto: GuestLoginDto) {
+    return this.authService.guestLogin(dto);
   }
 
   @Get('me')

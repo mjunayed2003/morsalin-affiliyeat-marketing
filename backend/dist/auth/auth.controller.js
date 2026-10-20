@@ -14,6 +14,7 @@ import { Controller, Post, Get, Body, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { LoginDto } from './dto/login.dto.js';
+import { GuestLoginDto } from './dto/guest-login.dto.js';
 import { SendRegisterOtpDto, VerifyRegisterOtpDto, SendForgotPasswordOtpDto, ResetPasswordDto, } from './dto/otp-auth.dto.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
 import { CurrentUser } from './decorators/current-user.decorator.js';
@@ -39,6 +40,9 @@ let AuthController = class AuthController {
     }
     async login(dto) {
         return this.authService.login(dto);
+    }
+    async guestLogin(dto) {
+        return this.authService.guestLogin(dto);
     }
     async getProfile(currentUser) {
         return this.authService.getProfile(currentUser.id);
@@ -86,6 +90,13 @@ __decorate([
     __metadata("design:paramtypes", [LoginDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
+__decorate([
+    Post('guest'),
+    __param(0, Body()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [GuestLoginDto]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "guestLogin", null);
 __decorate([
     Get('me'),
     UseGuards(JwtAuthGuard),

@@ -65,7 +65,7 @@ export interface User {
   city?: string;
   avatar?: string;
   verified: boolean;
-  verifiedAt: string;
+  verifiedAt?: string;
   createdAt: string;
   role: 'client' | 'admin';
   status?: 'ACTIVE' | 'BLOCKED' | 'PENDING';
