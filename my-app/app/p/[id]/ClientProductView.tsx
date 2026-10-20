@@ -146,7 +146,7 @@ export const ClientProductView: React.FC<ClientProductViewProps> = ({ productId 
   };
 
   const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
-  const cleanPhone = '8801873597814';
+  const cleanPhone = '8801340376081';
   const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(
     `Hello! I am inquiring about: ${product.title} (Price: $${product.price})\nStore: ${product.store || 'ProductPerks'}\nProduct Page: ${currentUrl}`
   )}`;

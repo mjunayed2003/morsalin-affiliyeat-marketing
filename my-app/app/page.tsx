@@ -707,7 +707,13 @@ export default function Home() {
               <a href="#" className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:text-slate-950 hover:bg-slate-200 transition-colors">
                 <FaFacebookF className="w-3.5 h-3.5" />
               </a>
-              <a href="#" className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:text-slate-950 hover:bg-slate-200 transition-colors">
+              <a 
+                href="https://www.instagram.com/onlinefreeproducts" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:text-[#e1306c] hover:bg-slate-200 transition-colors"
+                title="Instagram (@onlinefreeproducts)"
+              >
                 <FaInstagram className="w-3.5 h-3.5" />
               </a>
               <a href="#" className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:text-slate-950 hover:bg-slate-200 transition-colors">

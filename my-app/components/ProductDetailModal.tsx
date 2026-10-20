@@ -48,7 +48,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://productperks.com';
   const productPageUrl = `${origin}/p/${product.id}`;
-  const cleanPhone = '8801873597814';
+  const cleanPhone = '8801340376081';
   const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(
     `Hello! I want to order/review: ${product.title}\nProduct: ${productPageUrl}`
   )}`;

@@ -45,8 +45,8 @@ export declare class ChatService {
     }>;
     getLastCustomerMessage(userId?: string): Promise<{
         id: string;
-        createdAt: Date;
         image: string | null;
+        createdAt: Date;
         sender: string;
         senderName: string | null;
         text: string;

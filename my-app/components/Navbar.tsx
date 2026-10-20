@@ -37,22 +37,16 @@ export const Navbar: React.FC<NavbarProps> = ({
   const { user, isAuthenticated, isAdmin, openAuthModal, logout } = useAuth();
   
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
-  const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
-  const [selectedCountry, setSelectedCountry] = useState('USA');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showSearchInput, setShowSearchInput] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const countryRef = useRef<HTMLDivElement>(null);
 
   // Close dropdowns on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setUserDropdownOpen(false);
-      }
-      if (countryRef.current && !countryRef.current.contains(event.target as Node)) {
-        setCountryDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -280,50 +274,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               </>
             )}
 
-            {/* Country Selector Dropdown */}
-            <div className="relative" ref={countryRef}>
-              <button
-                type="button"
-                onClick={() => setCountryDropdownOpen(!countryDropdownOpen)}
-                className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 hover:text-slate-950 py-1.5 px-2 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
-              >
-                <span className="text-sm">🇺🇸</span>
-                <span className="hidden sm:inline">{selectedCountry}</span>
-                <FaChevronDown className="w-2.5 h-2.5 text-slate-500" />
-              </button>
-
-              {countryDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-32 bg-white rounded-xl shadow-lg border border-slate-100 py-1 z-50 text-xs">
-                  <button
-                    onClick={() => {
-                      setSelectedCountry('USA');
-                      setCountryDropdownOpen(false);
-                    }}
-                    className="w-full px-3 py-1.5 flex items-center gap-2 hover:bg-slate-50 text-slate-800 font-medium text-left"
-                  >
-                    <span>🇺🇸</span> USA
-                  </button>
-                  <button
-                    onClick={() => {
-                      setSelectedCountry('CAN');
-                      setCountryDropdownOpen(false);
-                    }}
-                    className="w-full px-3 py-1.5 flex items-center gap-2 hover:bg-slate-50 text-slate-800 font-medium text-left"
-                  >
-                    <span>🇨🇦</span> Canada
-                  </button>
-                  <button
-                    onClick={() => {
-                      setSelectedCountry('UK');
-                      setCountryDropdownOpen(false);
-                    }}
-                    className="w-full px-3 py-1.5 flex items-center gap-2 hover:bg-slate-50 text-slate-800 font-medium text-left"
-                  >
-                    <span>🇬🇧</span> UK
-                  </button>
-                </div>
-              )}
-            </div>
+            {/* Country Badge */}
+            <span className="text-xs font-bold text-slate-700 bg-slate-100/80 border border-slate-200/80 px-2.5 py-1 rounded-full select-none tracking-wide">
+              USA
+            </span>
 
             {/* Mobile Menu Hamburger */}
             <button

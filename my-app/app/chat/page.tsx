@@ -131,7 +131,7 @@ export default function ChatPage() {
   };
 
   // WhatsApp quick url
-  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '+880 1873-597814';
+  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '+880 1340-376081';
   const cleanPhone = whatsappNumber.replace(/[^0-9]/g, '');
   const defaultWhatsAppText = inquiryProduct
     ? `Hello ProductPerks! I am inquiring about this Amazon product:\n• ${inquiryProduct.title}\n• Price: $${inquiryProduct.price}\n• Store: ${inquiryProduct.store || 'Amazon Store'}`

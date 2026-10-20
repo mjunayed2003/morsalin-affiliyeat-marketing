@@ -22,8 +22,8 @@ export const TopBar: React.FC = () => {
   const { openChat } = useApp();
   const [searchValue, setSearchValue] = useState('');
 
-  const phoneNumber = '+880 1873-597814';
-  const cleanPhoneForLink = '8801873597814';
+  const phoneNumber = '+880 1340-376081';
+  const cleanPhoneForLink = '8801340376081';
   const whatsappUrl = `https://wa.me/${cleanPhoneForLink}?text=${encodeURIComponent('Hello ProductPerks Support, I would like to inquire about Amazon review products.')}`;
   const telegramUrl = `https://t.me/+${cleanPhoneForLink}`;
   const telUrl = `tel:+${cleanPhoneForLink}`;
@@ -157,11 +157,11 @@ export const TopBar: React.FC = () => {
                 <FaYoutube className="w-3.5 h-3.5" />
               </a>
               <a 
-                href="https://instagram.com" 
+                href="https://www.instagram.com/onlinefreeproducts" 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="hover:text-[#e1306c] transition-transform hover:scale-110" 
-                title="Instagram"
+                title="Instagram (@onlinefreeproducts)"
               >
                 <FaInstagram className="w-3 h-3" />
               </a>
