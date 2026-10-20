@@ -307,7 +307,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
             activeTab === 'login' 
               ? 'Enter your USA phone number or Gmail to access your account.' 
               : activeTab === 'register'
-              ? 'Join ProductPerks Review Club. Gmail OTP verification is required.'
+              ? 'Join FreeProducts.online Review Club. Gmail OTP verification is required.'
               : 'Reset your password using the OTP code sent to your Gmail.'
           )}
         </p>
@@ -873,7 +873,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
 
       {/* Footer Info */}
       <div className="p-3.5 bg-stone-50 border-t border-stone-200/80 text-center text-[11px] text-slate-500">
-        ProductPerks Amazon Review Club • USA Verified Members Only
+        FreeProducts.online Amazon Review Club • USA Verified Members Only
       </div>
     </div>
   );

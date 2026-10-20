@@ -339,7 +339,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         return {
           success: true,
-          message: data.message || `Welcome to ProductPerks, ${backendUser.name}!`,
+          message: data.message || `Welcome to FreeProducts.online, ${backendUser.name}!`,
           user: backendUser,
         };
       }
@@ -448,7 +448,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: data.user.id,
           phone: data.user.phone,
           name: data.user.name,
-          email: data.user.email || `${rawPhone}@reviewer.productperks.com`,
+          email: data.user.email || `${rawPhone}@reviewer.freeproducts.online`,
           address: data.user.address || '',
           city: data.user.city || 'New York',
           avatar: data.user.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name.trim())}&backgroundColor=1b3b2b`,
@@ -463,7 +463,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         return {
           success: true,
-          message: data.message || `Registration successful! Welcome to ProductPerks, ${backendUser.name}.`,
+          message: data.message || `Registration successful! Welcome to FreeProducts.online, ${backendUser.name}.`,
         };
       } else {
         return {
@@ -502,7 +502,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: data.user.id,
           phone: data.user.phone,
           name: data.user.name,
-          email: data.user.email || `${input}@reviewer.productperks.com`,
+          email: data.user.email || `${input}@reviewer.freeproducts.online`,
           address: data.user.address || '',
           city: data.user.city || 'New York',
           avatar: data.user.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(data.user.name)}&backgroundColor=1b3b2b`,

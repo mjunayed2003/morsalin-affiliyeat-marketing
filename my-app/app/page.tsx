@@ -145,7 +145,7 @@ export default function Home() {
 
                 {/* Paragraph Description */}
                 <p className="text-sm sm:text-base text-slate-600 font-normal leading-relaxed max-w-xl">
-                  Join ProductPerks Review Club! Get brand-new items from verified Amazon stores (LONG YUE, Lickoon, Imps Hair Creates & more). Test quality products, share your authentic Amazon feedback, and keep every item with zero hidden costs.
+                  Join FreeProducts.online Review Club! Get brand-new items from verified Amazon stores (LONG YUE, Lickoon, Imps Hair Creates & more). Test quality products, share your authentic Amazon feedback, and keep every item with zero hidden costs.
                 </p>
 
                 {/* Action Buttons */}
@@ -657,7 +657,7 @@ export default function Home() {
               <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-2xs">
                 <h4 className="font-bold text-sm text-slate-900">Do I ever have to return the products?</h4>
                 <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
-                  Never! Every single item you test through ProductPerks is 100% yours to keep permanently.
+                  Never! Every single item you test through FreeProducts.online is 100% yours to keep permanently.
                 </p>
               </div>
             </div>
@@ -676,14 +676,16 @@ export default function Home() {
             
             {/* Logo Left */}
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 border border-emerald-100">
-                <svg className="w-4 h-4 text-[#15803d]" viewBox="0 0 24 24" fill="currentColor">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-[#1b3b2b] text-white flex items-center justify-center shrink-0 shadow-2xs">
+                <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M20 7h-2.18A3.996 3.996 0 0 0 16 3.07C14.89 2.43 13.56 2.5 12.63 3.25L12 3.75l-.63-.5C10.44 2.5 9.11 2.43 8 3.07 6.46 3.96 5.8 5.81 6.18 7H4c-1.1 0-2 .9-2 2v2c0 .55.45 1 1 1h1v8c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-8h1c.55 0 1-.45 1-1V9c0-1.1-.9-2-2-2zm-9-3c.53 0 1.04.2 1.42.58l.58.58-1.06 1.06-.58-.58A1.99 1.99 0 0 1 11 4zm-3 2c0-.53.2-1.04.58-1.42.78-.78 2.05-.78 2.83 0l.58.58-1.99 1.99L8 6.15A1.99 1.99 0 0 1 8 6zm5 14H6v-8h7v8zm7 0h-5v-8h5v8zm0-10H4V9h16v1z" />
                 </svg>
               </div>
               <div>
-                <p className="font-bold text-slate-900 text-sm">ProductPerks</p>
-                <p className="text-[11px] text-slate-400">Amazon Review Club • Test products, share honest reviews, keep them free.</p>
+                <p className="font-extrabold text-slate-900 text-sm">
+                  FreeProducts<span className="text-emerald-700 font-black">.online</span>
+                </p>
+                <p className="text-[11px] text-slate-400">Amazon Review Club • Test products, share honest reviews, keep them 100% free.</p>
               </div>
             </div>
 
@@ -725,7 +727,7 @@ export default function Home() {
 
           {/* Bottom Copyright & Discreet Portal Links */}
           <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-slate-400">
-            <p>© 2026 ProductPerks. All rights reserved.</p>
+            <p>© 2026 FreeProducts.online. All rights reserved.</p>
             
             <div className="flex items-center gap-4">
               <Link href="/chat" className="hover:text-slate-600 transition-colors flex items-center gap-1">

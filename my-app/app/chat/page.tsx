@@ -134,8 +134,8 @@ export default function ChatPage() {
   const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '+880 1340-376081';
   const cleanPhone = whatsappNumber.replace(/[^0-9]/g, '');
   const defaultWhatsAppText = inquiryProduct
-    ? `Hello ProductPerks! I am inquiring about this Amazon product:\n• ${inquiryProduct.title}\n• Price: $${inquiryProduct.price}\n• Store: ${inquiryProduct.store || 'Amazon Store'}`
-    : `Hello ProductPerks! I want to learn more about testing Amazon products and joining the review club.`;
+    ? `Hello FreeProducts.online! I am inquiring about this Amazon product:\n• ${inquiryProduct.title}\n• Price: $${inquiryProduct.price}\n• Store: ${inquiryProduct.store || 'Amazon Store'}`
+    : `Hello FreeProducts.online! I want to learn more about testing Amazon products and joining the review club.`;
   const whatsappUrl = cleanPhone
     ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(defaultWhatsAppText)}`
     : `https://api.whatsapp.com/send?text=${encodeURIComponent(defaultWhatsAppText)}`;
@@ -192,7 +192,7 @@ export default function ChatPage() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-base sm:text-lg font-bold tracking-tight text-white">
-                  ProductPerks Support Desk
+                  FreeProducts.online Support Desk
                 </h1>
                 <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full">
                   Live
@@ -251,7 +251,7 @@ export default function ChatPage() {
             <div className="text-center my-2">
               <span className="inline-flex items-center gap-1.5 bg-white text-slate-600 text-[11px] font-medium px-3.5 py-1 rounded-full border border-stone-200 shadow-2xs">
                 <FaShieldHalved className="w-3 h-3 text-[#1b3b2b]" />
-                Official ProductPerks Review Club Chat • Verified Admin
+                Official FreeProducts.online Review Club Chat • Verified Admin
               </span>
             </div>
 
@@ -483,7 +483,7 @@ export default function ChatPage() {
             {/* Input field */}
             <input
               type="text"
-              placeholder={inquiryProduct ? `Ask about "${inquiryProduct.title}"...` : "Write message to ProductPerks Support..."}
+              placeholder={inquiryProduct ? `Ask about "${inquiryProduct.title}"...` : "Write message to FreeProducts.online Support..."}
               value={inputText}
               onChange={handleInputChange}
               className="flex-1 bg-stone-50 text-slate-900 text-xs sm:text-sm px-4 py-2.5 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-[#1b3b2b]/15 focus:border-[#1b3b2b] font-medium transition-all"
@@ -506,7 +506,7 @@ export default function ChatPage() {
         <div className="bg-stone-100 text-slate-600 border border-stone-200 rounded-b-3xl px-5 py-3 text-xs flex flex-col sm:flex-row items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-            <span>ProductPerks Review Desk • Amazon Review Club</span>
+            <span>FreeProducts.online Review Desk • Amazon Review Club</span>
           </div>
 
           <div className="flex items-center gap-4 text-slate-500 font-medium">

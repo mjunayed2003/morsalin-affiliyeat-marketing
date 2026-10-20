@@ -47,7 +47,7 @@ export const OtpBanner: React.FC<OtpBannerProps> = ({ onAutoFill }) => {
                 <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-200 px-2 py-0.5 rounded-full border border-emerald-400/30">
                   Simulated SMS
                 </span>
-                <span className="text-xs text-emerald-100/80 font-medium">ProductPerks Security</span>
+                <span className="text-xs text-emerald-100/80 font-medium">FreeProducts.online Security</span>
               </div>
               <p className="text-xs sm:text-sm text-stone-200 mt-1 font-medium">
                 Verification code for <span className="text-white font-bold">{otpBanner.phone}</span> is:

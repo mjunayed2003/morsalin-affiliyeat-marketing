@@ -336,7 +336,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const clearInquiryProduct = () => setInquiryProduct(null);
 
   const copyClientLink = (prod: Product) => {
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://productperks.com';
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://freeproducts.online';
     const link = `${origin}/p/${prod.id}`;
     navigator.clipboard.writeText(link);
     setCopiedId(prod.id);
@@ -459,7 +459,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const sendAdminReply = (text: string, image?: string, targetUserId?: string) => {
     const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const localId = `msg-${Date.now()}`;
-    const senderName = user?.name || 'ProductPerks Admin';
+    const senderName = user?.name || 'FreeProducts.online Admin';
     const token = typeof window !== 'undefined' ? localStorage.getItem('bytedesk_token_v2') : null;
 
     // Target the specific customer or the most recent customer in the chat

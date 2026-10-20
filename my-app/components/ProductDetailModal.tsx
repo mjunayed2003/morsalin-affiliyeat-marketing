@@ -46,7 +46,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
   if (!isOpen || !product) return null;
 
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://productperks.com';
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://freeproducts.online';
   const productPageUrl = `${origin}/p/${product.id}`;
   const cleanPhone = '8801340376081';
   const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(

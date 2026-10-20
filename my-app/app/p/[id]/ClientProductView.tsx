@@ -148,7 +148,7 @@ export const ClientProductView: React.FC<ClientProductViewProps> = ({ productId 
   const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
   const cleanPhone = '8801340376081';
   const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(
-    `Hello! I am inquiring about: ${product.title} (Price: $${product.price})\nStore: ${product.store || 'ProductPerks'}\nProduct Page: ${currentUrl}`
+    `Hello! I am inquiring about: ${product.title} (Price: $${product.price})\nStore: ${product.store || 'FreeProducts.online'}\nProduct Page: ${currentUrl}`
   )}`;
   const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(currentUrl)}&text=${encodeURIComponent(
     `🔥 Free Amazon Review Perk: ${product.title} (Est. Amazon Retail: $${product.originalPrice})`
@@ -843,7 +843,7 @@ export const ClientProductView: React.FC<ClientProductViewProps> = ({ productId 
       {/* Footer (matching Home Page) */}
       <footer className="bg-white border-t border-stone-200/80 py-8 text-xs text-slate-500 mt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p>© 2026 ProductPerks. All rights reserved.</p>
+          <p>© 2026 FreeProducts.online. All rights reserved.</p>
           <div className="flex items-center gap-4">
             <Link href="/" className="hover:text-slate-900 font-semibold">Home</Link>
             <Link href="/products" className="hover:text-slate-900 font-semibold">Products</Link>

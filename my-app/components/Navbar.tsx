@@ -90,19 +90,19 @@ export const Navbar: React.FC<NavbarProps> = ({
             className="flex items-center gap-2.5 group shrink-0"
           >
             {/* Emerald Gift Box Icon */}
-            <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 border border-emerald-100/80 shadow-2xs group-hover:scale-105 transition-transform">
-              <svg className="w-5 h-5 text-[#15803d]" viewBox="0 0 24 24" fill="currentColor">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-[#1b3b2b] text-white flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+              <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M20 7h-2.18A3.996 3.996 0 0 0 16 3.07C14.89 2.43 13.56 2.5 12.63 3.25L12 3.75l-.63-.5C10.44 2.5 9.11 2.43 8 3.07 6.46 3.96 5.8 5.81 6.18 7H4c-1.1 0-2 .9-2 2v2c0 .55.45 1 1 1h1v8c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-8h1c.55 0 1-.45 1-1V9c0-1.1-.9-2-2-2zm-9-3c.53 0 1.04.2 1.42.58l.58.58-1.06 1.06-.58-.58A1.99 1.99 0 0 1 11 4zm-3 2c0-.53.2-1.04.58-1.42.78-.78 2.05-.78 2.83 0l.58.58-1.99 1.99L8 6.15A1.99 1.99 0 0 1 8 6zm5 14H6v-8h7v8zm7 0h-5v-8h5v8zm0-10H4V9h16v1z" />
               </svg>
             </div>
             
             {/* Logo Text & Tagline */}
             <div className="flex flex-col">
-              <span className="font-bold text-lg sm:text-xl text-slate-900 tracking-tight leading-tight">
-                Product<span className="text-[#1b3b2b]">Perks</span>
+              <span className="font-extrabold text-lg sm:text-xl text-slate-900 tracking-tight leading-tight">
+                FreeProducts<span className="text-emerald-700 font-black">.online</span>
               </span>
-              <span className="text-[10px] sm:text-[11px] text-amber-700 font-semibold leading-none hidden sm:flex items-center gap-1">
-                <span>Amazon Review & Perks Club</span>
+              <span className="text-[10px] sm:text-[11px] text-emerald-800 font-semibold leading-none hidden sm:flex items-center gap-1">
+                <span>100% Free Amazon Review Perks</span>
               </span>
             </div>
           </Link>

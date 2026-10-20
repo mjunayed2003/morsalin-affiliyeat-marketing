@@ -24,7 +24,7 @@ export const TopBar: React.FC = () => {
 
   const phoneNumber = '+880 1340-376081';
   const cleanPhoneForLink = '8801340376081';
-  const whatsappUrl = `https://wa.me/${cleanPhoneForLink}?text=${encodeURIComponent('Hello ProductPerks Support, I would like to inquire about Amazon review products.')}`;
+  const whatsappUrl = `https://wa.me/${cleanPhoneForLink}?text=${encodeURIComponent('Hello FreeProducts.online Support, I would like to inquire about Amazon review products.')}`;
   const telegramUrl = `https://t.me/+${cleanPhoneForLink}`;
   const telUrl = `tel:+${cleanPhoneForLink}`;
 

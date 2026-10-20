@@ -15,8 +15,8 @@ export default function AdminSettingsPage() {
   const { showToast } = useApp();
 
   const [amazonTag, setAmazonTag] = useState('bwbh00-20');
-  const [platformName, setPlatformName] = useState('ProductPerks');
-  const [supportEmail, setSupportEmail] = useState('support@productperks.com');
+  const [platformName, setPlatformName] = useState('FreeProducts.online');
+  const [supportEmail, setSupportEmail] = useState('support@freeproducts.online');
   const [currency, setCurrency] = useState('USD ($)');
   const [enableSoundAlerts, setEnableSoundAlerts] = useState(true);
   const [maintenanceMode, setMaintenanceMode] = useState(false);

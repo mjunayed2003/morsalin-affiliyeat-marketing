@@ -17,13 +17,13 @@ export default function AdminContentPage() {
     'Test Top Amazon Products. Share Honest Reviews. Keep Them 100% Free.'
   );
   const [heroSubtitle, setHeroSubtitle] = useState(
-    'Join ProductPerks Review Club! Get brand-new items from verified Amazon stores (LONG YUE, Lickoon, Imps Hair Creates & more).'
+    'Join FreeProducts.online Review Club! Get brand-new items from verified Amazon stores (LONG YUE, Lickoon, Imps Hair Creates & more).'
   );
   const [announcementBanner, setAnnouncementBanner] = useState(
     '🔥 New Spring Review Perks Added! Test pet care, home & beauty gadgets 100% free with Amazon Prime delivery.'
   );
   const [seoMetaTitle, setSeoMetaTitle] = useState(
-    'ProductPerks - Amazon Review Club | Free Products for Reviewers'
+    'FreeProducts.online - Amazon Product Reviews & Free Testing Club USA'
   );
 
   const handleSave = (e: React.FormEvent) => {

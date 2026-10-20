@@ -21,29 +21,34 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { id } = await params;
   const product = await getProduct(id);
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://freeproducts.online';
+
   if (!product) {
     return {
-      title: 'Product - Review Perk | ProductPerks',
-      description: 'Verified Amazon Review Product'
+      metadataBase: new URL(siteUrl),
+      title: 'Free Amazon Review Perk | FreeProducts.online',
+      description: 'Verified Amazon Review Product available on FreeProducts.online.',
+      alternates: {
+        canonical: `${siteUrl}/products`,
+      },
     };
   }
 
-  const siteUrl = 
-    process.env.NEXT_PUBLIC_SITE_URL || 
-    process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/, '') || 
-    'https://morsalin-affiliyeat-marketing.vercel.app';
   const pageUrl = `${siteUrl}/p/${product.id}`;
   const imageUrl = product.image;
 
   return {
     metadataBase: new URL(siteUrl),
-    title: `${product.title} - Free Amazon Review Perk | ProductPerks`,
-    description: `Test this ${product.title} from verified Amazon store ${product.store || 'Amazon'}. Est. Retail: $${product.originalPrice}. 100% Free rebate!`,
+    title: `${product.title} - Free Amazon Review Perk | FreeProducts.online`,
+    description: `Test this ${product.title} from verified Amazon store ${product.store || 'Amazon'}. Est. Retail: $${product.originalPrice}. Claim 100% Free on FreeProducts.online!`,
+    alternates: {
+      canonical: pageUrl,
+    },
     openGraph: {
       title: `${product.title} - 100% Free Amazon Review Perk`,
       description: `Test this ${product.title} for FREE! Est. Retail: $${product.originalPrice}. Verified seller ${product.store || 'Amazon'}.`,
       url: pageUrl,
-      siteName: 'ProductPerks Amazon Review Club',
+      siteName: 'FreeProducts.online Amazon Review Club',
       images: [
         {
           url: imageUrl,
@@ -59,11 +64,55 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: `${product.title} - Free Amazon Review Perk`,
       description: `Claim this free review item from ${product.store || 'Amazon'}. Est. Retail: $${product.originalPrice}.`,
       images: [imageUrl],
+      creator: '@onlinefreeproducts',
     },
   };
 }
 
 export default async function ProductPageRoute({ params }: PageProps) {
   const { id } = await params;
-  return <ClientProductView productId={id} />;
+  const product = await getProduct(id);
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://freeproducts.online';
+  const pageUrl = `${siteUrl}/p/${id}`;
+
+  const productJsonLd = product
+    ? {
+        '@context': 'https://schema.org/',
+        '@type': 'Product',
+        name: product.title,
+        image: [product.image, ...(product.gallery || [])],
+        description: product.description,
+        sku: product.id,
+        brand: {
+          '@type': 'Brand',
+          name: product.store || 'Amazon Partner',
+        },
+        offers: {
+          '@type': 'Offer',
+          url: pageUrl,
+          priceCurrency: 'USD',
+          price: '0.00',
+          priceValidUntil: '2027-12-31',
+          itemCondition: 'https://schema.org/NewCondition',
+          availability: 'https://schema.org/InStock',
+          seller: {
+            '@type': 'Organization',
+            name: 'FreeProducts.online',
+          },
+        },
+      }
+    : null;
+
+  return (
+    <>
+      {productJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+        />
+      )}
+      <ClientProductView productId={id} />
+    </>
+  );
 }

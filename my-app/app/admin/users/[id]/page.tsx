@@ -235,7 +235,7 @@ export default function AdminUserDetailPage({ params }: PageProps) {
         isOpen={confirmBlockOpen}
         onClose={() => setConfirmBlockOpen(false)}
         title="Confirm Account Block"
-        message={`Are you sure you want to block ${user.name}? This will revoke their ability to access ProductPerks.`}
+        message={`Are you sure you want to block ${user.name}? This will revoke their ability to access FreeProducts.online.`}
         confirmLabel="Block User"
         isDestructive={true}
         onConfirm={() => {

@@ -44,7 +44,7 @@ export default function AdminReportsPage() {
       p.reviewsCount,
       `"${p.amazonUrl || ''}"`,
     ]);
-    downloadCSV('productperks_catalog_export', headers, rows);
+    downloadCSV('freeproducts_catalog_export', headers, rows);
   };
 
   const handleExportUsers = () => {
@@ -58,7 +58,7 @@ export default function AdminReportsPage() {
       u.status || 'ACTIVE',
       u.createdAt,
     ]);
-    downloadCSV('productperks_reviewers_export', headers, rows);
+    downloadCSV('freeproducts_reviewers_export', headers, rows);
   };
 
   const handleExportMessages = () => {
@@ -70,7 +70,7 @@ export default function AdminReportsPage() {
       `"${m.text.replace(/"/g, '""')}"`,
       `"${m.timestamp}"`,
     ]);
-    downloadCSV('productperks_chat_messages_export', headers, rows);
+    downloadCSV('freeproducts_chat_messages_export', headers, rows);
   };
 
   const reports = [

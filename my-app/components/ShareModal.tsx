@@ -40,7 +40,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
   if (!isOpen || !product) return null;
 
   // Compute shareable link directly pointing to dedicated /p/[id] route
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://productperks.com';
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://freeproducts.online';
   const shareableUrl = `${origin}/p/${product.id}`;
   
   // Active preview image (either custom uploaded or original product image)
@@ -205,7 +205,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                 {/* Social Snippet Details */}
                 <div className="p-3.5 bg-white">
                   <p className="text-[10px] text-emerald-700 uppercase font-bold tracking-wider">
-                    PRODUCTPERKS.COM • AMAZON REVIEW PERK
+                    FREEPRODUCTS.ONLINE • AMAZON REVIEW PERK
                   </p>
                   <h4 className="font-bold text-slate-900 text-sm leading-snug line-clamp-2 mt-0.5">
                     {product.title}

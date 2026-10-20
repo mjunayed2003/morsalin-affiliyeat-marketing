@@ -127,8 +127,8 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
   const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '+880 1340-376081';
   const cleanPhone = whatsappNumber.replace(/[^0-9]/g, '');
   const defaultWhatsAppText = inquiryProduct
-    ? `Hello ProductPerks! I am inquiring about this Amazon product:\n• ${inquiryProduct.title}\n• Price: $${inquiryProduct.price}\n• Store: ${inquiryProduct.store || 'Amazon Store'}`
-    : `Hello ProductPerks! I want to learn more about testing Amazon products and joining the review club.`;
+    ? `Hello FreeProducts.online! I am inquiring about this Amazon product:\n• ${inquiryProduct.title}\n• Price: $${inquiryProduct.price}\n• Store: ${inquiryProduct.store || 'Amazon Store'}`
+    : `Hello FreeProducts.online! I want to learn more about testing Amazon products and joining the review club.`;
   const whatsappUrl = cleanPhone
     ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(defaultWhatsAppText)}`
     : `https://api.whatsapp.com/send?text=${encodeURIComponent(defaultWhatsAppText)}`;
@@ -233,7 +233,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
               </div>
               <div>
                 <h3 className="font-bold text-sm tracking-tight flex items-center gap-1.5 text-white">
-                  ProductPerks Support Desk
+                  FreeProducts.online Support Desk
                 </h3>
                 <p className="text-[11px] text-emerald-200 flex items-center gap-1 font-medium">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
@@ -349,7 +349,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
                 >
                   {/* Sender indicator */}
                   <span className="text-[10px] text-slate-500 mb-1 px-1 font-medium">
-                    {isCustomer ? 'You (Reviewer)' : 'ProductPerks Admin'}
+                    {isCustomer ? 'You (Reviewer)' : 'FreeProducts.online Admin'}
                   </span>
 
                   {/* Message Bubble Container */}
@@ -412,7 +412,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
             {isTyping && (
               <div className="flex flex-col items-start animate-in fade-in duration-200">
                 <span className="text-[10px] text-slate-500 mb-1 px-1 font-medium">
-                  ProductPerks Admin
+                  FreeProducts.online Admin
                 </span>
                 <div className="bg-white rounded-2xl px-3.5 py-2.5 border border-stone-200 flex items-center gap-1.5 shadow-xs">
                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-bounce"></div>

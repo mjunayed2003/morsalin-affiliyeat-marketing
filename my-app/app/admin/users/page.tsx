@@ -62,7 +62,7 @@ export default function AdminUsersPage() {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `productperks_users_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute('download', `freeproducts_users_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -278,7 +278,7 @@ export default function AdminUsersPage() {
           message={
             selectedUserForAction.action === 'block'
               ? `Are you sure you want to block ${selectedUserForAction.user.name}? This user will not be able to log in or submit product inquiries.`
-              : `Are you sure you want to unblock ${selectedUserForAction.user.name}? Their access to ProductPerks will be restored.`
+              : `Are you sure you want to unblock ${selectedUserForAction.user.name}? Their access to FreeProducts.online will be restored.`
           }
           confirmLabel={selectedUserForAction.action === 'block' ? 'Block Account' : 'Unblock Account'}
           isDestructive={selectedUserForAction.action === 'block'}

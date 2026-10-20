@@ -201,7 +201,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
             <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-slate-100 py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
               <div className="px-3.5 py-2 border-b border-slate-100">
                 <p className="text-xs font-bold text-slate-900">{user?.name || 'Admin User'}</p>
-                <p className="text-[10px] text-emerald-600 font-mono">admin@productperks.com</p>
+                <p className="text-[10px] text-emerald-600 font-mono">admin@freeproducts.online</p>
               </div>
 
               <div className="py-1 text-xs">
