@@ -28,6 +28,7 @@ export declare class AuthService {
             address: string | null;
             city: string | null;
             avatar: string | null;
+            selfieImage: string | null;
             verified: boolean;
             role: import("../generated/prisma/enums.js").Role;
         };

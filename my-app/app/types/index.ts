@@ -64,6 +64,7 @@ export interface User {
   address?: string;
   city?: string;
   avatar?: string;
+  selfieImage?: string;
   verified: boolean;
   verifiedAt?: string;
   createdAt: string;

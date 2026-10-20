@@ -9,6 +9,7 @@ export class SendRegisterOtpDto {
 export class VerifyRegisterOtpDto {
     email;
     code;
+    selfieImage;
 }
 export class SendForgotPasswordOtpDto {
     email;

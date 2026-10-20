@@ -57,5 +57,18 @@ export class UsersController {
   ) {
     return this.usersService.updateReviewPermission(id, canReview);
   }
+
+  // Users can submit or update their own selfie verification photo
+  @Patch(':id/selfie')
+  async updateSelfie(
+    @Param('id') id: string,
+    @Body('selfieImage') selfieImage: string,
+    @CurrentUser() currentUser: AuthenticatedUser,
+  ) {
+    if (currentUser.role !== 'ADMIN' && currentUser.id !== id) {
+      throw new ForbiddenException('Access Denied: You can only update your own selfie.');
+    }
+    return this.usersService.updateSelfie(id, selfieImage);
+  }
 }
 

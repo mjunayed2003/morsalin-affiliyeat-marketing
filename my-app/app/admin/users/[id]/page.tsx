@@ -20,7 +20,11 @@ import {
   FaKey,
   FaStar,
   FaLock,
-  FaTrash
+  FaTrash,
+  FaCamera,
+  FaCircleCheck,
+  FaMagnifyingGlassPlus,
+  FaXmark
 } from 'react-icons/fa6';
 import { useAuth } from '@/app/context/AuthContext';
 import { useApp } from '@/app/context/AppContext';
@@ -40,6 +44,7 @@ export default function AdminUserDetailPage({ params }: PageProps) {
 
   const user = getUserById(id);
   const [confirmBlockOpen, setConfirmBlockOpen] = useState(false);
+  const [showSelfieModal, setShowSelfieModal] = useState(false);
 
   if (!user) {
     return (
@@ -145,72 +150,130 @@ export default function AdminUserDetailPage({ params }: PageProps) {
       {/* Main Grid: User Profile Details + Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
         
-        {/* Left Column (5 cols): Profile Info Card */}
-        <div className="md:col-span-5 bg-white rounded-2xl border border-slate-200/80 p-6 shadow-2xs space-y-6">
-          <div className="flex flex-col items-center text-center pb-4 border-b border-slate-100">
-            <img
-              src={user.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user.name)}`}
-              alt={user.name}
-              className="w-20 h-20 rounded-full object-cover border-2 border-emerald-500/20 shadow-xs mb-3"
-            />
-            <h3 className="font-bold text-base text-slate-900">{user.name}</h3>
-            <p className="text-xs text-slate-500">{user.role.toUpperCase()} Member</p>
+        {/* Left Column (5 cols): Profile Info Card & Verification Selfie */}
+        <div className="md:col-span-5 space-y-6">
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-2xs space-y-6">
+            <div className="flex flex-col items-center text-center pb-4 border-b border-slate-100">
+              <img
+                src={user.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user.name)}`}
+                alt={user.name}
+                className="w-20 h-20 rounded-full object-cover border-2 border-emerald-500/20 shadow-xs mb-3"
+              />
+              <h3 className="font-bold text-base text-slate-900">{user.name}</h3>
+              <p className="text-xs text-slate-500">{user.role.toUpperCase()} Member</p>
+            </div>
+
+            <div className="space-y-3.5 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400 flex items-center gap-2">
+                  <FaPhone className="w-3 h-3 text-emerald-600" />
+                  Phone Number
+                </span>
+                <span className="font-mono font-bold text-slate-800">{maskPhone(user.phone)}</span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400 flex items-center gap-2">
+                  <FaEnvelope className="w-3 h-3 text-slate-400" />
+                  Email Address
+                </span>
+                <span className="font-medium text-slate-800 truncate max-w-[180px]">{user.email || 'None'}</span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400 flex items-center gap-2">
+                  <FaLocationDot className="w-3 h-3 text-slate-400" />
+                  City / Region
+                </span>
+                <span className="font-medium text-slate-800">{user.city || 'Dhaka'}</span>
+              </div>
+
+              <div className="flex items-start justify-between">
+                <span className="text-slate-400 flex items-center gap-2 shrink-0">
+                  <FaLocationDot className="w-3 h-3 text-slate-400" />
+                  Delivery Address
+                </span>
+                <span className="font-medium text-slate-800 text-right max-w-[180px]">
+                  {user.address || 'Not provided'}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                <span className="text-slate-400 flex items-center gap-2">
+                  <FaStar className="w-3 h-3 text-amber-500" />
+                  Review Permission
+                </span>
+                <span className={`font-semibold ${user.canReview ? 'text-emerald-700 font-bold' : 'text-slate-500'}`}>
+                  {user.canReview ? 'Allowed by Admin' : 'Restricted'}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                <span className="text-slate-400 flex items-center gap-2">
+                  <FaCalendarDays className="w-3 h-3 text-slate-400" />
+                  Registered On
+                </span>
+                <span className="font-mono text-slate-700">
+                  {new Date(user.createdAt).toLocaleDateString()}
+                </span>
+              </div>
+            </div>
           </div>
 
-          <div className="space-y-3.5 text-xs">
-            <div className="flex items-center justify-between">
-              <span className="text-slate-400 flex items-center gap-2">
-                <FaPhone className="w-3 h-3 text-emerald-600" />
-                Phone Number
-              </span>
-              <span className="font-mono font-bold text-slate-800">{maskPhone(user.phone)}</span>
+          {/* Verification Selfie Card */}
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <FaCamera className="w-4 h-4 text-emerald-700" />
+                <h3 className="font-bold text-sm text-slate-900">Verification Selfie</h3>
+              </div>
+              {user.selfieImage ? (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                  <FaCircleCheck className="w-2.5 h-2.5 text-emerald-600" />
+                  <span>Submitted</span>
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-500">
+                  <span>No Selfie</span>
+                </span>
+              )}
             </div>
 
-            <div className="flex items-center justify-between">
-              <span className="text-slate-400 flex items-center gap-2">
-                <FaEnvelope className="w-3 h-3 text-slate-400" />
-                Email Address
-              </span>
-              <span className="font-medium text-slate-800 truncate max-w-[180px]">{user.email || 'None'}</span>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <span className="text-slate-400 flex items-center gap-2">
-                <FaLocationDot className="w-3 h-3 text-slate-400" />
-                City / Region
-              </span>
-              <span className="font-medium text-slate-800">{user.city || 'Dhaka'}</span>
-            </div>
-
-            <div className="flex items-start justify-between">
-              <span className="text-slate-400 flex items-center gap-2 shrink-0">
-                <FaLocationDot className="w-3 h-3 text-slate-400" />
-                Delivery Address
-              </span>
-              <span className="font-medium text-slate-800 text-right max-w-[180px]">
-                {user.address || 'Not provided'}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-              <span className="text-slate-400 flex items-center gap-2">
-                <FaStar className="w-3 h-3 text-amber-500" />
-                Review Permission
-              </span>
-              <span className={`font-semibold ${user.canReview ? 'text-emerald-700 font-bold' : 'text-slate-500'}`}>
-                {user.canReview ? 'Allowed by Admin' : 'Restricted'}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-              <span className="text-slate-400 flex items-center gap-2">
-                <FaCalendarDays className="w-3 h-3 text-slate-400" />
-                Registered On
-              </span>
-              <span className="font-mono text-slate-700">
-                {new Date(user.createdAt).toLocaleDateString()}
-              </span>
-            </div>
+            {user.selfieImage ? (
+              <div className="space-y-3">
+                <div 
+                  onClick={() => setShowSelfieModal(true)}
+                  className="relative group cursor-pointer overflow-hidden rounded-xl border border-slate-200 bg-slate-900 aspect-4/3 flex items-center justify-center shadow-xs"
+                >
+                  <img
+                    src={user.selfieImage}
+                    alt={`${user.name} verification selfie`}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 text-white text-xs font-semibold">
+                    <FaMagnifyingGlassPlus className="w-4 h-4" />
+                    <span>Click to Zoom</span>
+                  </div>
+                </div>
+                <div className="p-2.5 bg-emerald-50/70 rounded-xl border border-emerald-100 text-[11px] text-emerald-900">
+                  <p className="font-semibold flex items-center gap-1.5">
+                    <FaCheck className="w-3 h-3 text-emerald-600 shrink-0" />
+                    <span>Captured during OTP step</span>
+                  </p>
+                  <p className="text-[10px] text-emerald-700/80 mt-0.5">
+                    User identity snapped via live webcam/front camera upon registration.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="py-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                <FaCamera className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                <p className="text-xs font-semibold text-slate-700">No selfie submitted</p>
+                <p className="text-[11px] text-slate-400 mt-0.5 max-w-[200px] mx-auto">
+                  This user registered before selfie verification was activated.
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -348,6 +411,51 @@ export default function AdminUserDetailPage({ params }: PageProps) {
           showToast(`Account ${user.name} has been blocked.`);
         }}
       />
+
+      {/* Selfie Zoom Modal */}
+      {showSelfieModal && user.selfieImage && (
+        <div 
+          onClick={() => setShowSelfieModal(false)}
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="relative bg-white rounded-3xl p-5 max-w-lg w-full shadow-2xl border border-white/20 overflow-hidden"
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <FaCamera className="w-4 h-4 text-emerald-700" />
+                <span className="font-bold text-sm text-slate-900">{user.name} - Verification Selfie</span>
+              </div>
+              <button 
+                onClick={() => setShowSelfieModal(false)}
+                className="p-1.5 rounded-full hover:bg-slate-100 text-slate-500 transition-colors cursor-pointer"
+              >
+                <FaXmark className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="mt-3 rounded-2xl overflow-hidden bg-slate-950 aspect-4/3 flex items-center justify-center">
+              <img 
+                src={user.selfieImage} 
+                alt={user.name} 
+                className="w-full h-full object-contain"
+              />
+            </div>
+            <div className="mt-4 flex items-center justify-between text-xs text-slate-500">
+              <span className="flex items-center gap-1.5 text-emerald-700 font-semibold">
+                <FaCircleCheck className="w-3.5 h-3.5" />
+                <span>Identity Selfie Verified</span>
+              </span>
+              <button
+                onClick={() => setShowSelfieModal(false)}
+                className="px-4 py-1.5 bg-slate-900 text-white rounded-xl text-xs font-semibold hover:bg-slate-800 cursor-pointer"
+              >
+                Close Preview
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

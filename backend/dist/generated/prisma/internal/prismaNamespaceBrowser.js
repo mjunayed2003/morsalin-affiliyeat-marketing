@@ -31,6 +31,7 @@ export const UserScalarFieldEnum = {
     address: 'address',
     city: 'city',
     avatar: 'avatar',
+    selfieImage: 'selfieImage',
     verified: 'verified',
     verifiedAt: 'verifiedAt',
     role: 'role',

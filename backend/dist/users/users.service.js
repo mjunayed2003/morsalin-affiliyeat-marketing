@@ -29,6 +29,7 @@ let UsersService = class UsersService {
                 address: true,
                 city: true,
                 avatar: true,
+                selfieImage: true,
                 verified: true,
                 verifiedAt: true,
                 role: true,
@@ -50,6 +51,7 @@ let UsersService = class UsersService {
                 address: true,
                 city: true,
                 avatar: true,
+                selfieImage: true,
                 verified: true,
                 verifiedAt: true,
                 role: true,
@@ -80,6 +82,16 @@ let UsersService = class UsersService {
         return this.prisma.user.update({
             where: { id },
             data: { canReview },
+        });
+    }
+    async updateSelfie(id, selfieImage) {
+        await this.findOne(id);
+        return this.prisma.user.update({
+            where: { id },
+            data: {
+                selfieImage,
+                avatar: selfieImage
+            },
         });
     }
 };

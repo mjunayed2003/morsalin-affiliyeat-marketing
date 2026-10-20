@@ -9,6 +9,7 @@ export declare class SendRegisterOtpDto {
 export declare class VerifyRegisterOtpDto {
     email: string;
     code: string;
+    selfieImage?: string;
 }
 export declare class SendForgotPasswordOtpDto {
     email: string;

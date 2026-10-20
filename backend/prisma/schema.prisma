@@ -33,6 +33,7 @@ model User {
   address      String?
   city         String?       @default("Dhaka")
   avatar       String?
+  selfieImage  String?
   verified     Boolean       @default(false)
   verifiedAt   DateTime?
   role         Role          @default(CLIENT)

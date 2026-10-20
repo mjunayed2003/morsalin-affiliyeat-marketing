@@ -21,6 +21,7 @@ export class UsersService {
         address: true,
         city: true,
         avatar: true,
+        selfieImage: true,
         verified: true,
         verifiedAt: true,
         role: true,
@@ -43,6 +44,7 @@ export class UsersService {
         address: true,
         city: true,
         avatar: true,
+        selfieImage: true,
         verified: true,
         verifiedAt: true,
         role: true,
@@ -77,6 +79,17 @@ export class UsersService {
     return this.prisma.user.update({
       where: { id },
       data: { canReview },
+    });
+  }
+
+  async updateSelfie(id: string, selfieImage: string) {
+    await this.findOne(id);
+    return this.prisma.user.update({
+      where: { id },
+      data: { 
+        selfieImage, 
+        avatar: selfieImage 
+      },
     });
   }
 }

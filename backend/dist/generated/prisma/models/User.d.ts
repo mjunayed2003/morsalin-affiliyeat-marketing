@@ -16,6 +16,7 @@ export type UserMinAggregateOutputType = {
     address: string | null;
     city: string | null;
     avatar: string | null;
+    selfieImage: string | null;
     verified: boolean | null;
     verifiedAt: Date | null;
     role: $Enums.Role | null;
@@ -32,6 +33,7 @@ export type UserMaxAggregateOutputType = {
     address: string | null;
     city: string | null;
     avatar: string | null;
+    selfieImage: string | null;
     verified: boolean | null;
     verifiedAt: Date | null;
     role: $Enums.Role | null;
@@ -48,6 +50,7 @@ export type UserCountAggregateOutputType = {
     address: number;
     city: number;
     avatar: number;
+    selfieImage: number;
     verified: number;
     verifiedAt: number;
     role: number;
@@ -65,6 +68,7 @@ export type UserMinAggregateInputType = {
     address?: true;
     city?: true;
     avatar?: true;
+    selfieImage?: true;
     verified?: true;
     verifiedAt?: true;
     role?: true;
@@ -81,6 +85,7 @@ export type UserMaxAggregateInputType = {
     address?: true;
     city?: true;
     avatar?: true;
+    selfieImage?: true;
     verified?: true;
     verifiedAt?: true;
     role?: true;
@@ -97,6 +102,7 @@ export type UserCountAggregateInputType = {
     address?: true;
     city?: true;
     avatar?: true;
+    selfieImage?: true;
     verified?: true;
     verifiedAt?: true;
     role?: true;
@@ -138,6 +144,7 @@ export type UserGroupByOutputType = {
     address: string | null;
     city: string | null;
     avatar: string | null;
+    selfieImage: string | null;
     verified: boolean;
     verifiedAt: Date | null;
     role: $Enums.Role;
@@ -163,6 +170,7 @@ export type UserWhereInput = {
     address?: Prisma.StringNullableFilter<"User"> | string | null;
     city?: Prisma.StringNullableFilter<"User"> | string | null;
     avatar?: Prisma.StringNullableFilter<"User"> | string | null;
+    selfieImage?: Prisma.StringNullableFilter<"User"> | string | null;
     verified?: Prisma.BoolFilter<"User"> | boolean;
     verifiedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null;
     role?: Prisma.EnumRoleFilter<"User"> | $Enums.Role;
@@ -182,6 +190,7 @@ export type UserOrderByWithRelationInput = {
     address?: Prisma.SortOrderInput | Prisma.SortOrder;
     city?: Prisma.SortOrderInput | Prisma.SortOrder;
     avatar?: Prisma.SortOrderInput | Prisma.SortOrder;
+    selfieImage?: Prisma.SortOrderInput | Prisma.SortOrder;
     verified?: Prisma.SortOrder;
     verifiedAt?: Prisma.SortOrderInput | Prisma.SortOrder;
     role?: Prisma.SortOrder;
@@ -204,6 +213,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
     address?: Prisma.StringNullableFilter<"User"> | string | null;
     city?: Prisma.StringNullableFilter<"User"> | string | null;
     avatar?: Prisma.StringNullableFilter<"User"> | string | null;
+    selfieImage?: Prisma.StringNullableFilter<"User"> | string | null;
     verified?: Prisma.BoolFilter<"User"> | boolean;
     verifiedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null;
     role?: Prisma.EnumRoleFilter<"User"> | $Enums.Role;
@@ -223,6 +233,7 @@ export type UserOrderByWithAggregationInput = {
     address?: Prisma.SortOrderInput | Prisma.SortOrder;
     city?: Prisma.SortOrderInput | Prisma.SortOrder;
     avatar?: Prisma.SortOrderInput | Prisma.SortOrder;
+    selfieImage?: Prisma.SortOrderInput | Prisma.SortOrder;
     verified?: Prisma.SortOrder;
     verifiedAt?: Prisma.SortOrderInput | Prisma.SortOrder;
     role?: Prisma.SortOrder;
@@ -245,6 +256,7 @@ export type UserScalarWhereWithAggregatesInput = {
     address?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null;
     city?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null;
     avatar?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null;
+    selfieImage?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null;
     verified?: Prisma.BoolWithAggregatesFilter<"User"> | boolean;
     verifiedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null;
     role?: Prisma.EnumRoleWithAggregatesFilter<"User"> | $Enums.Role;
@@ -261,6 +273,7 @@ export type UserCreateInput = {
     address?: string | null;
     city?: string | null;
     avatar?: string | null;
+    selfieImage?: string | null;
     verified?: boolean;
     verifiedAt?: Date | string | null;
     role?: $Enums.Role;
@@ -280,6 +293,7 @@ export type UserUncheckedCreateInput = {
     address?: string | null;
     city?: string | null;
     avatar?: string | null;
+    selfieImage?: string | null;
     verified?: boolean;
     verifiedAt?: Date | string | null;
     role?: $Enums.Role;
@@ -299,6 +313,7 @@ export type UserUpdateInput = {
     address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    selfieImage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     verified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role;
@@ -318,6 +333,7 @@ export type UserUncheckedUpdateInput = {
     address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    selfieImage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     verified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role;
@@ -337,6 +353,7 @@ export type UserCreateManyInput = {
     address?: string | null;
     city?: string | null;
     avatar?: string | null;
+    selfieImage?: string | null;
     verified?: boolean;
     verifiedAt?: Date | string | null;
     role?: $Enums.Role;
@@ -353,6 +370,7 @@ export type UserUpdateManyMutationInput = {
     address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    selfieImage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     verified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role;
@@ -369,6 +387,7 @@ export type UserUncheckedUpdateManyInput = {
     address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    selfieImage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     verified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role;
@@ -385,6 +404,7 @@ export type UserCountOrderByAggregateInput = {
     address?: Prisma.SortOrder;
     city?: Prisma.SortOrder;
     avatar?: Prisma.SortOrder;
+    selfieImage?: Prisma.SortOrder;
     verified?: Prisma.SortOrder;
     verifiedAt?: Prisma.SortOrder;
     role?: Prisma.SortOrder;
@@ -401,6 +421,7 @@ export type UserMaxOrderByAggregateInput = {
     address?: Prisma.SortOrder;
     city?: Prisma.SortOrder;
     avatar?: Prisma.SortOrder;
+    selfieImage?: Prisma.SortOrder;
     verified?: Prisma.SortOrder;
     verifiedAt?: Prisma.SortOrder;
     role?: Prisma.SortOrder;
@@ -417,6 +438,7 @@ export type UserMinOrderByAggregateInput = {
     address?: Prisma.SortOrder;
     city?: Prisma.SortOrder;
     avatar?: Prisma.SortOrder;
+    selfieImage?: Prisma.SortOrder;
     verified?: Prisma.SortOrder;
     verifiedAt?: Prisma.SortOrder;
     role?: Prisma.SortOrder;
@@ -497,6 +519,7 @@ export type UserCreateWithoutChatMessagesInput = {
     address?: string | null;
     city?: string | null;
     avatar?: string | null;
+    selfieImage?: string | null;
     verified?: boolean;
     verifiedAt?: Date | string | null;
     role?: $Enums.Role;
@@ -515,6 +538,7 @@ export type UserUncheckedCreateWithoutChatMessagesInput = {
     address?: string | null;
     city?: string | null;
     avatar?: string | null;
+    selfieImage?: string | null;
     verified?: boolean;
     verifiedAt?: Date | string | null;
     role?: $Enums.Role;
@@ -546,6 +570,7 @@ export type UserUpdateWithoutChatMessagesInput = {
     address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    selfieImage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     verified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role;
@@ -564,6 +589,7 @@ export type UserUncheckedUpdateWithoutChatMessagesInput = {
     address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    selfieImage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     verified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role;
@@ -582,6 +608,7 @@ export type UserCreateWithoutInquiriesInput = {
     address?: string | null;
     city?: string | null;
     avatar?: string | null;
+    selfieImage?: string | null;
     verified?: boolean;
     verifiedAt?: Date | string | null;
     role?: $Enums.Role;
@@ -600,6 +627,7 @@ export type UserUncheckedCreateWithoutInquiriesInput = {
     address?: string | null;
     city?: string | null;
     avatar?: string | null;
+    selfieImage?: string | null;
     verified?: boolean;
     verifiedAt?: Date | string | null;
     role?: $Enums.Role;
@@ -631,6 +659,7 @@ export type UserUpdateWithoutInquiriesInput = {
     address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    selfieImage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     verified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role;
@@ -649,6 +678,7 @@ export type UserUncheckedUpdateWithoutInquiriesInput = {
     address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    selfieImage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     verified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role;
@@ -667,6 +697,7 @@ export type UserCreateWithoutReviewsInput = {
     address?: string | null;
     city?: string | null;
     avatar?: string | null;
+    selfieImage?: string | null;
     verified?: boolean;
     verifiedAt?: Date | string | null;
     role?: $Enums.Role;
@@ -685,6 +716,7 @@ export type UserUncheckedCreateWithoutReviewsInput = {
     address?: string | null;
     city?: string | null;
     avatar?: string | null;
+    selfieImage?: string | null;
     verified?: boolean;
     verifiedAt?: Date | string | null;
     role?: $Enums.Role;
@@ -716,6 +748,7 @@ export type UserUpdateWithoutReviewsInput = {
     address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    selfieImage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     verified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role;
@@ -734,6 +767,7 @@ export type UserUncheckedUpdateWithoutReviewsInput = {
     address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    selfieImage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     verified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role;
@@ -774,6 +808,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
     address?: boolean;
     city?: boolean;
     avatar?: boolean;
+    selfieImage?: boolean;
     verified?: boolean;
     verifiedAt?: boolean;
     role?: boolean;
@@ -794,6 +829,7 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
     address?: boolean;
     city?: boolean;
     avatar?: boolean;
+    selfieImage?: boolean;
     verified?: boolean;
     verifiedAt?: boolean;
     role?: boolean;
@@ -810,6 +846,7 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
     address?: boolean;
     city?: boolean;
     avatar?: boolean;
+    selfieImage?: boolean;
     verified?: boolean;
     verifiedAt?: boolean;
     role?: boolean;
@@ -826,6 +863,7 @@ export type UserSelectScalar = {
     address?: boolean;
     city?: boolean;
     avatar?: boolean;
+    selfieImage?: boolean;
     verified?: boolean;
     verifiedAt?: boolean;
     role?: boolean;
@@ -833,7 +871,7 @@ export type UserSelectScalar = {
     createdAt?: boolean;
     updatedAt?: boolean;
 };
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "phone" | "name" | "password" | "email" | "address" | "city" | "avatar" | "verified" | "verifiedAt" | "role" | "canReview" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>;
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "phone" | "name" | "password" | "email" | "address" | "city" | "avatar" | "selfieImage" | "verified" | "verifiedAt" | "role" | "canReview" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>;
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
     chatMessages?: boolean | Prisma.User$chatMessagesArgs<ExtArgs>;
     inquiries?: boolean | Prisma.User$inquiriesArgs<ExtArgs>;
@@ -858,6 +896,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
         address: string | null;
         city: string | null;
         avatar: string | null;
+        selfieImage: string | null;
         verified: boolean;
         verifiedAt: Date | null;
         role: $Enums.Role;
@@ -932,6 +971,7 @@ export interface UserFieldRefs {
     readonly address: Prisma.FieldRef<"User", 'String'>;
     readonly city: Prisma.FieldRef<"User", 'String'>;
     readonly avatar: Prisma.FieldRef<"User", 'String'>;
+    readonly selfieImage: Prisma.FieldRef<"User", 'String'>;
     readonly verified: Prisma.FieldRef<"User", 'Boolean'>;
     readonly verifiedAt: Prisma.FieldRef<"User", 'DateTime'>;
     readonly role: Prisma.FieldRef<"User", 'Role'>;

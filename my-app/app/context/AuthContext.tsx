@@ -49,8 +49,10 @@ interface AuthContextType {
   }) => Promise<{ success: boolean; message: string; email?: string; phone?: string }>;
   verifyRegisterOtp: (
     email: string,
-    code: string
+    code: string,
+    selfieImage?: string
   ) => Promise<{ success: boolean; message: string; user?: User }>;
+  uploadUserSelfie: (selfieImage: string) => Promise<{ success: boolean; message: string }>;
   sendForgotPasswordOtp: (
     email: string
   ) => Promise<{ success: boolean; message: string; email?: string }>;
@@ -412,12 +414,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   /**
    * STEP 2: Verify Registration OTP and Complete Sign Up
    */
-  const verifyRegisterOtp = async (email: string, code: string) => {
+  const verifyRegisterOtp = async (email: string, code: string, selfieImage?: string) => {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/verify-register-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, code }),
+        body: JSON.stringify({ email, code, selfieImage }),
       });
 
       const data = await response.json();
@@ -429,7 +431,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email: data.user.email,
           address: data.user.address || '',
           city: data.user.city || 'New York',
-          avatar: data.user.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(data.user.name)}&backgroundColor=1b3b2b`,
+          avatar: data.user.avatar || selfieImage || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(data.user.name)}&backgroundColor=1b3b2b`,
+          selfieImage: data.user.selfieImage || selfieImage,
           verified: true,
           verifiedAt: new Date().toISOString(),
           createdAt: data.user.createdAt || new Date().toISOString(),
@@ -674,6 +677,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     persistUsers(updatedUsers);
   };
 
+  const uploadUserSelfie = async (selfieImage: string): Promise<{ success: boolean; message: string }> => {
+    if (!user) {
+      return { success: false, message: 'You must be logged in to upload a selfie.' };
+    }
+    const updatedUser: User = { ...user, selfieImage, avatar: selfieImage };
+    setCurrentUser(updatedUser, token);
+    const updatedUsers = users.map((u) => (u.id === user.id ? updatedUser : u));
+    persistUsers(updatedUsers);
+
+    const currentToken = token || (typeof window !== 'undefined' ? localStorage.getItem('bytedesk_token_v2') : null);
+    if (currentToken) {
+      try {
+        const res = await fetch(`${API_BASE_URL}/users/${user.id}/selfie`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${currentToken}`,
+          },
+          body: JSON.stringify({ selfieImage }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          return { success: false, message: data.message || 'Failed to update selfie on server' };
+        }
+        return { success: true, message: 'Selfie uploaded successfully!' };
+      } catch {
+        return { success: true, message: 'Selfie saved locally.' };
+      }
+    }
+    return { success: true, message: 'Selfie saved.' };
+  };
+
   const blockUser = (userId: string) => {
     const updatedUsers = users.map((u) => (u.id === userId ? { ...u, status: 'BLOCKED' as const } : u));
     persistUsers(updatedUsers);
@@ -832,6 +867,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         getUserById,
         toggleUserReviewPermission,
         startGuestChat,
+        uploadUserSelfie,
       }}
     >
       {children}

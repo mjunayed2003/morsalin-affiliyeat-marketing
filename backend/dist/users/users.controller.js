@@ -36,6 +36,12 @@ let UsersController = class UsersController {
     async updateReviewPermission(id, canReview) {
         return this.usersService.updateReviewPermission(id, canReview);
     }
+    async updateSelfie(id, selfieImage, currentUser) {
+        if (currentUser.role !== 'ADMIN' && currentUser.id !== id) {
+            throw new ForbiddenException('Access Denied: You can only update your own selfie.');
+        }
+        return this.usersService.updateSelfie(id, selfieImage);
+    }
 };
 __decorate([
     Get(),
@@ -71,6 +77,15 @@ __decorate([
     __metadata("design:paramtypes", [String, Boolean]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "updateReviewPermission", null);
+__decorate([
+    Patch(':id/selfie'),
+    __param(0, Param('id')),
+    __param(1, Body('selfieImage')),
+    __param(2, CurrentUser()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "updateSelfie", null);
 UsersController = __decorate([
     Controller('users'),
     UseGuards(JwtAuthGuard, RolesGuard),

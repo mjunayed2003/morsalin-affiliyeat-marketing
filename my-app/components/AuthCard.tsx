@@ -17,7 +17,10 @@ import {
   FaArrowLeft,
   FaRotateRight,
   FaCircleCheck,
-  FaKey
+  FaKey,
+  FaCamera,
+  FaImage,
+  FaCheck
 } from 'react-icons/fa6';
 
 interface AuthCardProps {
@@ -53,7 +56,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
   const [isSubmittingLogin, setIsSubmittingLogin] = useState(false);
 
   // Registration form state
-  const [regStep, setRegStep] = useState<'form' | 'otp'>('form');
+  const [regStep, setRegStep] = useState<'form' | 'otp' | 'selfie'>('form');
   const [regName, setRegName] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regPhone, setRegPhone] = useState('');
@@ -67,6 +70,87 @@ export const AuthCard: React.FC<AuthCardProps> = ({
   const [isVerifyingRegOtp, setIsVerifyingRegOtp] = useState(false);
   const [showRegPassword, setShowRegPassword] = useState(false);
   const [regTimer, setRegTimer] = useState<number>(600); // 10 mins
+
+  // Camera & Selfie state
+  const [selfieImage, setSelfieImage] = useState<string | null>(null);
+  const [isCameraActive, setIsCameraActive] = useState<boolean>(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const videoRef = React.useRef<HTMLVideoElement>(null);
+  const selfieFileRef = React.useRef<HTMLInputElement>(null);
+  const streamRef = React.useRef<MediaStream | null>(null);
+
+  const startCamera = async () => {
+    setCameraError(null);
+    try {
+      if (typeof navigator === 'undefined' || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setCameraError('Camera access is not supported on this browser. Please upload a photo instead.');
+        return;
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: 'user',
+          width: { ideal: 480 },
+          height: { ideal: 480 },
+        },
+        audio: false,
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play().catch(() => {});
+      }
+      setIsCameraActive(true);
+    } catch (err: any) {
+      console.warn('Camera permission denied or unavailable:', err);
+      setCameraError('Could not access your front camera. Please allow camera permissions or upload a selfie photo below.');
+      setIsCameraActive(false);
+    }
+  };
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    setIsCameraActive(false);
+  };
+
+  const captureSelfie = () => {
+    if (!videoRef.current) return;
+    const video = videoRef.current;
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth || 480;
+    canvas.height = video.videoHeight || 480;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      setSelfieImage(dataUrl);
+      stopCamera();
+    }
+  };
+
+  const handleSelfieFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setRegError('Please choose a valid image file (JPG, PNG, or WebP).');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setSelfieImage(event.target?.result as string);
+      stopCamera();
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  useEffect(() => {
+    return () => {
+      stopCamera();
+    };
+  }, []);
 
   // Forgot password state
   const [forgotStep, setForgotStep] = useState<'request' | 'reset'>('request');
@@ -182,8 +266,8 @@ export const AuthCard: React.FC<AuthCardProps> = ({
     }
   };
 
-  // Handle Step 2: Verify Registration OTP
-  const handleVerifyRegOtp = async (e: React.FormEvent) => {
+  // Handle Step 2: Validate OTP & Proceed to Selfie Verification
+  const handleProceedToSelfie = (e: React.FormEvent) => {
     e.preventDefault();
     setRegError('');
 
@@ -192,11 +276,25 @@ export const AuthCard: React.FC<AuthCardProps> = ({
       return;
     }
 
+    setRegStep('selfie');
+  };
+
+  // Handle Step 3: Submit Selfie & Complete Registration
+  const handleFinalSubmitWithSelfie = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setRegError('');
+
+    if (!selfieImage) {
+      setRegError('Please take or upload your selfie photo before completing registration.');
+      return;
+    }
+
     setIsVerifyingRegOtp(true);
     try {
-      const res = await verifyRegisterOtp(regEmail.trim(), regOtp.trim());
+      const res = await verifyRegisterOtp(regEmail.trim(), regOtp.trim(), selfieImage);
       if (res.success) {
         showToast(res.message);
+        stopCamera();
         if (onSuccess) onSuccess();
       } else {
         setRegError(res.message);
@@ -630,7 +728,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
 
             {/* Step 2: OTP Verification Screen */}
             {regStep === 'otp' && (
-              <form onSubmit={handleVerifyRegOtp} className="space-y-4 animate-in fade-in duration-150">
+              <form onSubmit={handleProceedToSelfie} className="space-y-4 animate-in fade-in duration-150">
                 <div className="text-center p-4 bg-emerald-50/50 rounded-2xl border border-emerald-200/80">
                   <div className="w-12 h-12 mx-auto rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mb-2">
                     <FaEnvelope className="w-6 h-6" />
@@ -664,14 +762,14 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                   />
                 </div>
 
-                {/* Verify Button */}
+                {/* Continue to Selfie Button */}
                 <button
                   type="submit"
-                  disabled={isVerifyingRegOtp || regOtp.length !== 6}
+                  disabled={regOtp.length !== 6}
                   className="w-full bg-[#1b3b2b] hover:bg-[#142e20] active:scale-95 disabled:opacity-50 text-white font-bold py-3 rounded-xl shadow-xs text-sm transition-all cursor-pointer flex items-center justify-center gap-2"
                 >
-                  <FaCircleCheck className="w-4 h-4 text-emerald-400" />
-                  <span>{isVerifyingRegOtp ? 'Verifying & Creating Account...' : 'Verify OTP & Open Account'}</span>
+                  <span>Continue to Selfie Verification</span>
+                  <FaArrowRight className="w-3.5 h-3.5" />
                 </button>
 
                 {/* Resend & Back buttons */}
@@ -688,11 +786,171 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                   <button
                     type="button"
                     onClick={(e) => handleSendRegOtp(e as any)}
-                    disabled={isSendingRegOtp || regTimer > 540} // 60s cooldown
+                    disabled={isSendingRegOtp || regTimer > 540}
                     className="text-[#1b3b2b] hover:underline font-semibold flex items-center gap-1 cursor-pointer disabled:opacity-40"
                   >
                     <FaRotateRight className={`w-3 h-3 ${isSendingRegOtp ? 'animate-spin' : ''}`} />
                     <span>Resend OTP</span>
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Step 3: Selfie Verification Screen */}
+            {regStep === 'selfie' && (
+              <form onSubmit={handleFinalSubmitWithSelfie} className="space-y-4 animate-in fade-in duration-200">
+                {/* Header Card */}
+                <div className="text-center p-3.5 bg-emerald-50/60 rounded-2xl border border-emerald-200/80">
+                  <div className="w-10 h-10 mx-auto rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center mb-1.5 shadow-xs">
+                    <FaCamera className="w-5 h-5 text-emerald-700" />
+                  </div>
+                  <h3 className="font-bold text-slate-900 text-base">Identity Selfie Verification</h3>
+                  <p className="text-xs text-slate-600 mt-0.5">
+                    Step 3 of 3: Take or upload a clear, front-facing selfie to complete your reviewer registration.
+                  </p>
+                </div>
+
+                {cameraError && (
+                  <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 font-medium">
+                    {cameraError}
+                  </div>
+                )}
+
+                {/* Camera / Preview Frame */}
+                <div className="relative w-full aspect-4/3 max-w-[340px] mx-auto rounded-2xl bg-slate-900 overflow-hidden border-2 border-stone-200 shadow-md flex items-center justify-center">
+                  {/* Case 1: Live Video Camera Stream */}
+                  {isCameraActive && (
+                    <div className="relative w-full h-full flex items-center justify-center bg-black">
+                      <video
+                        ref={videoRef}
+                        autoPlay
+                        playsInline
+                        muted
+                        className="w-full h-full object-cover scale-x-[-1]"
+                      />
+                      {/* Face guideline frame */}
+                      <div className="absolute inset-4 sm:inset-6 rounded-full border-2 border-dashed border-emerald-400/70 pointer-events-none animate-pulse" />
+                      <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-2">
+                        <button
+                          type="button"
+                          onClick={captureSelfie}
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2 rounded-full shadow-lg transition-all flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <FaCamera className="w-3.5 h-3.5" />
+                          <span>Snap Photo</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={stopCamera}
+                          className="bg-slate-800/80 hover:bg-slate-800 text-white font-semibold text-xs px-3 py-2 rounded-full cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Case 2: Selfie Photo Captured or Uploaded */}
+                  {!isCameraActive && selfieImage && (
+                    <div className="relative w-full h-full bg-slate-100 flex items-center justify-center">
+                      <img
+                        src={selfieImage}
+                        alt="Selfie Preview"
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute top-2.5 right-2.5 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs flex items-center gap-1">
+                        <FaCheck className="w-2.5 h-2.5" />
+                        <span>Selfie Ready</span>
+                      </div>
+                      <div className="absolute bottom-2.5 left-0 right-0 flex justify-center">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelfieImage(null);
+                            startCamera();
+                          }}
+                          className="bg-slate-900/85 hover:bg-slate-950 text-white text-xs font-semibold px-3.5 py-1.5 rounded-full backdrop-blur-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <FaRotateRight className="w-3 h-3" />
+                          <span>Retake Photo</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Case 3: Empty State (Prompt to Open Camera or Upload) */}
+                  {!isCameraActive && !selfieImage && (
+                    <div className="text-center p-6 text-white space-y-3">
+                      <div className="w-14 h-14 mx-auto rounded-2xl bg-white/10 flex items-center justify-center border border-white/20">
+                        <FaUser className="w-7 h-7 text-emerald-400" />
+                      </div>
+                      <p className="text-xs text-slate-300 font-medium">
+                        Ensure good lighting with your face clearly visible.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Action Buttons: Open Camera vs Upload from Device */}
+                {!isCameraActive && (
+                  <div className="grid grid-cols-2 gap-2.5 pt-1">
+                    <button
+                      type="button"
+                      onClick={startCamera}
+                      className="bg-stone-100 hover:bg-stone-200 text-slate-800 text-xs font-bold py-2.5 px-3 rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer border border-stone-200"
+                    >
+                      <FaCamera className="w-3.5 h-3.5 text-emerald-700" />
+                      <span>{selfieImage ? 'Re-open Camera' : 'Use Camera'}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => selfieFileRef.current?.click()}
+                      className="bg-stone-100 hover:bg-stone-200 text-slate-800 text-xs font-bold py-2.5 px-3 rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer border border-stone-200"
+                    >
+                      <FaImage className="w-3.5 h-3.5 text-emerald-700" />
+                      <span>Upload Photo</span>
+                    </button>
+                  </div>
+                )}
+
+                <input
+                  ref={selfieFileRef}
+                  type="file"
+                  accept="image/*"
+                  capture="user"
+                  className="hidden"
+                  onChange={handleSelfieFileUpload}
+                />
+
+                {/* Final Submit Button */}
+                <button
+                  type="submit"
+                  disabled={isVerifyingRegOtp || !selfieImage}
+                  className="w-full bg-[#1b3b2b] hover:bg-[#142e20] active:scale-95 disabled:opacity-40 disabled:pointer-events-none text-white font-bold py-3.5 rounded-xl shadow-md text-sm transition-all cursor-pointer flex items-center justify-center gap-2 mt-2"
+                >
+                  <FaCircleCheck className="w-4 h-4 text-emerald-400" />
+                  <span>
+                    {isVerifyingRegOtp
+                      ? 'Verifying & Creating Account...'
+                      : selfieImage
+                      ? 'Submit Selfie & Finish Registration'
+                      : 'Take or Upload Selfie First'}
+                  </span>
+                </button>
+
+                {/* Back to OTP */}
+                <div className="text-center pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      stopCamera();
+                      setRegStep('otp');
+                    }}
+                    className="text-xs text-slate-500 hover:text-slate-800 font-semibold cursor-pointer flex items-center justify-center gap-1 mx-auto"
+                  >
+                    <FaArrowLeft className="w-3 h-3" />
+                    <span>Back to OTP Code</span>
                   </button>
                 </div>
               </form>
