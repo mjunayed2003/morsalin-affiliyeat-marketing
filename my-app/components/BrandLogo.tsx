@@ -30,10 +30,10 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
       tagline: 'text-[9px]',
     },
     md: {
-      emblem: 'w-10 h-10 sm:w-11 sm:h-11 rounded-2xl',
-      svg: 'w-6 h-6',
-      mainText: 'text-lg sm:text-xl font-black',
-      tagText: 'text-[10px] sm:text-[11px] px-1.5 py-0.5',
+      emblem: 'w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl',
+      svg: 'w-5 h-5 sm:w-6 sm:h-6',
+      mainText: 'text-[16px] sm:text-xl font-black',
+      tagText: 'text-[9px] sm:text-[11px] px-1.5 py-0.5',
       tagline: 'text-[10px] sm:text-[11px]',
     },
     lg: {
@@ -46,7 +46,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
   }[size];
 
   const content = (
-    <div className={`flex items-center gap-3 group select-none ${className}`}>
+    <div className={`flex items-center gap-2 sm:gap-3 group select-none ${className}`}>
       
       {/* 3D Isometric Glowing Gift Emblem */}
       <div 
@@ -139,7 +139,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
         {/* Micro Tagline */}
         {showTagline && (
           <div 
-            className={`flex items-center gap-1.5 font-semibold leading-none mt-1 ${sizeMap.tagline} ${
+            className={`hidden sm:flex items-center gap-1.5 font-semibold leading-none mt-1 ${sizeMap.tagline} ${
               isDark ? 'text-emerald-300/80' : 'text-emerald-800'
             }`}
           >

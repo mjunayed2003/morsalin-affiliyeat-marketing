@@ -36,11 +36,13 @@ model User {
   verified     Boolean       @default(false)
   verifiedAt   DateTime?
   role         Role          @default(CLIENT)
+  canReview    Boolean       @default(false)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
   chatMessages ChatMessage[]
   inquiries    Inquiry[]
+  reviews      Review[]
 
   @@map("users")
 }
@@ -82,6 +84,7 @@ model Product {
   updatedAt        DateTime      @updatedAt
 
   inquiries        Inquiry[]
+  reviews          Review[]
 
   @@map("products")
 }
@@ -118,4 +121,22 @@ model Inquiry {
   updatedAt      DateTime      @updatedAt
 
   @@map("inquiries")
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userName  String
+  rating    Int      @default(5)
+  title     String?
+  comment   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productId])
+  @@index([userId])
+  @@map("reviews")
 }

@@ -47,4 +47,15 @@ export class UsersController {
   ) {
     return this.usersService.updateRole(id, role);
   }
+
+  // Only ADMIN can grant or revoke product review permissions
+  @Patch(':id/review-permission')
+  @Roles('ADMIN')
+  async updateReviewPermission(
+    @Param('id') id: string,
+    @Body('canReview') canReview: boolean,
+  ) {
+    return this.usersService.updateReviewPermission(id, canReview);
+  }
 }
+

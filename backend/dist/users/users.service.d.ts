@@ -15,6 +15,7 @@ export declare class UsersService {
         verified: boolean;
         verifiedAt: Date | null;
         role: import("../generated/prisma/enums.js").Role;
+        canReview: boolean;
     }[]>;
     findOne(id: string): Promise<{
         id: string;
@@ -64,6 +65,7 @@ export declare class UsersService {
         verified: boolean;
         verifiedAt: Date | null;
         role: import("../generated/prisma/enums.js").Role;
+        canReview: boolean;
     }>;
     updateRole(id: string, role: 'CLIENT' | 'ADMIN'): Promise<{
         id: string;
@@ -79,5 +81,22 @@ export declare class UsersService {
         verified: boolean;
         verifiedAt: Date | null;
         role: import("../generated/prisma/enums.js").Role;
+        canReview: boolean;
+    }>;
+    updateReviewPermission(id: string, canReview: boolean): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        name: string;
+        phone: string;
+        password: string | null;
+        email: string | null;
+        address: string | null;
+        city: string | null;
+        avatar: string | null;
+        verified: boolean;
+        verifiedAt: Date | null;
+        role: import("../generated/prisma/enums.js").Role;
+        canReview: boolean;
     }>;
 }

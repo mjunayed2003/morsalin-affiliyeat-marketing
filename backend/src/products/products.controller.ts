@@ -7,13 +7,15 @@ import {
   Param, 
   Body, 
   Query, 
-  UseGuards 
+  UseGuards,
+  ForbiddenException
 } from '@nestjs/common';
 import { ProductsService } from './products.service.js';
 import { CreateProductDto, UpdateProductDto } from './dto/create-product.dto.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../auth/guards/roles.guard.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
+import { CurrentUser, type AuthenticatedUser } from '../auth/decorators/current-user.decorator.js';
 
 @Controller('products')
 export class ProductsController {
@@ -26,6 +28,34 @@ export class ProductsController {
     @Query('search') search?: string,
   ) {
     return this.productsService.findAll(category, search);
+  }
+
+  // Public: Get reviews for a product
+  @Get(':id/reviews')
+  async getReviews(@Param('id') id: string) {
+    return this.productsService.getReviews(id);
+  }
+
+  // Auth: Post a review (Only if canReview is true or role is ADMIN)
+  @Post(':id/reviews')
+  @UseGuards(JwtAuthGuard)
+  async addReview(
+    @Param('id') id: string,
+    @CurrentUser() currentUser: AuthenticatedUser,
+    @Body() body: { rating: number; title?: string; comment: string },
+  ) {
+    if (currentUser.role !== 'ADMIN' && !(currentUser as any).canReview) {
+      throw new ForbiddenException('Review access restricted: Admin authorization is required.');
+    }
+    return this.productsService.addReview(id, currentUser.id, currentUser.name || 'Verified Reviewer', body);
+  }
+
+  // Admin Only: Delete review
+  @Delete('reviews/:reviewId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  async deleteReview(@Param('reviewId') reviewId: string) {
+    return this.productsService.deleteReview(reviewId);
   }
 
   // Public: View product details
@@ -61,3 +91,4 @@ export class ProductsController {
     return this.productsService.remove(id);
   }
 }
+

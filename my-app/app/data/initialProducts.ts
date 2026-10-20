@@ -1,4 +1,67 @@
-import { Product, ChatMessage } from '../types';
+import { Product, ChatMessage, Review } from '../types';
+
+export const INITIAL_REVIEWS: Review[] = [
+  {
+    id: "rev-doorbell-1",
+    productId: "prod-long-yue-doorbell",
+    userId: "user-sarah-jenkins",
+    userName: "Sarah Jenkins",
+    userAvatar: "https://api.dicebear.com/7.x/initials/svg?seed=Sarah%20Jenkins&backgroundColor=1b3b2b",
+    rating: 5,
+    title: "Super easy potty training alert! Puppy learned in 3 days",
+    comment: "The brass chime is loud and clear enough to hear across both floors of our home without being jarring or obnoxious. Our golden retriever puppy learned to tap it with his nose in just 3 days! The bamboo base is solidly built and the adhesive mount holds tightly.",
+    createdAt: "2026-10-12T14:20:00Z",
+    verifiedReviewer: true,
+  },
+  {
+    id: "rev-doorbell-2",
+    productId: "prod-long-yue-doorbell",
+    userId: "user-michael-brown",
+    userName: "Michael Brown",
+    userAvatar: "https://api.dicebear.com/7.x/initials/svg?seed=Michael%20Brown&backgroundColor=0d5bff",
+    rating: 5,
+    title: "Sticks firmly on sliding patio door, solid brass construction",
+    comment: "Very well constructed bell. The adhesive tape is heavy duty and sticks firmly to our glass patio door. It has a beautiful chime tone that sounds like a boutique shop alert. Highly recommend this for any dog owner!",
+    createdAt: "2026-10-15T09:45:00Z",
+    verifiedReviewer: true,
+  },
+  {
+    id: "rev-lickoon-1",
+    productId: "prod-lickoon-repellent",
+    userId: "user-emily-watson",
+    userName: "Emily Watson",
+    userAvatar: "https://api.dicebear.com/7.x/initials/svg?seed=Emily%20Watson&backgroundColor=9f1239",
+    rating: 5,
+    title: "Fresh peppermint scent and 100% effective against garage mice",
+    comment: "Placed 4 pouches around the corners of our two-car garage and inside the mower storage. Smells clean and natural like pure peppermint, and we have not seen any rodent droppings since putting them out. Plus safe around our kids!",
+    createdAt: "2026-10-14T11:30:00Z",
+    verifiedReviewer: true,
+  },
+  {
+    id: "rev-lickoon-2",
+    productId: "prod-lickoon-repellent",
+    userId: "user-sarah-jenkins",
+    userName: "Sarah Jenkins",
+    userAvatar: "https://api.dicebear.com/7.x/initials/svg?seed=Sarah%20Jenkins&backgroundColor=1b3b2b",
+    rating: 5,
+    title: "Great humane deterrent for car engine bay & storage shed",
+    comment: "Used in our RV and shed storage. Lasts a long time and the pouches do not leak. Great natural alternative to harsh chemicals or dangerous traps.",
+    createdAt: "2026-10-16T18:10:00Z",
+    verifiedReviewer: true,
+  },
+  {
+    id: "rev-hair-1",
+    productId: "prod-imps-hair-fibers",
+    userId: "user-michael-brown",
+    userName: "Michael Brown",
+    userAvatar: "https://api.dicebear.com/7.x/initials/svg?seed=Michael%20Brown&backgroundColor=0d5bff",
+    rating: 5,
+    title: "Undetectable fuller appearance, works seamlessly with applicator",
+    comment: "The micro-keratin powder flows evenly and electrostatically binds to fine hair strands. Gives natural looking thickness for crown thinning without any sticky residue. Withstands breezy weather with ease.",
+    createdAt: "2026-10-17T16:05:00Z",
+    verifiedReviewer: true,
+  }
+];
 
 export const INITIAL_PRODUCTS: Product[] = [
   {

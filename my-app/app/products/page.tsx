@@ -132,7 +132,7 @@ export default function ProductsPage() {
         {/* ========================================================================= */}
         {/* SEARCH & FILTER BAR                                                       */}
         {/* ========================================================================= */}
-        <div className="bg-white rounded-3xl p-5 sm:p-6 border border-stone-200/80 shadow-xs space-y-5">
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 border border-stone-200/80 shadow-xs space-y-4 sm:space-y-5">
           
           <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
             
@@ -219,7 +219,7 @@ export default function ProductsPage() {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-7">
               {filteredProducts.map((prod) => {
                 const badgeStyle = CATEGORY_STYLES[prod.category] || { 
                   bg: 'bg-stone-100', 
@@ -229,13 +229,13 @@ export default function ProductsPage() {
                 return (
                   <div
                     key={prod.id}
-                    className="group bg-white rounded-2xl border border-stone-200/80 hover:border-stone-300 p-4 sm:p-5 flex flex-col justify-between shadow-2xs hover:shadow-md transition-all duration-200"
+                    className="group bg-white rounded-xl sm:rounded-2xl border border-stone-200/80 hover:border-stone-300 p-2.5 sm:p-5 flex flex-col justify-between shadow-2xs hover:shadow-md transition-all duration-200"
                   >
                     <div>
                       {/* Product Image Link */}
                       <Link 
                         href={`/p/${prod.id}`}
-                        className="block relative w-full aspect-4/3 rounded-xl bg-[#f8f7f4] overflow-hidden mb-4 cursor-pointer flex items-center justify-center group/img"
+                        className="block relative w-full aspect-4/3 rounded-lg sm:rounded-xl bg-[#f8f7f4] overflow-hidden mb-2 sm:mb-4 cursor-pointer flex items-center justify-center group/img"
                         title={`View ${prod.title}`}
                       >
                         <img 
@@ -245,53 +245,54 @@ export default function ProductsPage() {
                           loading="lazy"
                         />
                         {prod.badge && (
-                          <div className="absolute top-2.5 left-2.5 bg-slate-900/90 text-white font-semibold text-[10px] px-2 py-0.5 rounded-full backdrop-blur-xs">
+                          <div className="absolute top-2 left-2 sm:top-2.5 sm:left-2.5 bg-slate-900/90 text-white font-semibold text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded-full backdrop-blur-xs">
                             {prod.badge}
                           </div>
                         )}
                       </Link>
 
                       {/* Category Pill, Store & Rating */}
-                      <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold ${badgeStyle.bg} ${badgeStyle.text}`}>
+                      <div className="flex items-center justify-between gap-1 mb-1.5 sm:mb-2 flex-wrap">
+                        <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
+                          <span className={`inline-block px-1.5 sm:px-2.5 py-0.5 rounded-full text-[9px] sm:text-[11px] font-bold ${badgeStyle.bg} ${badgeStyle.text} truncate max-w-[85px] sm:max-w-none`}>
                             {prod.category}
                           </span>
                           {prod.store && (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
-                              <FaStore className="w-2.5 h-2.5 text-amber-600" />
-                              <span>{prod.store}</span>
+                            <span className="inline-flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2.5 py-0.5 rounded-full text-[9px] sm:text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200 truncate max-w-[80px] sm:max-w-none">
+                              <FaStore className="w-2 sm:w-2.5 h-2 sm:h-2.5 text-amber-600 shrink-0" />
+                              <span className="truncate">{prod.store}</span>
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center gap-1 text-amber-500 font-bold text-xs">
-                          <FaStar className="w-3 h-3 text-amber-400" />
+                        <div className="flex items-center gap-0.5 sm:gap-1 text-amber-500 font-bold text-[10px] sm:text-xs shrink-0">
+                          <FaStar className="w-2.5 sm:w-3 h-2.5 sm:h-3 text-amber-400" />
                           <span>{prod.rating}</span>
-                          <span className="text-slate-400 font-normal">({prod.reviewsCount})</span>
+                          <span className="text-slate-400 font-normal hidden sm:inline">({prod.reviewsCount})</span>
                         </div>
                       </div>
 
                       {/* Product Title */}
                       <Link 
                         href={`/p/${prod.id}`}
-                        className="block font-bold text-slate-900 text-base leading-snug hover:text-[#1b3b2b] transition-colors cursor-pointer line-clamp-1"
+                        className="block font-bold text-slate-900 text-xs sm:text-base leading-snug hover:text-[#1b3b2b] transition-colors cursor-pointer line-clamp-2 sm:line-clamp-1"
                       >
                         {prod.title}
                       </Link>
 
                       {/* Subcategory / Niche */}
-                      <p className="text-xs text-slate-500 font-medium mt-0.5">
+                      <p className="text-[10px] sm:text-xs text-slate-500 font-medium mt-0.5 line-clamp-1">
                         {prod.subCategory || prod.description.slice(0, 50) + '...'}
                       </p>
                     </div>
 
                     {/* Action Buttons: "Get It Free" + "Amazon" */}
-                    <div className="pt-5 flex items-center gap-2">
+                    <div className="pt-2.5 sm:pt-5 flex items-center gap-1.5 sm:gap-2">
                       <Link
                         href={`/p/${prod.id}`}
-                        className="flex-1 py-2.5 px-3 rounded-xl font-semibold text-xs sm:text-sm bg-[#f4f3ef] hover:bg-[#1b3b2b] text-slate-700 hover:text-white transition-all duration-200 cursor-pointer shadow-2xs text-center"
+                        className="flex-1 py-1.5 sm:py-2.5 px-2 sm:px-3 rounded-lg sm:rounded-xl font-bold text-[11px] sm:text-sm bg-[#1b3b2b] hover:bg-[#142e20] text-white transition-all duration-200 cursor-pointer shadow-2xs text-center whitespace-nowrap"
                       >
-                        Get It Free
+                        <span className="sm:hidden">Get Free</span>
+                        <span className="hidden sm:inline">Get It Free</span>
                       </Link>
                       {prod.amazonUrl && (
                         <a
@@ -306,7 +307,7 @@ export default function ProductsPage() {
                               openAuthModal('login');
                             }
                           }}
-                          className={`py-2.5 px-3 rounded-xl font-bold text-xs border transition-all duration-200 inline-flex items-center gap-1.5 shadow-2xs cursor-pointer shrink-0 ${
+                          className={`py-1.5 sm:py-2.5 px-2 sm:px-3 rounded-lg sm:rounded-xl font-bold text-[11px] sm:text-xs border transition-all duration-200 inline-flex items-center justify-center gap-1 shadow-2xs cursor-pointer shrink-0 ${
                             isAuthenticated
                               ? 'bg-[#fff8e7] hover:bg-[#ff9900] text-[#92400e] hover:text-slate-950 border-amber-300 hover:border-[#e08500]'
                               : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-200'
@@ -314,7 +315,8 @@ export default function ProductsPage() {
                           title={isAuthenticated ? `View on Amazon (${prod.store || 'Amazon'})` : 'Sign in to access Amazon review link'}
                         >
                           <FaAmazon className="w-3.5 h-3.5 text-[#e08500]" />
-                          <span>{isAuthenticated ? 'Amazon' : 'Amazon 🔒'}</span>
+                          <span className="hidden sm:inline">{isAuthenticated ? 'Amazon' : 'Amazon 🔒'}</span>
+                          <span className="sm:hidden">{isAuthenticated ? '' : '🔒'}</span>
                         </a>
                       )}
                     </div>
@@ -335,7 +337,6 @@ export default function ProductsPage() {
             <Link href="/" className="hover:text-slate-900">Home</Link>
             <Link href="/products" className="hover:text-slate-900">Products</Link>
             <Link href="/chat" className="hover:text-slate-900">Support Desk</Link>
-            <Link href="/admin" className="hover:text-slate-900">Admin Studio</Link>
           </div>
         </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-slate-400">

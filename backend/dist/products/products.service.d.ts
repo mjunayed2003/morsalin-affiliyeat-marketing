@@ -118,4 +118,34 @@ export declare class ProductsService {
         createdAt: Date;
         updatedAt: Date;
     }>;
+    getReviews(productId: string): Promise<{
+        title: string | null;
+        id: string;
+        rating: number;
+        createdAt: Date;
+        updatedAt: Date;
+        productId: string;
+        userId: string;
+        userName: string;
+        comment: string;
+    }[]>;
+    addReview(productId: string, userId: string, userName: string, data: {
+        rating: number;
+        title?: string;
+        comment: string;
+    }): Promise<{
+        title: string | null;
+        id: string;
+        rating: number;
+        createdAt: Date;
+        updatedAt: Date;
+        productId: string;
+        userId: string;
+        userName: string;
+        comment: string;
+    }>;
+    deleteReview(reviewId: string): Promise<{
+        success: boolean;
+        message: string;
+    }>;
 }

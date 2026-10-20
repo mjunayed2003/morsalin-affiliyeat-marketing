@@ -79,6 +79,50 @@ let ProductsService = class ProductsService {
             where: { id },
         });
     }
+    async getReviews(productId) {
+        return this.prisma.review.findMany({
+            where: { productId },
+            orderBy: { createdAt: 'desc' },
+        });
+    }
+    async addReview(productId, userId, userName, data) {
+        await this.findOne(productId);
+        const review = await this.prisma.review.create({
+            data: {
+                productId,
+                userId,
+                userName,
+                rating: data.rating || 5,
+                title: data.title,
+                comment: data.comment,
+            },
+        });
+        await this.prisma.product.update({
+            where: { id: productId },
+            data: {
+                reviewsCount: { increment: 1 },
+            },
+        }).catch(() => { });
+        return review;
+    }
+    async deleteReview(reviewId) {
+        const review = await this.prisma.review.findUnique({
+            where: { id: reviewId },
+        });
+        if (!review) {
+            throw new NotFoundException(`Review with ID "${reviewId}" not found`);
+        }
+        await this.prisma.review.delete({
+            where: { id: reviewId },
+        });
+        await this.prisma.product.update({
+            where: { id: review.productId },
+            data: {
+                reviewsCount: { decrement: 1 },
+            },
+        }).catch(() => { });
+        return { success: true, message: 'Review deleted' };
+    }
 };
 ProductsService = __decorate([
     Injectable(),

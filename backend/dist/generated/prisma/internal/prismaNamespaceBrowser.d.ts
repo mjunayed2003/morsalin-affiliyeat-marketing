@@ -16,6 +16,7 @@ export declare const ModelName: {
     readonly Product: "Product";
     readonly ChatMessage: "ChatMessage";
     readonly Inquiry: "Inquiry";
+    readonly Review: "Review";
 };
 export type ModelName = (typeof ModelName)[keyof typeof ModelName];
 export declare const TransactionIsolationLevel: {
@@ -37,6 +38,7 @@ export declare const UserScalarFieldEnum: {
     readonly verified: "verified";
     readonly verifiedAt: "verifiedAt";
     readonly role: "role";
+    readonly canReview: "canReview";
     readonly createdAt: "createdAt";
     readonly updatedAt: "updatedAt";
 };
@@ -102,6 +104,18 @@ export declare const InquiryScalarFieldEnum: {
     readonly updatedAt: "updatedAt";
 };
 export type InquiryScalarFieldEnum = (typeof InquiryScalarFieldEnum)[keyof typeof InquiryScalarFieldEnum];
+export declare const ReviewScalarFieldEnum: {
+    readonly id: "id";
+    readonly productId: "productId";
+    readonly userId: "userId";
+    readonly userName: "userName";
+    readonly rating: "rating";
+    readonly title: "title";
+    readonly comment: "comment";
+    readonly createdAt: "createdAt";
+    readonly updatedAt: "updatedAt";
+};
+export type ReviewScalarFieldEnum = (typeof ReviewScalarFieldEnum)[keyof typeof ReviewScalarFieldEnum];
 export declare const SortOrder: {
     readonly asc: "asc";
     readonly desc: "desc";

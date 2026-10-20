@@ -17,7 +17,10 @@ import {
   FaChartLine, 
   FaArrowPointer,
   FaComments,
-  FaKey
+  FaKey,
+  FaStar,
+  FaLock,
+  FaTrash
 } from 'react-icons/fa6';
 import { useAuth } from '@/app/context/AuthContext';
 import { useApp } from '@/app/context/AppContext';
@@ -32,8 +35,8 @@ interface PageProps {
 export default function AdminUserDetailPage({ params }: PageProps) {
   const { id } = use(params);
   const router = useRouter();
-  const { getUserById, blockUser, unblockUser } = useAuth();
-  const { messages, showToast } = useApp();
+  const { getUserById, blockUser, unblockUser, toggleUserReviewPermission } = useAuth();
+  const { messages, reviews, deleteReview, getProductById, showToast } = useApp();
 
   const user = getUserById(id);
   const [confirmBlockOpen, setConfirmBlockOpen] = useState(false);
@@ -81,6 +84,17 @@ export default function AdminUserDetailPage({ params }: PageProps) {
                 {isBlocked ? 'Blocked' : 'Active'}
               </Badge>
               {user.verified && <Badge variant="verified">Verified</Badge>}
+              {user.canReview ? (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                  <FaStar className="w-2.5 h-2.5 text-emerald-600 fill-emerald-600" />
+                  <span>Reviewer Allowed</span>
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                  <FaLock className="w-2.5 h-2.5 text-slate-400" />
+                  <span>Review Restricted</span>
+                </span>
+              )}
             </div>
             <p className="text-xs text-slate-400 font-mono mt-0.5">ID: {user.id}</p>
           </div>
@@ -88,6 +102,23 @@ export default function AdminUserDetailPage({ params }: PageProps) {
 
         {/* Action Controls */}
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              const nextVal = !user.canReview;
+              toggleUserReviewPermission(user.id, nextVal);
+              showToast(`Review permission ${nextVal ? 'granted to' : 'revoked from'} ${user.name}`);
+            }}
+            className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all shadow-2xs cursor-pointer ${
+              user.canReview
+                ? 'bg-amber-500 hover:bg-amber-600 text-white'
+                : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+            }`}
+            title={user.canReview ? 'Revoke permission to write reviews' : 'Allow this user to post product reviews'}
+          >
+            <FaStar className="w-3 h-3 fill-current" />
+            <span>{user.canReview ? 'Revoke Review Access' : 'Grant Review Permission'}</span>
+          </button>
+
           {isBlocked ? (
             <button
               onClick={() => {
@@ -163,6 +194,16 @@ export default function AdminUserDetailPage({ params }: PageProps) {
 
             <div className="flex items-center justify-between pt-2 border-t border-slate-100">
               <span className="text-slate-400 flex items-center gap-2">
+                <FaStar className="w-3 h-3 text-amber-500" />
+                Review Permission
+              </span>
+              <span className={`font-semibold ${user.canReview ? 'text-emerald-700 font-bold' : 'text-slate-500'}`}>
+                {user.canReview ? 'Allowed by Admin' : 'Restricted'}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+              <span className="text-slate-400 flex items-center gap-2">
                 <FaCalendarDays className="w-3 h-3 text-slate-400" />
                 Registered On
               </span>
@@ -196,6 +237,70 @@ export default function AdminUserDetailPage({ params }: PageProps) {
               <p className="text-[10px] text-slate-400 mt-0.5">Chat inquiries</p>
             </div>
           </div>
+
+          {/* Customer Reviews Published By User */}
+          {(() => {
+            const userReviews = reviews.filter((r) => r.userId === user.id);
+            return (
+              <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <div className="flex items-center gap-2">
+                    <FaStar className="w-4 h-4 text-amber-500 fill-amber-500" />
+                    <h3 className="font-bold text-sm text-slate-900">Reviews Submitted by User</h3>
+                  </div>
+                  <span className="text-[10px] text-slate-400 font-mono">{userReviews.length} total</span>
+                </div>
+
+                {userReviews.length === 0 ? (
+                  <p className="text-xs text-slate-400 py-3 text-center">No product reviews submitted by this reviewer yet.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {userReviews.map((rev) => {
+                      const reviewedProduct = getProductById(rev.productId);
+                      return (
+                        <div key={rev.id} className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 text-xs space-y-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <p className="font-bold text-slate-900">
+                                {reviewedProduct?.title || rev.productId}
+                              </p>
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                <div className="flex items-center gap-0.5 text-amber-500">
+                                  {[1, 2, 3, 4, 5].map((st) => (
+                                    <FaStar
+                                      key={st}
+                                      className={`w-2.5 h-2.5 ${st <= rev.rating ? 'fill-amber-500' : 'text-slate-200'}`}
+                                    />
+                                  ))}
+                                </div>
+                                <span className="text-[10px] text-slate-400">
+                                  {new Date(rev.createdAt).toLocaleDateString()}
+                                </span>
+                              </div>
+                            </div>
+
+                            <button
+                              onClick={() => {
+                                deleteReview(rev.id);
+                                showToast('Review deleted.');
+                              }}
+                              className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
+                              title="Delete this review (Admin Action)"
+                            >
+                              <FaTrash className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+
+                          {rev.title && <p className="font-semibold text-slate-800">{rev.title}</p>}
+                          <p className="text-slate-600 leading-relaxed">{rev.comment}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* User Support Messages History */}
           <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs space-y-4">

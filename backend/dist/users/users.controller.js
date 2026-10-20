@@ -33,6 +33,9 @@ let UsersController = class UsersController {
     async updateRole(id, role) {
         return this.usersService.updateRole(id, role);
     }
+    async updateReviewPermission(id, canReview) {
+        return this.usersService.updateReviewPermission(id, canReview);
+    }
 };
 __decorate([
     Get(),
@@ -59,6 +62,15 @@ __decorate([
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "updateRole", null);
+__decorate([
+    Patch(':id/review-permission'),
+    Roles('ADMIN'),
+    __param(0, Param('id')),
+    __param(1, Body('canReview')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Boolean]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "updateReviewPermission", null);
 UsersController = __decorate([
     Controller('users'),
     UseGuards(JwtAuthGuard, RolesGuard),

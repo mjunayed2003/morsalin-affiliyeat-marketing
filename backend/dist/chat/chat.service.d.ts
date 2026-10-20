@@ -47,15 +47,15 @@ export declare class ChatService {
         id: string;
         image: string | null;
         createdAt: Date;
+        productId: string | null;
+        userId: string | null;
         sender: string;
         senderName: string | null;
         text: string;
-        productId: string | null;
         productTitle: string | null;
         productPrice: number | null;
         productImage: string | null;
         read: boolean;
-        userId: string | null;
     } | null>;
     clearMessages(userId?: string): Promise<{
         success: boolean;

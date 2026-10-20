@@ -19,6 +19,7 @@ export type UserMinAggregateOutputType = {
     verified: boolean | null;
     verifiedAt: Date | null;
     role: $Enums.Role | null;
+    canReview: boolean | null;
     createdAt: Date | null;
     updatedAt: Date | null;
 };
@@ -34,6 +35,7 @@ export type UserMaxAggregateOutputType = {
     verified: boolean | null;
     verifiedAt: Date | null;
     role: $Enums.Role | null;
+    canReview: boolean | null;
     createdAt: Date | null;
     updatedAt: Date | null;
 };
@@ -49,6 +51,7 @@ export type UserCountAggregateOutputType = {
     verified: number;
     verifiedAt: number;
     role: number;
+    canReview: number;
     createdAt: number;
     updatedAt: number;
     _all: number;
@@ -65,6 +68,7 @@ export type UserMinAggregateInputType = {
     verified?: true;
     verifiedAt?: true;
     role?: true;
+    canReview?: true;
     createdAt?: true;
     updatedAt?: true;
 };
@@ -80,6 +84,7 @@ export type UserMaxAggregateInputType = {
     verified?: true;
     verifiedAt?: true;
     role?: true;
+    canReview?: true;
     createdAt?: true;
     updatedAt?: true;
 };
@@ -95,6 +100,7 @@ export type UserCountAggregateInputType = {
     verified?: true;
     verifiedAt?: true;
     role?: true;
+    canReview?: true;
     createdAt?: true;
     updatedAt?: true;
     _all?: true;
@@ -135,6 +141,7 @@ export type UserGroupByOutputType = {
     verified: boolean;
     verifiedAt: Date | null;
     role: $Enums.Role;
+    canReview: boolean;
     createdAt: Date;
     updatedAt: Date;
     _count: UserCountAggregateOutputType | null;
@@ -159,10 +166,12 @@ export type UserWhereInput = {
     verified?: Prisma.BoolFilter<"User"> | boolean;
     verifiedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null;
     role?: Prisma.EnumRoleFilter<"User"> | $Enums.Role;
+    canReview?: Prisma.BoolFilter<"User"> | boolean;
     createdAt?: Prisma.DateTimeFilter<"User"> | Date | string;
     updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string;
     chatMessages?: Prisma.ChatMessageListRelationFilter;
     inquiries?: Prisma.InquiryListRelationFilter;
+    reviews?: Prisma.ReviewListRelationFilter;
 };
 export type UserOrderByWithRelationInput = {
     id?: Prisma.SortOrder;
@@ -176,10 +185,12 @@ export type UserOrderByWithRelationInput = {
     verified?: Prisma.SortOrder;
     verifiedAt?: Prisma.SortOrderInput | Prisma.SortOrder;
     role?: Prisma.SortOrder;
+    canReview?: Prisma.SortOrder;
     createdAt?: Prisma.SortOrder;
     updatedAt?: Prisma.SortOrder;
     chatMessages?: Prisma.ChatMessageOrderByRelationAggregateInput;
     inquiries?: Prisma.InquiryOrderByRelationAggregateInput;
+    reviews?: Prisma.ReviewOrderByRelationAggregateInput;
 };
 export type UserWhereUniqueInput = Prisma.AtLeast<{
     id?: string;
@@ -196,10 +207,12 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
     verified?: Prisma.BoolFilter<"User"> | boolean;
     verifiedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null;
     role?: Prisma.EnumRoleFilter<"User"> | $Enums.Role;
+    canReview?: Prisma.BoolFilter<"User"> | boolean;
     createdAt?: Prisma.DateTimeFilter<"User"> | Date | string;
     updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string;
     chatMessages?: Prisma.ChatMessageListRelationFilter;
     inquiries?: Prisma.InquiryListRelationFilter;
+    reviews?: Prisma.ReviewListRelationFilter;
 }, "id" | "phone" | "email">;
 export type UserOrderByWithAggregationInput = {
     id?: Prisma.SortOrder;
@@ -213,6 +226,7 @@ export type UserOrderByWithAggregationInput = {
     verified?: Prisma.SortOrder;
     verifiedAt?: Prisma.SortOrderInput | Prisma.SortOrder;
     role?: Prisma.SortOrder;
+    canReview?: Prisma.SortOrder;
     createdAt?: Prisma.SortOrder;
     updatedAt?: Prisma.SortOrder;
     _count?: Prisma.UserCountOrderByAggregateInput;
@@ -234,6 +248,7 @@ export type UserScalarWhereWithAggregatesInput = {
     verified?: Prisma.BoolWithAggregatesFilter<"User"> | boolean;
     verifiedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null;
     role?: Prisma.EnumRoleWithAggregatesFilter<"User"> | $Enums.Role;
+    canReview?: Prisma.BoolWithAggregatesFilter<"User"> | boolean;
     createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string;
     updatedAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string;
 };
@@ -249,10 +264,12 @@ export type UserCreateInput = {
     verified?: boolean;
     verifiedAt?: Date | string | null;
     role?: $Enums.Role;
+    canReview?: boolean;
     createdAt?: Date | string;
     updatedAt?: Date | string;
     chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput;
     inquiries?: Prisma.InquiryCreateNestedManyWithoutUserInput;
+    reviews?: Prisma.ReviewCreateNestedManyWithoutUserInput;
 };
 export type UserUncheckedCreateInput = {
     id?: string;
@@ -266,10 +283,12 @@ export type UserUncheckedCreateInput = {
     verified?: boolean;
     verifiedAt?: Date | string | null;
     role?: $Enums.Role;
+    canReview?: boolean;
     createdAt?: Date | string;
     updatedAt?: Date | string;
     chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput;
     inquiries?: Prisma.InquiryUncheckedCreateNestedManyWithoutUserInput;
+    reviews?: Prisma.ReviewUncheckedCreateNestedManyWithoutUserInput;
 };
 export type UserUpdateInput = {
     id?: Prisma.StringFieldUpdateOperationsInput | string;
@@ -283,10 +302,12 @@ export type UserUpdateInput = {
     verified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role;
+    canReview?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput;
     inquiries?: Prisma.InquiryUpdateManyWithoutUserNestedInput;
+    reviews?: Prisma.ReviewUpdateManyWithoutUserNestedInput;
 };
 export type UserUncheckedUpdateInput = {
     id?: Prisma.StringFieldUpdateOperationsInput | string;
@@ -300,10 +321,12 @@ export type UserUncheckedUpdateInput = {
     verified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role;
+    canReview?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput;
     inquiries?: Prisma.InquiryUncheckedUpdateManyWithoutUserNestedInput;
+    reviews?: Prisma.ReviewUncheckedUpdateManyWithoutUserNestedInput;
 };
 export type UserCreateManyInput = {
     id?: string;
@@ -317,6 +340,7 @@ export type UserCreateManyInput = {
     verified?: boolean;
     verifiedAt?: Date | string | null;
     role?: $Enums.Role;
+    canReview?: boolean;
     createdAt?: Date | string;
     updatedAt?: Date | string;
 };
@@ -332,6 +356,7 @@ export type UserUpdateManyMutationInput = {
     verified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role;
+    canReview?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
 };
@@ -347,6 +372,7 @@ export type UserUncheckedUpdateManyInput = {
     verified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role;
+    canReview?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
 };
@@ -362,6 +388,7 @@ export type UserCountOrderByAggregateInput = {
     verified?: Prisma.SortOrder;
     verifiedAt?: Prisma.SortOrder;
     role?: Prisma.SortOrder;
+    canReview?: Prisma.SortOrder;
     createdAt?: Prisma.SortOrder;
     updatedAt?: Prisma.SortOrder;
 };
@@ -377,6 +404,7 @@ export type UserMaxOrderByAggregateInput = {
     verified?: Prisma.SortOrder;
     verifiedAt?: Prisma.SortOrder;
     role?: Prisma.SortOrder;
+    canReview?: Prisma.SortOrder;
     createdAt?: Prisma.SortOrder;
     updatedAt?: Prisma.SortOrder;
 };
@@ -392,6 +420,7 @@ export type UserMinOrderByAggregateInput = {
     verified?: Prisma.SortOrder;
     verifiedAt?: Prisma.SortOrder;
     role?: Prisma.SortOrder;
+    canReview?: Prisma.SortOrder;
     createdAt?: Prisma.SortOrder;
     updatedAt?: Prisma.SortOrder;
 };
@@ -447,6 +476,18 @@ export type UserUpdateOneRequiredWithoutInquiriesNestedInput = {
     connect?: Prisma.UserWhereUniqueInput;
     update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutInquiriesInput, Prisma.UserUpdateWithoutInquiriesInput>, Prisma.UserUncheckedUpdateWithoutInquiriesInput>;
 };
+export type UserCreateNestedOneWithoutReviewsInput = {
+    create?: Prisma.XOR<Prisma.UserCreateWithoutReviewsInput, Prisma.UserUncheckedCreateWithoutReviewsInput>;
+    connectOrCreate?: Prisma.UserCreateOrConnectWithoutReviewsInput;
+    connect?: Prisma.UserWhereUniqueInput;
+};
+export type UserUpdateOneRequiredWithoutReviewsNestedInput = {
+    create?: Prisma.XOR<Prisma.UserCreateWithoutReviewsInput, Prisma.UserUncheckedCreateWithoutReviewsInput>;
+    connectOrCreate?: Prisma.UserCreateOrConnectWithoutReviewsInput;
+    upsert?: Prisma.UserUpsertWithoutReviewsInput;
+    connect?: Prisma.UserWhereUniqueInput;
+    update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutReviewsInput, Prisma.UserUpdateWithoutReviewsInput>, Prisma.UserUncheckedUpdateWithoutReviewsInput>;
+};
 export type UserCreateWithoutChatMessagesInput = {
     id?: string;
     phone: string;
@@ -459,9 +500,11 @@ export type UserCreateWithoutChatMessagesInput = {
     verified?: boolean;
     verifiedAt?: Date | string | null;
     role?: $Enums.Role;
+    canReview?: boolean;
     createdAt?: Date | string;
     updatedAt?: Date | string;
     inquiries?: Prisma.InquiryCreateNestedManyWithoutUserInput;
+    reviews?: Prisma.ReviewCreateNestedManyWithoutUserInput;
 };
 export type UserUncheckedCreateWithoutChatMessagesInput = {
     id?: string;
@@ -475,9 +518,11 @@ export type UserUncheckedCreateWithoutChatMessagesInput = {
     verified?: boolean;
     verifiedAt?: Date | string | null;
     role?: $Enums.Role;
+    canReview?: boolean;
     createdAt?: Date | string;
     updatedAt?: Date | string;
     inquiries?: Prisma.InquiryUncheckedCreateNestedManyWithoutUserInput;
+    reviews?: Prisma.ReviewUncheckedCreateNestedManyWithoutUserInput;
 };
 export type UserCreateOrConnectWithoutChatMessagesInput = {
     where: Prisma.UserWhereUniqueInput;
@@ -504,9 +549,11 @@ export type UserUpdateWithoutChatMessagesInput = {
     verified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role;
+    canReview?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     inquiries?: Prisma.InquiryUpdateManyWithoutUserNestedInput;
+    reviews?: Prisma.ReviewUpdateManyWithoutUserNestedInput;
 };
 export type UserUncheckedUpdateWithoutChatMessagesInput = {
     id?: Prisma.StringFieldUpdateOperationsInput | string;
@@ -520,9 +567,11 @@ export type UserUncheckedUpdateWithoutChatMessagesInput = {
     verified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role;
+    canReview?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     inquiries?: Prisma.InquiryUncheckedUpdateManyWithoutUserNestedInput;
+    reviews?: Prisma.ReviewUncheckedUpdateManyWithoutUserNestedInput;
 };
 export type UserCreateWithoutInquiriesInput = {
     id?: string;
@@ -536,9 +585,11 @@ export type UserCreateWithoutInquiriesInput = {
     verified?: boolean;
     verifiedAt?: Date | string | null;
     role?: $Enums.Role;
+    canReview?: boolean;
     createdAt?: Date | string;
     updatedAt?: Date | string;
     chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput;
+    reviews?: Prisma.ReviewCreateNestedManyWithoutUserInput;
 };
 export type UserUncheckedCreateWithoutInquiriesInput = {
     id?: string;
@@ -552,9 +603,11 @@ export type UserUncheckedCreateWithoutInquiriesInput = {
     verified?: boolean;
     verifiedAt?: Date | string | null;
     role?: $Enums.Role;
+    canReview?: boolean;
     createdAt?: Date | string;
     updatedAt?: Date | string;
     chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput;
+    reviews?: Prisma.ReviewUncheckedCreateNestedManyWithoutUserInput;
 };
 export type UserCreateOrConnectWithoutInquiriesInput = {
     where: Prisma.UserWhereUniqueInput;
@@ -581,9 +634,11 @@ export type UserUpdateWithoutInquiriesInput = {
     verified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role;
+    canReview?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput;
+    reviews?: Prisma.ReviewUpdateManyWithoutUserNestedInput;
 };
 export type UserUncheckedUpdateWithoutInquiriesInput = {
     id?: Prisma.StringFieldUpdateOperationsInput | string;
@@ -597,17 +652,106 @@ export type UserUncheckedUpdateWithoutInquiriesInput = {
     verified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role;
+    canReview?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput;
+    reviews?: Prisma.ReviewUncheckedUpdateManyWithoutUserNestedInput;
+};
+export type UserCreateWithoutReviewsInput = {
+    id?: string;
+    phone: string;
+    name: string;
+    password?: string | null;
+    email?: string | null;
+    address?: string | null;
+    city?: string | null;
+    avatar?: string | null;
+    verified?: boolean;
+    verifiedAt?: Date | string | null;
+    role?: $Enums.Role;
+    canReview?: boolean;
+    createdAt?: Date | string;
+    updatedAt?: Date | string;
+    chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput;
+    inquiries?: Prisma.InquiryCreateNestedManyWithoutUserInput;
+};
+export type UserUncheckedCreateWithoutReviewsInput = {
+    id?: string;
+    phone: string;
+    name: string;
+    password?: string | null;
+    email?: string | null;
+    address?: string | null;
+    city?: string | null;
+    avatar?: string | null;
+    verified?: boolean;
+    verifiedAt?: Date | string | null;
+    role?: $Enums.Role;
+    canReview?: boolean;
+    createdAt?: Date | string;
+    updatedAt?: Date | string;
+    chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput;
+    inquiries?: Prisma.InquiryUncheckedCreateNestedManyWithoutUserInput;
+};
+export type UserCreateOrConnectWithoutReviewsInput = {
+    where: Prisma.UserWhereUniqueInput;
+    create: Prisma.XOR<Prisma.UserCreateWithoutReviewsInput, Prisma.UserUncheckedCreateWithoutReviewsInput>;
+};
+export type UserUpsertWithoutReviewsInput = {
+    update: Prisma.XOR<Prisma.UserUpdateWithoutReviewsInput, Prisma.UserUncheckedUpdateWithoutReviewsInput>;
+    create: Prisma.XOR<Prisma.UserCreateWithoutReviewsInput, Prisma.UserUncheckedCreateWithoutReviewsInput>;
+    where?: Prisma.UserWhereInput;
+};
+export type UserUpdateToOneWithWhereWithoutReviewsInput = {
+    where?: Prisma.UserWhereInput;
+    data: Prisma.XOR<Prisma.UserUpdateWithoutReviewsInput, Prisma.UserUncheckedUpdateWithoutReviewsInput>;
+};
+export type UserUpdateWithoutReviewsInput = {
+    id?: Prisma.StringFieldUpdateOperationsInput | string;
+    phone?: Prisma.StringFieldUpdateOperationsInput | string;
+    name?: Prisma.StringFieldUpdateOperationsInput | string;
+    password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    verified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+    role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role;
+    canReview?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput;
+    inquiries?: Prisma.InquiryUpdateManyWithoutUserNestedInput;
+};
+export type UserUncheckedUpdateWithoutReviewsInput = {
+    id?: Prisma.StringFieldUpdateOperationsInput | string;
+    phone?: Prisma.StringFieldUpdateOperationsInput | string;
+    name?: Prisma.StringFieldUpdateOperationsInput | string;
+    password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    verified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
+    role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role;
+    canReview?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+    createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+    chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput;
+    inquiries?: Prisma.InquiryUncheckedUpdateManyWithoutUserNestedInput;
 };
 export type UserCountOutputType = {
     chatMessages: number;
     inquiries: number;
+    reviews: number;
 };
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
     chatMessages?: boolean | UserCountOutputTypeCountChatMessagesArgs;
     inquiries?: boolean | UserCountOutputTypeCountInquiriesArgs;
+    reviews?: boolean | UserCountOutputTypeCountReviewsArgs;
 };
 export type UserCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
     select?: Prisma.UserCountOutputTypeSelect<ExtArgs> | null;
@@ -617,6 +761,9 @@ export type UserCountOutputTypeCountChatMessagesArgs<ExtArgs extends runtime.Typ
 };
 export type UserCountOutputTypeCountInquiriesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
     where?: Prisma.InquiryWhereInput;
+};
+export type UserCountOutputTypeCountReviewsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+    where?: Prisma.ReviewWhereInput;
 };
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
     id?: boolean;
@@ -630,10 +777,12 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
     verified?: boolean;
     verifiedAt?: boolean;
     role?: boolean;
+    canReview?: boolean;
     createdAt?: boolean;
     updatedAt?: boolean;
     chatMessages?: boolean | Prisma.User$chatMessagesArgs<ExtArgs>;
     inquiries?: boolean | Prisma.User$inquiriesArgs<ExtArgs>;
+    reviews?: boolean | Prisma.User$reviewsArgs<ExtArgs>;
     _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>;
 }, ExtArgs["result"]["user"]>;
 export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -648,6 +797,7 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
     verified?: boolean;
     verifiedAt?: boolean;
     role?: boolean;
+    canReview?: boolean;
     createdAt?: boolean;
     updatedAt?: boolean;
 }, ExtArgs["result"]["user"]>;
@@ -663,6 +813,7 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
     verified?: boolean;
     verifiedAt?: boolean;
     role?: boolean;
+    canReview?: boolean;
     createdAt?: boolean;
     updatedAt?: boolean;
 }, ExtArgs["result"]["user"]>;
@@ -678,13 +829,15 @@ export type UserSelectScalar = {
     verified?: boolean;
     verifiedAt?: boolean;
     role?: boolean;
+    canReview?: boolean;
     createdAt?: boolean;
     updatedAt?: boolean;
 };
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "phone" | "name" | "password" | "email" | "address" | "city" | "avatar" | "verified" | "verifiedAt" | "role" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>;
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "phone" | "name" | "password" | "email" | "address" | "city" | "avatar" | "verified" | "verifiedAt" | "role" | "canReview" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>;
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
     chatMessages?: boolean | Prisma.User$chatMessagesArgs<ExtArgs>;
     inquiries?: boolean | Prisma.User$inquiriesArgs<ExtArgs>;
+    reviews?: boolean | Prisma.User$reviewsArgs<ExtArgs>;
     _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>;
 };
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {};
@@ -694,6 +847,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     objects: {
         chatMessages: Prisma.$ChatMessagePayload<ExtArgs>[];
         inquiries: Prisma.$InquiryPayload<ExtArgs>[];
+        reviews: Prisma.$ReviewPayload<ExtArgs>[];
     };
     scalars: runtime.Types.Extensions.GetPayloadResult<{
         id: string;
@@ -707,6 +861,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
         verified: boolean;
         verifiedAt: Date | null;
         role: $Enums.Role;
+        canReview: boolean;
         createdAt: Date;
         updatedAt: Date;
     }, ExtArgs["result"]["user"]>;
@@ -763,6 +918,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
     readonly [Symbol.toStringTag]: "PrismaPromise";
     chatMessages<T extends Prisma.User$chatMessagesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$chatMessagesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ChatMessagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>;
     inquiries<T extends Prisma.User$inquiriesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$inquiriesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$InquiryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>;
+    reviews<T extends Prisma.User$reviewsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$reviewsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ReviewPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>;
     then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): runtime.Types.Utils.JsPromise<TResult1 | TResult2>;
     catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): runtime.Types.Utils.JsPromise<T | TResult>;
     finally(onfinally?: (() => void) | undefined | null): runtime.Types.Utils.JsPromise<T>;
@@ -779,6 +935,7 @@ export interface UserFieldRefs {
     readonly verified: Prisma.FieldRef<"User", 'Boolean'>;
     readonly verifiedAt: Prisma.FieldRef<"User", 'DateTime'>;
     readonly role: Prisma.FieldRef<"User", 'Role'>;
+    readonly canReview: Prisma.FieldRef<"User", 'Boolean'>;
     readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>;
     readonly updatedAt: Prisma.FieldRef<"User", 'DateTime'>;
 }
@@ -901,6 +1058,17 @@ export type User$inquiriesArgs<ExtArgs extends runtime.Types.Extensions.Internal
     take?: number;
     skip?: number;
     distinct?: Prisma.InquiryScalarFieldEnum | Prisma.InquiryScalarFieldEnum[];
+};
+export type User$reviewsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+    select?: Prisma.ReviewSelect<ExtArgs> | null;
+    omit?: Prisma.ReviewOmit<ExtArgs> | null;
+    include?: Prisma.ReviewInclude<ExtArgs> | null;
+    where?: Prisma.ReviewWhereInput;
+    orderBy?: Prisma.ReviewOrderByWithRelationInput | Prisma.ReviewOrderByWithRelationInput[];
+    cursor?: Prisma.ReviewWhereUniqueInput;
+    take?: number;
+    skip?: number;
+    distinct?: Prisma.ReviewScalarFieldEnum | Prisma.ReviewScalarFieldEnum[];
 };
 export type UserDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
     select?: Prisma.UserSelect<ExtArgs> | null;

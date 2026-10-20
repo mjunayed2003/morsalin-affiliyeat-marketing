@@ -28,7 +28,8 @@ export const ModelName = {
     EmailOtp: 'EmailOtp',
     Product: 'Product',
     ChatMessage: 'ChatMessage',
-    Inquiry: 'Inquiry'
+    Inquiry: 'Inquiry',
+    Review: 'Review'
 };
 export const TransactionIsolationLevel = runtime.makeStrictEnum({
     ReadUncommitted: 'ReadUncommitted',
@@ -48,6 +49,7 @@ export const UserScalarFieldEnum = {
     verified: 'verified',
     verifiedAt: 'verifiedAt',
     role: 'role',
+    canReview: 'canReview',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
 };
@@ -105,6 +107,17 @@ export const InquiryScalarFieldEnum = {
     amazonOrderId: 'amazonOrderId',
     reviewUrl: 'reviewUrl',
     notes: 'notes',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+};
+export const ReviewScalarFieldEnum = {
+    id: 'id',
+    productId: 'productId',
+    userId: 'userId',
+    userName: 'userName',
+    rating: 'rating',
+    title: 'title',
+    comment: 'comment',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
 };

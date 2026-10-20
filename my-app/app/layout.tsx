@@ -75,7 +75,14 @@ export const metadata: Metadata = {
     creator: "@onlinefreeproducts",
   },
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico' },
+    ],
+    apple: [
+      { url: '/apple-icon.svg', type: 'image/svg+xml' },
+    ],
+    shortcut: '/icon.svg',
   },
 };
 
@@ -99,7 +106,7 @@ const jsonLd = {
       "@id": "https://freeproducts.online/#organization",
       "name": "FreeProducts.online",
       "url": "https://freeproducts.online",
-      "logo": "https://freeproducts.online/favicon.ico",
+      "logo": "https://freeproducts.online/icon.svg",
       "sameAs": [
         "https://www.instagram.com/onlinefreeproducts"
       ],
@@ -121,6 +128,8 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full antialiased">
       <head>
+        <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+        <link rel="apple-touch-icon" href="/icon.svg" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

@@ -126,37 +126,39 @@ export default function Home() {
               <div className="lg:col-span-7 space-y-6 sm:space-y-8">
                 
                 {/* Eyebrow / Overline */}
-                <div className="text-[11px] sm:text-xs font-bold tracking-[0.22em] text-[#1b3b2b] uppercase flex items-center gap-2 flex-wrap">
-                  <span className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-900 border border-amber-200 px-2.5 py-1 rounded-full">
+                <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                  <span className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-900 border border-amber-200/90 px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold tracking-wide uppercase shadow-2xs">
                     <FaAmazon className="w-3 h-3 text-[#ff9900]" />
-                    <span>AMAZON REVIEWER CLUB</span>
+                    <span>Amazon Reviewer Club</span>
                   </span>
-                  <span className="text-slate-300">•</span>
-                  <span>100% FREE PRODUCTS</span>
-                  <span className="text-slate-300">•</span>
-                  <span>VERIFIED STORES</span>
+                  <span className="inline-flex items-center bg-emerald-50 text-emerald-800 border border-emerald-200/80 px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold tracking-wide uppercase">
+                    100% Free Products
+                  </span>
+                  <span className="inline-flex items-center bg-stone-100 text-stone-700 border border-stone-200 px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold tracking-wide uppercase">
+                    Verified Stores
+                  </span>
                 </div>
 
                 {/* Main Headline */}
-                <h1 className="font-headline text-4xl sm:text-5xl lg:text-[56px] text-slate-900 font-bold leading-[1.14] tracking-tight">
-                  Test Top Amazon Products.<br />
-                  Share Honest Reviews.<br />
+                <h1 className="font-headline text-2xl sm:text-4xl lg:text-[54px] text-slate-900 font-extrabold leading-[1.2] sm:leading-[1.14] tracking-tight">
+                  Test Top Amazon Products.<br className="hidden sm:inline" />{' '}
+                  Share Honest Reviews.<br className="hidden sm:inline" />{' '}
                   <span className="text-[#1b3b2b]">Keep Them 100% Free.</span>
                 </h1>
 
                 {/* Paragraph Description */}
-                <p className="text-sm sm:text-base text-slate-600 font-normal leading-relaxed max-w-xl">
+                <p className="text-xs sm:text-base text-slate-600 font-normal leading-relaxed max-w-xl">
                   Join FreeProducts.online Review Club! Get brand-new items from verified Amazon stores (LONG YUE, Lickoon, Imps Hair Creates & more). Test quality products, share your authentic Amazon feedback, and keep every item with zero hidden costs.
                 </p>
 
                 {/* Action Buttons */}
-                <div className="flex flex-wrap items-center gap-3.5 pt-1">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1">
                   <button
                     onClick={() => {
                       const el = document.getElementById('products');
                       el?.scrollIntoView({ behavior: 'smooth' });
                     }}
-                    className="bg-[#1b3b2b] hover:bg-[#142e20] active:scale-95 text-white font-semibold text-xs sm:text-sm px-6 sm:px-7 py-3.5 rounded-full inline-flex items-center gap-2.5 shadow-sm transition-all cursor-pointer"
+                    className="w-full sm:w-auto justify-center bg-[#1b3b2b] hover:bg-[#142e20] active:scale-95 text-white font-semibold text-xs sm:text-sm px-6 sm:px-7 py-3.5 rounded-full inline-flex items-center gap-2.5 shadow-sm transition-all cursor-pointer"
                   >
                     <span>Claim Free Products</span>
                     <FaArrowRight className="w-3.5 h-3.5" />
@@ -164,56 +166,56 @@ export default function Home() {
 
                   <a
                     href="#how-it-works"
-                    className="bg-white hover:bg-slate-50 active:scale-95 text-slate-800 border border-slate-300/90 font-semibold text-xs sm:text-sm px-6 sm:px-7 py-3.5 rounded-full inline-flex items-center gap-2 transition-all cursor-pointer shadow-2xs"
+                    className="w-full sm:w-auto justify-center bg-white hover:bg-slate-50 active:scale-95 text-slate-800 border border-slate-300/90 font-semibold text-xs sm:text-sm px-6 sm:px-7 py-3.5 rounded-full inline-flex items-center gap-2 transition-all cursor-pointer shadow-2xs"
                   >
                     <span>How Review Program Works</span>
                   </a>
                 </div>
 
                 {/* Value Propositions / Trust Badges (4 Columns) */}
-                <div className="pt-6 sm:pt-8 border-t border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-5">
+                <div className="pt-5 sm:pt-8 border-t border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-5">
                   
                   {/* Badge 1: 100% Free Items */}
-                  <div className="flex items-start gap-2.5">
-                    <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-800 shrink-0 mt-0.5 border border-emerald-100">
-                      <FaBoxOpen className="w-4 h-4 text-emerald-700" />
+                  <div className="flex items-start gap-2 sm:gap-2.5 p-2 sm:p-0 rounded-xl bg-slate-50/60 sm:bg-transparent">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-800 shrink-0 mt-0.5 border border-emerald-100">
+                      <FaBoxOpen className="w-3.5 h-3.5 text-emerald-700" />
                     </div>
-                    <div>
-                      <p className="text-xs font-bold text-slate-900 leading-tight">100% Free Items</p>
-                      <p className="text-[11px] text-slate-500 font-medium leading-tight mt-0.5">Zero cost to reviewer</p>
+                    <div className="min-w-0">
+                      <p className="text-[11px] sm:text-xs font-bold text-slate-900 leading-tight truncate">100% Free Items</p>
+                      <p className="text-[10px] sm:text-[11px] text-slate-500 font-medium leading-tight mt-0.5 truncate">Zero cost to reviewer</p>
                     </div>
                   </div>
 
                   {/* Badge 2: Verified Amazon Stores */}
-                  <div className="flex items-start gap-2.5">
-                    <div className="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center text-amber-800 shrink-0 mt-0.5 border border-amber-200/80">
-                      <FaAmazon className="w-3.5 h-3.5 text-[#e08500]" />
+                  <div className="flex items-start gap-2 sm:gap-2.5 p-2 sm:p-0 rounded-xl bg-slate-50/60 sm:bg-transparent">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-amber-50 flex items-center justify-center text-amber-800 shrink-0 mt-0.5 border border-amber-200/80">
+                      <FaAmazon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#e08500]" />
                     </div>
-                    <div>
-                      <p className="text-xs font-bold text-slate-900 leading-tight">Verified Stores</p>
-                      <p className="text-[11px] text-slate-500 font-medium leading-tight mt-0.5">LONG YUE, Lickoon & more</p>
+                    <div className="min-w-0">
+                      <p className="text-[11px] sm:text-xs font-bold text-slate-900 leading-tight truncate">Verified Stores</p>
+                      <p className="text-[10px] sm:text-[11px] text-slate-500 font-medium leading-tight mt-0.5 truncate">LONG YUE & more</p>
                     </div>
                   </div>
 
                   {/* Badge 3: Keep Forever */}
-                  <div className="flex items-start gap-2.5">
-                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-700 shrink-0 mt-0.5">
-                      <FaAward className="w-4 h-4 text-slate-700" />
+                  <div className="flex items-start gap-2 sm:gap-2.5 p-2 sm:p-0 rounded-xl bg-slate-50/60 sm:bg-transparent">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-700 shrink-0 mt-0.5">
+                      <FaAward className="w-3.5 h-3.5 text-slate-700" />
                     </div>
-                    <div>
-                      <p className="text-xs font-bold text-slate-900 leading-tight">Keep Forever</p>
-                      <p className="text-[11px] text-slate-500 font-medium leading-tight mt-0.5">Tested items are yours</p>
+                    <div className="min-w-0">
+                      <p className="text-[11px] sm:text-xs font-bold text-slate-900 leading-tight truncate">Keep Forever</p>
+                      <p className="text-[10px] sm:text-[11px] text-slate-500 font-medium leading-tight mt-0.5 truncate">Tested items yours</p>
                     </div>
                   </div>
 
                   {/* Badge 4: USA Prime Delivery */}
-                  <div className="flex items-start gap-2.5">
-                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-700 shrink-0 mt-0.5">
-                      <FaTruckFast className="w-4 h-4 text-slate-700" />
+                  <div className="flex items-start gap-2 sm:gap-2.5 p-2 sm:p-0 rounded-xl bg-slate-50/60 sm:bg-transparent">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-700 shrink-0 mt-0.5">
+                      <FaTruckFast className="w-3.5 h-3.5 text-slate-700" />
                     </div>
-                    <div>
-                      <p className="text-xs font-bold text-slate-900 leading-tight">Fast US Shipping</p>
-                      <p className="text-[11px] text-slate-500 font-medium leading-tight mt-0.5">Amazon Prime delivery</p>
+                    <div className="min-w-0">
+                      <p className="text-[11px] sm:text-xs font-bold text-slate-900 leading-tight truncate">Fast US Shipping</p>
+                      <p className="text-[10px] sm:text-[11px] text-slate-500 font-medium leading-tight mt-0.5 truncate">Amazon Prime</p>
                     </div>
                   </div>
 
@@ -293,8 +295,8 @@ export default function Home() {
               </Link>
             </div>
 
-            {/* Product Cards Grid (3 Columns) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
+            {/* Product Cards Grid (2 Columns on mobile, 3 on desktop) */}
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-7">
               {displayedProducts.map((prod) => {
                 const badgeStyle = CATEGORY_STYLES[prod.category] || { 
                   bg: 'bg-stone-100', 
@@ -304,13 +306,13 @@ export default function Home() {
                 return (
                   <div
                     key={prod.id}
-                    className="group bg-white rounded-2xl border border-slate-100/90 hover:border-slate-300 p-4 sm:p-5 flex flex-col justify-between shadow-2xs hover:shadow-md transition-all duration-200"
+                    className="group bg-white rounded-xl sm:rounded-2xl border border-slate-100/90 hover:border-slate-300 p-2.5 sm:p-5 flex flex-col justify-between shadow-2xs hover:shadow-md transition-all duration-200"
                   >
                     <div>
                       {/* Product Image Link */}
                       <Link 
                         href={`/p/${prod.id}`}
-                        className="block relative w-full aspect-4/3 rounded-xl bg-[#f8f7f4] overflow-hidden mb-4 cursor-pointer flex items-center justify-center group/img"
+                        className="block relative w-full aspect-4/3 rounded-lg sm:rounded-xl bg-[#f8f7f4] overflow-hidden mb-2 sm:mb-4 cursor-pointer flex items-center justify-center group/img"
                         title={`View ${prod.title}`}
                       >
                         <img 
@@ -322,18 +324,18 @@ export default function Home() {
                       </Link>
 
                       {/* Category Pill & Store Badge */}
-                      <div className="mb-2 flex items-center gap-1.5 flex-wrap">
-                        <span className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold ${badgeStyle.bg} ${badgeStyle.text}`}>
+                      <div className="mb-1.5 sm:mb-2 flex items-center gap-1 sm:gap-1.5 flex-wrap">
+                        <span className={`inline-block px-1.5 sm:px-2.5 py-0.5 rounded-full text-[9px] sm:text-[11px] font-bold ${badgeStyle.bg} ${badgeStyle.text} truncate max-w-[85px] sm:max-w-none`}>
                           {prod.category}
                         </span>
                         {prod.store && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
-                            <FaStore className="w-2.5 h-2.5 text-amber-600" />
-                            <span>{prod.store}</span>
+                          <span className="inline-flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2.5 py-0.5 rounded-full text-[9px] sm:text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200 truncate max-w-[80px] sm:max-w-none">
+                            <FaStore className="w-2 sm:w-2.5 h-2 sm:h-2.5 text-amber-600 shrink-0" />
+                            <span className="truncate">{prod.store}</span>
                           </span>
                         )}
                         {prod.badge && (
-                          <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-900 text-white">
+                          <span className="inline-block px-1.5 sm:px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold bg-slate-900 text-white">
                             {prod.badge}
                           </span>
                         )}
@@ -342,24 +344,25 @@ export default function Home() {
                       {/* Product Title */}
                       <Link 
                         href={`/p/${prod.id}`}
-                        className="block font-bold text-slate-900 text-base leading-snug hover:text-[#1b3b2b] transition-colors cursor-pointer line-clamp-1"
+                        className="block font-bold text-slate-900 text-xs sm:text-base leading-snug hover:text-[#1b3b2b] transition-colors cursor-pointer line-clamp-2 sm:line-clamp-1"
                       >
                         {prod.title}
                       </Link>
 
                       {/* Subcategory / Niche */}
-                      <p className="text-xs text-slate-500 font-medium mt-0.5">
+                      <p className="text-[10px] sm:text-xs text-slate-500 font-medium mt-0.5 line-clamp-1">
                         {prod.subCategory || 'Quality Selection'}
                       </p>
                     </div>
 
                     {/* Action Buttons: "Get It Free" + "Amazon" */}
-                    <div className="pt-5 flex items-center gap-2">
+                    <div className="pt-2.5 sm:pt-5 flex items-center gap-1.5 sm:gap-2">
                       <Link
                         href={`/p/${prod.id}`}
-                        className="flex-1 py-2.5 px-3 rounded-xl font-semibold text-xs sm:text-sm bg-[#f4f3ef] hover:bg-[#1b3b2b] text-slate-700 hover:text-white transition-all duration-200 cursor-pointer shadow-2xs text-center"
+                        className="flex-1 py-1.5 sm:py-2.5 px-2 sm:px-3 rounded-lg sm:rounded-xl font-bold text-[11px] sm:text-sm bg-[#1b3b2b] hover:bg-[#142e20] text-white transition-all duration-200 cursor-pointer shadow-2xs text-center whitespace-nowrap"
                       >
-                        Get It Free
+                        <span className="sm:hidden">Get Free</span>
+                        <span className="hidden sm:inline">Get It Free</span>
                       </Link>
                       {prod.amazonUrl && (
                         <a
@@ -374,7 +377,7 @@ export default function Home() {
                               openAuthModal('login');
                             }
                           }}
-                          className={`py-2.5 px-3 rounded-xl font-bold text-xs border transition-all duration-200 inline-flex items-center gap-1.5 shadow-2xs cursor-pointer shrink-0 ${
+                          className={`py-1.5 sm:py-2.5 px-2 sm:px-3 rounded-lg sm:rounded-xl font-bold text-[11px] sm:text-xs border transition-all duration-200 inline-flex items-center justify-center gap-1 shadow-2xs cursor-pointer shrink-0 ${
                             isAuthenticated
                               ? 'bg-[#fff8e7] hover:bg-[#ff9900] text-[#92400e] hover:text-slate-950 border-amber-300 hover:border-[#e08500]'
                               : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-200'
@@ -382,7 +385,8 @@ export default function Home() {
                           title={isAuthenticated ? `View on Amazon (${prod.store || 'Amazon'})` : 'Sign in to access Amazon review link'}
                         >
                           <FaAmazon className="w-3.5 h-3.5 text-[#e08500]" />
-                          <span>{isAuthenticated ? 'Amazon' : 'Amazon 🔒'}</span>
+                          <span className="hidden sm:inline">{isAuthenticated ? 'Amazon' : 'Amazon 🔒'}</span>
+                          <span className="sm:hidden">{isAuthenticated ? '' : '🔒'}</span>
                         </a>
                       )}
                     </div>
@@ -721,12 +725,7 @@ export default function Home() {
             <div className="flex items-center gap-4">
               <Link href="/chat" className="hover:text-slate-600 transition-colors flex items-center gap-1">
                 <FaComments className="w-3 h-3" />
-                <span>Live Chat</span>
-              </Link>
-              <span>•</span>
-              <Link href="/admin" className="hover:text-slate-600 transition-colors flex items-center gap-1">
-                <FaSliders className="w-3 h-3" />
-                <span>Admin Studio</span>
+                <span>Live Chat Support</span>
               </Link>
             </div>
           </div>

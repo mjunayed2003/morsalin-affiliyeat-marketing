@@ -42,6 +42,19 @@ export interface ChatMessage {
   createdAt?: string;
 }
 
+export interface Review {
+  id: string;
+  productId: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  rating: number; // 1 to 5
+  title?: string;
+  comment: string;
+  createdAt: string;
+  verifiedReviewer?: boolean;
+}
+
 export interface User {
   id: string;
   phone: string;
@@ -59,6 +72,7 @@ export interface User {
   lastActivity?: string;
   clicksCount?: number;
   viewsCount?: number;
+  canReview?: boolean; // Admin granted permission to post reviews
 }
 
 

@@ -14,7 +14,9 @@ import {
   FaCheck,
   FaPhone,
   FaLocationDot,
-  FaArrowRight
+  FaArrowRight,
+  FaStar,
+  FaLock
 } from 'react-icons/fa6';
 import { useAuth } from '@/app/context/AuthContext';
 import { useApp } from '@/app/context/AppContext';
@@ -24,7 +26,7 @@ import { Badge } from '@/components/admin/Badge';
 import { ConfirmModal } from '@/components/admin/ConfirmModal';
 
 export default function AdminUsersPage() {
-  const { users, blockUser, unblockUser } = useAuth();
+  const { users, blockUser, unblockUser, toggleUserReviewPermission } = useAuth();
   const { showToast } = useApp();
 
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
@@ -35,6 +37,7 @@ export default function AdminUsersPage() {
     return users.filter((u) => {
       const userStatus = u.status || 'ACTIVE';
       if (statusFilter === 'ALL') return true;
+      if (statusFilter === 'CAN_REVIEW') return !!u.canReview;
       return userStatus === statusFilter;
     });
   }, [users, statusFilter]);
@@ -42,11 +45,12 @@ export default function AdminUsersPage() {
   // Metrics
   const totalUsers = users.length;
   const activeCount = users.filter((u) => (u.status || 'ACTIVE') === 'ACTIVE').length;
+  const reviewAllowedCount = users.filter((u) => u.canReview).length;
   const blockedCount = users.filter((u) => u.status === 'BLOCKED').length;
 
   // Export to CSV
   const handleExportCSV = () => {
-    const headers = ['ID', 'Name', 'Phone', 'Email', 'Role', 'Status', 'Verified', 'Created At'];
+    const headers = ['ID', 'Name', 'Phone', 'Email', 'Role', 'Status', 'Review Permission', 'Verified', 'Created At'];
     const rows = users.map((u) => [
       u.id,
       `"${u.name}"`,
@@ -54,6 +58,7 @@ export default function AdminUsersPage() {
       `"${u.email || ''}"`,
       u.role,
       u.status || 'ACTIVE',
+      u.canReview ? 'Allowed' : 'Restricted',
       u.verified ? 'Yes' : 'No',
       u.createdAt
     ]);
@@ -150,6 +155,42 @@ export default function AdminUsersPage() {
       ),
     },
     {
+      key: 'canReview',
+      header: 'Review Permission',
+      sortable: true,
+      render: (u) => (
+        <div className="flex items-center gap-2">
+          {u.canReview ? (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-2xs">
+              <FaStar className="w-2.5 h-2.5 text-emerald-600 fill-emerald-600" />
+              <span>Allowed</span>
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
+              <FaLock className="w-2.5 h-2.5 text-slate-400" />
+              <span>Restricted</span>
+            </span>
+          )}
+
+          <button
+            onClick={() => {
+              const nextVal = !u.canReview;
+              toggleUserReviewPermission(u.id, nextVal);
+              showToast(`Review permission ${nextVal ? 'granted to' : 'revoked from'} ${u.name}`);
+            }}
+            className={`text-[10px] font-bold px-2 py-0.5 rounded-md border transition-all cursor-pointer ${
+              u.canReview
+                ? 'border-slate-200 text-slate-600 hover:bg-slate-100'
+                : 'border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 shadow-2xs'
+            }`}
+            title={u.canReview ? 'Revoke review permission' : 'Grant review permission to user'}
+          >
+            {u.canReview ? 'Revoke' : 'Allow'}
+          </button>
+        </div>
+      ),
+    },
+    {
       key: 'actions',
       header: 'Actions',
       className: 'text-right',
@@ -162,6 +203,22 @@ export default function AdminUsersPage() {
           >
             <FaEye className="w-3.5 h-3.5" />
           </Link>
+
+          <button
+            onClick={() => {
+              const nextVal = !u.canReview;
+              toggleUserReviewPermission(u.id, nextVal);
+              showToast(`Review permission ${nextVal ? 'granted to' : 'revoked from'} ${u.name}`);
+            }}
+            className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
+              u.canReview
+                ? 'border-amber-200 text-amber-700 bg-amber-50 hover:bg-amber-100'
+                : 'border-slate-200 text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 hover:border-emerald-200'
+            }`}
+            title={u.canReview ? 'Review Allowed (Click to revoke)' : 'Review Restricted (Click to allow)'}
+          >
+            <FaStar className={`w-3.5 h-3.5 ${u.canReview ? 'text-amber-500 fill-amber-500' : 'opacity-40'}`} />
+          </button>
 
           {(u.status || 'ACTIVE') === 'BLOCKED' ? (
             <button
@@ -211,10 +268,10 @@ export default function AdminUsersPage() {
       </div>
 
       {/* Metrics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs flex items-center justify-between">
           <div>
-            <p className="text-xs text-slate-500 font-semibold uppercase">Total Reviewers</p>
+            <p className="text-[11px] text-slate-500 font-semibold uppercase">Total Users</p>
             <p className="text-2xl font-bold text-slate-900 mt-1">{totalUsers}</p>
           </div>
           <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center">
@@ -224,17 +281,27 @@ export default function AdminUsersPage() {
 
         <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs flex items-center justify-between">
           <div>
-            <p className="text-xs text-slate-500 font-semibold uppercase">Active Members</p>
-            <p className="text-2xl font-bold text-emerald-700 mt-1">{activeCount}</p>
+            <p className="text-[11px] text-slate-500 font-semibold uppercase">Review Allowed</p>
+            <p className="text-2xl font-bold text-emerald-700 mt-1">{reviewAllowedCount}</p>
           </div>
           <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
+            <FaStar className="w-5 h-5 text-emerald-600 fill-emerald-600" />
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs flex items-center justify-between">
+          <div>
+            <p className="text-[11px] text-slate-500 font-semibold uppercase">Active Accounts</p>
+            <p className="text-2xl font-bold text-slate-800 mt-1">{activeCount}</p>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center">
             <FaUserCheck className="w-5 h-5" />
           </div>
         </div>
 
         <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs flex items-center justify-between">
           <div>
-            <p className="text-xs text-slate-500 font-semibold uppercase">Blocked Accounts</p>
+            <p className="text-[11px] text-slate-500 font-semibold uppercase">Blocked</p>
             <p className="text-2xl font-bold text-rose-700 mt-1">{blockedCount}</p>
           </div>
           <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-700 flex items-center justify-center">
@@ -244,18 +311,24 @@ export default function AdminUsersPage() {
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
-        {['ALL', 'ACTIVE', 'BLOCKED'].map((tab) => (
+      <div className="flex items-center gap-2 border-b border-slate-200 pb-2 overflow-x-auto">
+        {['ALL', 'CAN_REVIEW', 'ACTIVE', 'BLOCKED'].map((tab) => (
           <button
             key={tab}
             onClick={() => setStatusFilter(tab)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
               statusFilter === tab
                 ? 'bg-[#1b3b2b] text-white shadow-xs'
                 : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
-            {tab === 'ALL' ? 'All Accounts' : tab === 'ACTIVE' ? 'Active' : 'Blocked'}
+            {tab === 'ALL'
+              ? 'All Accounts'
+              : tab === 'CAN_REVIEW'
+              ? `Review Allowed (${reviewAllowedCount})`
+              : tab === 'ACTIVE'
+              ? 'Active'
+              : 'Blocked'}
           </button>
         ))}
       </div>

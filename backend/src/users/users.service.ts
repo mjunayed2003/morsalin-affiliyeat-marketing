@@ -24,6 +24,7 @@ export class UsersService {
         verified: true,
         verifiedAt: true,
         role: true,
+        canReview: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -45,6 +46,7 @@ export class UsersService {
         verified: true,
         verifiedAt: true,
         role: true,
+        canReview: true,
         createdAt: true,
         updatedAt: true,
         inquiries: {
@@ -67,6 +69,14 @@ export class UsersService {
     return this.prisma.user.update({
       where: { id },
       data: { role },
+    });
+  }
+
+  async updateReviewPermission(id: string, canReview: boolean) {
+    await this.findOne(id);
+    return this.prisma.user.update({
+      where: { id },
+      data: { canReview },
     });
   }
 }

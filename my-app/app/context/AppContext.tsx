@@ -1,8 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Product, ChatMessage } from '../types';
-import { INITIAL_PRODUCTS, INITIAL_CHAT_MESSAGES } from '../data/initialProducts';
+import { Product, ChatMessage, Review } from '../types';
+import { INITIAL_PRODUCTS, INITIAL_CHAT_MESSAGES, INITIAL_REVIEWS } from '../data/initialProducts';
 import { getSocket, API_BASE_URL } from '@/lib/socket';
 import { useAuth } from './AuthContext';
 
@@ -37,6 +37,10 @@ interface AppContextType {
   emitTyping: (isTyping: boolean) => void;
   clearMessages: () => void;
   getProductById: (id: string) => Product | undefined;
+  reviews: Review[];
+  addReview: (reviewData: { productId: string; rating: number; title?: string; comment: string }) => { success: boolean; message: string };
+  deleteReview: (reviewId: string) => { success: boolean; message: string };
+  getProductReviews: (productId: string) => Review[];
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -92,6 +96,124 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [inquiryProduct, setInquiryProduct] = useState<Product | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [reviews, setReviews] = useState<Review[]>(INITIAL_REVIEWS);
+
+  // Initialize reviews from localStorage
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('bytedesk_reviews_v2');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setReviews(parsed);
+          return;
+        }
+      }
+      localStorage.setItem('bytedesk_reviews_v2', JSON.stringify(INITIAL_REVIEWS));
+    } catch (e) {}
+  }, []);
+
+  const persistReviews = (newReviews: Review[]) => {
+    setReviews(newReviews);
+    try {
+      localStorage.setItem('bytedesk_reviews_v2', JSON.stringify(newReviews));
+    } catch (e) {}
+  };
+
+  const getProductReviews = (prodId: string) => {
+    return reviews.filter((r) => r.productId === prodId);
+  };
+
+  const addReview = (reviewData: { productId: string; rating: number; title?: string; comment: string }) => {
+    if (!user) {
+      showToast('Please sign in to submit a product review.');
+      return { success: false, message: 'Please sign in to write a review.' };
+    }
+
+    const isAuthorized = user.role === 'admin' || user.canReview === true;
+    if (!isAuthorized) {
+      showToast('Review access restricted: Admin authorization is required.');
+      return {
+        success: false,
+        message: 'You do not have permission to post reviews. Admin authorization is required.',
+      };
+    }
+
+    if (!reviewData.comment.trim()) {
+      showToast('Please write a review comment.');
+      return { success: false, message: 'Review comment cannot be empty.' };
+    }
+
+    const newRev: Review = {
+      id: `rev-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      productId: reviewData.productId,
+      userId: user.id,
+      userName: user.name,
+      userAvatar: user.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user.name)}&backgroundColor=1b3b2b`,
+      rating: Math.max(1, Math.min(5, reviewData.rating || 5)),
+      title: reviewData.title?.trim() || undefined,
+      comment: reviewData.comment.trim(),
+      createdAt: new Date().toISOString(),
+      verifiedReviewer: true,
+    };
+
+    const updated = [newRev, ...reviews];
+    persistReviews(updated);
+
+    // Update product reviewsCount
+    setProducts((prev) =>
+      prev.map((p) => {
+        if (p.id === reviewData.productId) {
+          return { ...p, reviewsCount: (p.reviewsCount || 0) + 1 };
+        }
+        return p;
+      })
+    );
+
+    // Attempt backend sync
+    fetch(`${API_BASE_URL}/products/${reviewData.productId}/reviews`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(newRev),
+    }).catch(() => {});
+
+    showToast('Your review has been published!');
+    return { success: true, message: 'Review published successfully.' };
+  };
+
+  const deleteReview = (reviewId: string) => {
+    const target = reviews.find((r) => r.id === reviewId);
+    if (!target) return { success: false, message: 'Review not found.' };
+
+    const canDelete = user?.role === 'admin' || user?.id === target.userId;
+    if (!canDelete) {
+      showToast('Only administrators can remove reviews.');
+      return { success: false, message: 'Unauthorized: Only admins can delete reviews.' };
+    }
+
+    const updated = reviews.filter((r) => r.id !== reviewId);
+    persistReviews(updated);
+
+    if (target.productId) {
+      setProducts((prev) =>
+        prev.map((p) => {
+          if (p.id === target.productId && p.reviewsCount > 0) {
+            return { ...p, reviewsCount: Math.max(0, p.reviewsCount - 1) };
+          }
+          return p;
+        })
+      );
+    }
+
+    // Attempt backend sync
+    fetch(`${API_BASE_URL}/products/reviews/${reviewId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    }).catch(() => {});
+
+    showToast('Review deleted successfully.');
+    return { success: true, message: 'Review removed.' };
+  };
 
   // Audio synthesizer chime
   const playChime = () => {
@@ -564,6 +686,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         emitTyping,
         clearMessages,
         getProductById,
+        reviews,
+        addReview,
+        deleteReview,
+        getProductReviews,
       }}
     >
       {children}

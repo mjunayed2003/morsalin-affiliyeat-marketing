@@ -1,5 +1,6 @@
 import { ProductsService } from './products.service.js';
 import { CreateProductDto, UpdateProductDto } from './dto/create-product.dto.js';
+import { type AuthenticatedUser } from '../auth/decorators/current-user.decorator.js';
 export declare class ProductsController {
     private readonly productsService;
     constructor(productsService: ProductsService);
@@ -26,6 +27,36 @@ export declare class ProductsController {
         createdAt: Date;
         updatedAt: Date;
     }[]>;
+    getReviews(id: string): Promise<{
+        title: string | null;
+        id: string;
+        rating: number;
+        createdAt: Date;
+        updatedAt: Date;
+        productId: string;
+        userId: string;
+        userName: string;
+        comment: string;
+    }[]>;
+    addReview(id: string, currentUser: AuthenticatedUser, body: {
+        rating: number;
+        title?: string;
+        comment: string;
+    }): Promise<{
+        title: string | null;
+        id: string;
+        rating: number;
+        createdAt: Date;
+        updatedAt: Date;
+        productId: string;
+        userId: string;
+        userName: string;
+        comment: string;
+    }>;
+    deleteReview(reviewId: string): Promise<{
+        success: boolean;
+        message: string;
+    }>;
     findOne(id: string): Promise<{
         category: string;
         description: string;

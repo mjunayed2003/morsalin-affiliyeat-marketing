@@ -14,12 +14,14 @@ import {
   FaShareNodes,
   FaLink,
   FaTelegram,
-  FaLock
+  FaLock,
+  FaTrash
 } from 'react-icons/fa6';
 import { FaFacebookMessenger, FaAmazon, FaStore, FaWhatsapp } from 'react-icons/fa';
 import { FiX } from 'react-icons/fi';
 import { Product } from '../app/types';
 import { useAuth } from '@/app/context/AuthContext';
+import { useApp } from '@/app/context/AppContext';
 
 interface ProductDetailModalProps {
   product: Product | null;
@@ -36,7 +38,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   onInquire,
   onOpenShare
 }) => {
-  const { isAuthenticated, openAuthModal } = useAuth();
+  const { isAuthenticated, user, openAuthModal } = useAuth();
+  const { getProductReviews, deleteReview, showToast } = useApp();
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isCopied, setIsCopied] = useState(false);
 
@@ -109,7 +112,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         </div>
 
         {/* Content */}
-        <div className="p-6 max-h-[75vh] overflow-y-auto custom-scrollbar space-y-6">
+        <div className="p-4 sm:p-6 max-h-[82vh] sm:max-h-[75vh] overflow-y-auto custom-scrollbar space-y-4 sm:space-y-6">
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
             
@@ -315,6 +318,76 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
             </div>
           </div>
+
+          {/* Customer Reviews Preview inside Modal */}
+          {(() => {
+            const productReviews = getProductReviews(product.id);
+            return (
+              <div className="p-4 bg-slate-50/80 rounded-2xl border border-slate-200/80 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FaStar className="w-4 h-4 text-amber-500 fill-amber-500" />
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800">
+                      Verified Reviews ({productReviews.length})
+                    </h4>
+                  </div>
+                  <a
+                    href={`/p/${product.id}#reviews`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[11px] font-bold text-emerald-800 hover:text-emerald-900 hover:underline flex items-center gap-1"
+                  >
+                    <span>Write Review / View All</span>
+                    <FaArrowUpRightFromSquare className="w-2.5 h-2.5" />
+                  </a>
+                </div>
+
+                {productReviews.length === 0 ? (
+                  <p className="text-xs text-slate-400 py-1">No reviews yet for this product.</p>
+                ) : (
+                  <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1">
+                    {productReviews.map((rev) => (
+                      <div key={rev.id} className="bg-white p-3 rounded-xl border border-slate-200/70 text-xs space-y-1">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-bold text-slate-900">{rev.userName}</span>
+                            <div className="flex items-center text-amber-400">
+                              {[1, 2, 3, 4, 5].map((st) => (
+                                <FaStar
+                                  key={st}
+                                  className={`w-2.5 h-2.5 ${st <= rev.rating ? 'fill-amber-400' : 'text-slate-200'}`}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] text-slate-400">
+                              {new Date(rev.createdAt).toLocaleDateString()}
+                            </span>
+                            {user?.role === 'admin' && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  deleteReview(rev.id);
+                                  showToast('Review deleted.');
+                                }}
+                                className="p-1 text-slate-400 hover:text-rose-600 rounded transition-colors cursor-pointer"
+                                title="Admin delete review"
+                              >
+                                <FaTrash className="w-3 h-3" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                        {rev.title && <p className="font-semibold text-slate-800">{rev.title}</p>}
+                        <p className="text-slate-600 text-[11px] leading-relaxed line-clamp-2">{rev.comment}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Trust Guarantees */}
           <div className="grid grid-cols-3 gap-3 p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-center text-xs">

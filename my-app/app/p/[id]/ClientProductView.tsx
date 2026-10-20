@@ -26,7 +26,10 @@ import {
   FaShareNodes,
   FaLink,
   FaTelegram,
-  FaLock
+  FaLock,
+  FaTrash,
+  FaPenToSquare,
+  FaThumbsUp
 } from 'react-icons/fa6';
 import { FaWhatsapp, FaAmazon, FaStore } from 'react-icons/fa';
 import { FiX } from 'react-icons/fi';
@@ -53,8 +56,8 @@ const CATEGORY_STYLES: Record<string, { bg: string; text: string }> = {
 };
 
 export const ClientProductView: React.FC<ClientProductViewProps> = ({ productId }) => {
-  const { getProductById, messages, sendCustomerMessage, showToast, openShareModal } = useApp();
-  const { isAuthModalOpen, closeAuthModal, isAuthenticated, openAuthModal } = useAuth();
+  const { getProductById, messages, sendCustomerMessage, showToast, openShareModal, addReview, deleteReview, getProductReviews } = useApp();
+  const { isAuthModalOpen, closeAuthModal, isAuthenticated, user, openAuthModal } = useAuth();
   const product = getProductById(productId);
 
   const [inputText, setInputText] = useState('');
@@ -63,6 +66,13 @@ export const ClientProductView: React.FC<ClientProductViewProps> = ({ productId 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [previewChatImage, setPreviewChatImage] = useState<string | null>(null);
   const [isCopied, setIsCopied] = useState(false);
+  const [isWritingReview, setIsWritingReview] = useState(false);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewHoverRating, setReviewHoverRating] = useState(0);
+  const [reviewTitle, setReviewTitle] = useState('');
+  const [reviewComment, setReviewComment] = useState('');
+  const [reviewFilter, setReviewFilter] = useState<number | 'ALL'>('ALL');
+  const [helpfulMap, setHelpfulMap] = useState<Record<string, boolean>>({});
   const chatFeedRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -154,6 +164,65 @@ export const ClientProductView: React.FC<ClientProductViewProps> = ({ productId 
   const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(currentUrl)}&text=${encodeURIComponent(
     `🔥 Free Amazon Review Perk: ${product.title} (Est. Amazon Retail: $${product.originalPrice})`
   )}`;
+
+  // Review calculations & handlers
+  const productReviews = getProductReviews(product.id);
+  const totalReviewsCount = productReviews.length;
+  const averageRating = totalReviewsCount > 0
+    ? (productReviews.reduce((sum, r) => sum + r.rating, 0) / totalReviewsCount).toFixed(1)
+    : (product.rating || 5.0).toFixed(1);
+
+  const starCounts: Record<number, number> = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+  productReviews.forEach((r) => {
+    const val = Math.max(1, Math.min(5, Math.round(r.rating)));
+    starCounts[val] = (starCounts[val] || 0) + 1;
+  });
+
+  const filteredProductReviews = productReviews.filter((r) => {
+    if (reviewFilter === 'ALL') return true;
+    return Math.round(r.rating) === reviewFilter;
+  });
+
+  const canUserReview = isAuthenticated && (user?.role === 'admin' || user?.canReview === true);
+
+  const handleSubmitReview = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!canUserReview) {
+      showToast('Review access restricted: Admin authorization is required.');
+      return;
+    }
+    if (!reviewComment.trim()) {
+      showToast('Please enter your review comments.');
+      return;
+    }
+
+    const res = addReview({
+      productId: product.id,
+      rating: reviewRating,
+      title: reviewTitle.trim() || undefined,
+      comment: reviewComment.trim(),
+    });
+
+    if (res.success) {
+      setReviewComment('');
+      setReviewTitle('');
+      setReviewRating(5);
+      setIsWritingReview(false);
+    }
+  };
+
+  const handleDeleteReview = (reviewId: string) => {
+    if (typeof window !== 'undefined' && window.confirm('Are you sure you want to delete this review?')) {
+      deleteReview(reviewId);
+    }
+  };
+
+  const toggleHelpful = (reviewId: string) => {
+    setHelpfulMap((prev) => ({
+      ...prev,
+      [reviewId]: !prev[reviewId],
+    }));
+  };
 
   const handleAmazonLinkClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     if (!isAuthenticated) {
@@ -302,7 +371,7 @@ export const ClientProductView: React.FC<ClientProductViewProps> = ({ productId 
           <div className="lg:col-span-7 space-y-6">
             
             {/* Main Product Card */}
-            <div className="bg-white rounded-3xl p-5 sm:p-7 border border-stone-200/80 shadow-2xs space-y-5">
+            <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-7 border border-stone-200/80 shadow-2xs space-y-4 sm:space-y-5">
               
               {/* Main Image with Zoom */}
               <div 
@@ -376,11 +445,16 @@ export const ClientProductView: React.FC<ClientProductViewProps> = ({ productId 
                       <span>Store: {product.store}</span>
                     </span>
                   )}
-                  <div className="flex items-center gap-1 text-amber-500 font-bold text-xs ml-auto">
-                    <FaStar className="w-3.5 h-3.5 text-amber-400" />
-                    <span>{product.rating}</span>
-                    <span className="text-slate-400 font-normal">({product.reviewsCount} reviews)</span>
-                  </div>
+                  {/* Rating Score Badge */}
+                  <a
+                    href="#reviews"
+                    className="flex items-center gap-1 bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold px-2.5 py-1 rounded-lg text-xs border border-amber-200/60 transition-colors ml-auto"
+                    title="Jump to Customer Reviews"
+                  >
+                    <FaStar className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                    <span>{averageRating}</span>
+                    <span className="text-slate-500 font-normal">({totalReviewsCount} reviews)</span>
+                  </a>
                 </div>
 
                 <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 leading-snug tracking-tight">
@@ -839,6 +913,398 @@ export const ClientProductView: React.FC<ClientProductViewProps> = ({ productId 
 
         </div>
 
+        {/* Full-width Customer Reviews Section */}
+        <section id="reviews" className="mt-14 pt-8 border-t border-stone-200/90 space-y-8">
+          
+          {/* Section Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span className="text-xs font-bold uppercase tracking-wider text-emerald-800">Community Feedback</span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">
+                Verified Customer Reviews
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Authentic feedback from verified Amazon testers and FreeProducts.online members.
+              </p>
+            </div>
+
+            {/* Quick Action Button */}
+            {canUserReview && (
+              <button
+                type="button"
+                onClick={() => setIsWritingReview((prev) => !prev)}
+                className="inline-flex items-center gap-2 bg-[#1b3b2b] hover:bg-[#142e20] text-white px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-xs transition-all cursor-pointer shrink-0 self-start sm:self-auto"
+              >
+                <FaPenToSquare className="w-3.5 h-3.5" />
+                <span>{isWritingReview ? 'Close Review Form' : 'Write a Customer Review'}</span>
+              </button>
+            )}
+          </div>
+
+          {/* Rating Summary Card */}
+          <div className="bg-white rounded-3xl border border-stone-200/90 p-6 sm:p-8 shadow-2xs">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+              
+              {/* Average Rating Big Display (4 cols) */}
+              <div className="md:col-span-4 flex flex-col items-center md:items-start text-center md:text-left md:border-r border-stone-100 md:pr-6">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-5xl font-extrabold text-slate-900 tracking-tight">{averageRating}</span>
+                  <span className="text-lg font-bold text-slate-400">/ 5.0</span>
+                </div>
+
+                <div className="flex items-center gap-1 my-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <FaStar
+                      key={star}
+                      className={`w-4 h-4 ${
+                        star <= Math.round(Number(averageRating))
+                          ? 'text-amber-400 fill-amber-400'
+                          : 'text-stone-200'
+                      }`}
+                    />
+                  ))}
+                </div>
+
+                <p className="text-xs font-semibold text-slate-700">
+                  Based on {totalReviewsCount} verified review{totalReviewsCount === 1 ? '' : 's'}
+                </p>
+                <span className="mt-2 text-[11px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                  100% Verified Reviewers
+                </span>
+              </div>
+
+              {/* Star Breakdown Progress Bars (5 cols) */}
+              <div className="md:col-span-5 space-y-2">
+                {[5, 4, 3, 2, 1].map((stars) => {
+                  const count = starCounts[stars] || 0;
+                  const pct = totalReviewsCount > 0 ? Math.round((count / totalReviewsCount) * 100) : 0;
+                  return (
+                    <div key={stars} className="flex items-center gap-3 text-xs">
+                      <div className="flex items-center gap-1 w-14 shrink-0 font-semibold text-slate-700">
+                        <span>{stars}</span>
+                        <FaStar className="w-3 h-3 text-amber-400 fill-amber-400" />
+                      </div>
+                      <div className="flex-1 h-2 rounded-full bg-stone-100 overflow-hidden">
+                        <div
+                          className="h-full bg-emerald-600 rounded-full transition-all duration-500"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <span className="w-10 text-right text-slate-400 font-mono text-[11px]">{pct}%</span>
+                      <span className="w-6 text-right text-slate-500 font-semibold text-[11px]">({count})</span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Review Permission Status Card (3 cols) */}
+              <div className="md:col-span-3 bg-[#fafaf8] rounded-2xl border border-stone-200/80 p-4 flex flex-col justify-between h-full">
+                {canUserReview ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-emerald-700 font-bold text-xs">
+                      <FaCheck className="w-3.5 h-3.5" />
+                      <span>Reviewer Status: Authorized</span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 leading-relaxed">
+                      You are an approved reviewer. Share your experience with photos and feedback.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setIsWritingReview(true)}
+                      className="w-full bg-[#1b3b2b] hover:bg-[#142e20] text-white py-2 rounded-xl text-xs font-bold transition-all shadow-2xs cursor-pointer"
+                    >
+                      Write Review
+                    </button>
+                  </div>
+                ) : isAuthenticated ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-1.5 text-amber-800 font-bold text-xs">
+                      <FaLock className="w-3.5 h-3.5 text-amber-600" />
+                      <span>Review Permission Restricted</span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 leading-relaxed">
+                      Admin review permission is required to post. Contact admin via chat to request access.
+                    </p>
+                    <a
+                      href={whatsappUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center gap-1.5 w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-xl text-xs font-bold transition-all shadow-2xs"
+                    >
+                      <FaWhatsapp className="w-3.5 h-3.5" />
+                      <span>Request Access via WhatsApp</span>
+                    </a>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-1.5 text-slate-800 font-bold text-xs">
+                      <FaLock className="w-3.5 h-3.5 text-slate-400" />
+                      <span>Tester Sign In Required</span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 leading-relaxed">
+                      Log in to check your verified reviewer authorization status.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => openAuthModal('login')}
+                      className="w-full bg-[#1b3b2b] hover:bg-[#142e20] text-white py-2 rounded-xl text-xs font-bold transition-all shadow-2xs cursor-pointer"
+                    >
+                      Sign In to Review
+                    </button>
+                  </div>
+                )}
+              </div>
+
+            </div>
+          </div>
+
+          {/* Write a Review Form */}
+          {isWritingReview && (
+            <div className="bg-[#fafaf8] rounded-3xl border-2 border-emerald-600/30 p-6 sm:p-8 shadow-sm space-y-6">
+              <div className="flex items-center justify-between pb-4 border-b border-stone-200">
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">
+                    Write Your Review for {product.title}
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Your feedback helps other members test and evaluate products.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsWritingReview(false)}
+                  className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg cursor-pointer"
+                >
+                  <FiX className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSubmitReview} className="space-y-4">
+                {/* Star Picker */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                    Overall Rating:
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onMouseEnter={() => setReviewHoverRating(star)}
+                          onMouseLeave={() => setReviewHoverRating(0)}
+                          onClick={() => setReviewRating(star)}
+                          className="p-1 transition-transform hover:scale-110 cursor-pointer"
+                        >
+                          <FaStar
+                            className={`w-6 h-6 transition-colors ${
+                              (reviewHoverRating || reviewRating) >= star
+                                ? 'text-amber-400 fill-amber-400 drop-shadow-xs'
+                                : 'text-stone-300'
+                            }`}
+                          />
+                        </button>
+                      ))}
+                    </div>
+                    <span className="text-xs font-bold text-slate-700">
+                      {reviewRating === 5 && '5 - Excellent (Highly Recommended)'}
+                      {reviewRating === 4 && '4 - Very Good'}
+                      {reviewRating === 3 && '3 - Good'}
+                      {reviewRating === 2 && '2 - Fair'}
+                      {reviewRating === 1 && '1 - Poor'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Review Title */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                    Review Headline:
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Solid build quality, our dog learned the bell on day 2!"
+                    value={reviewTitle}
+                    onChange={(e) => setReviewTitle(e.target.value)}
+                    className="w-full bg-white text-slate-900 text-xs sm:text-sm px-4 py-2.5 rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600"
+                  />
+                </div>
+
+                {/* Review Comment */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                    Detailed Experience & Feedback: *
+                  </label>
+                  <textarea
+                    rows={4}
+                    required
+                    placeholder="Describe how the product performed, build quality, shipping time, ease of setup, or testing results..."
+                    value={reviewComment}
+                    onChange={(e) => setReviewComment(e.target.value)}
+                    className="w-full bg-white text-slate-900 text-xs sm:text-sm p-4 rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600 leading-relaxed"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsWritingReview(false)}
+                    className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-stone-200 transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={!reviewComment.trim()}
+                    className="bg-[#1b3b2b] hover:bg-[#142e20] text-white px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-xs transition-all disabled:opacity-40 cursor-pointer"
+                  >
+                    Submit Review
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Filter Bar */}
+          <div className="flex items-center justify-between gap-4 border-b border-stone-200 pb-3 flex-wrap">
+            <div className="flex items-center gap-1.5 overflow-x-auto text-xs">
+              <button
+                type="button"
+                onClick={() => setReviewFilter('ALL')}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer ${
+                  reviewFilter === 'ALL'
+                    ? 'bg-[#1b3b2b] text-white shadow-2xs'
+                    : 'text-slate-600 hover:bg-stone-100'
+                }`}
+              >
+                All ({totalReviewsCount})
+              </button>
+              {[5, 4, 3, 2, 1].map((st) => (
+                <button
+                  key={st}
+                  type="button"
+                  onClick={() => setReviewFilter(st)}
+                  className={`px-3 py-1.5 rounded-xl font-semibold flex items-center gap-1 transition-all cursor-pointer ${
+                    reviewFilter === st
+                      ? 'bg-[#1b3b2b] text-white shadow-2xs'
+                      : 'text-slate-600 hover:bg-stone-100'
+                  }`}
+                >
+                  <span>{st}</span>
+                  <FaStar className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />
+                  <span className="text-[11px] opacity-75 font-mono">({starCounts[st] || 0})</span>
+                </button>
+              ))}
+            </div>
+
+            {user?.role === 'admin' && (
+              <span className="text-[11px] font-bold text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-1 rounded-lg">
+                Admin Mode: You can delete any review below
+              </span>
+            )}
+          </div>
+
+          {/* Reviews List */}
+          {filteredProductReviews.length === 0 ? (
+            <div className="bg-white rounded-3xl border border-stone-200/80 p-12 text-center text-slate-400 space-y-2">
+              <FaStar className="w-10 h-10 text-stone-200 mx-auto" />
+              <p className="font-bold text-slate-700">No reviews found in this filter.</p>
+              <p className="text-xs">Be the first to share your experience with this item!</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredProductReviews.map((rev) => {
+                const isHelpful = !!helpfulMap[rev.id];
+                return (
+                  <div
+                    key={rev.id}
+                    className="bg-white rounded-2xl border border-stone-200/90 p-5 sm:p-6 shadow-2xs space-y-3 transition-all hover:border-stone-300"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={rev.userAvatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(rev.userName)}&backgroundColor=1b3b2b`}
+                          alt={rev.userName}
+                          className="w-10 h-10 rounded-full object-cover border border-stone-200"
+                        />
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className="font-bold text-sm text-slate-900">{rev.userName}</h4>
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                              <FaCheck className="w-2.5 h-2.5 text-emerald-600" />
+                              <span>Verified Reviewer</span>
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <div className="flex items-center gap-0.5 text-amber-400">
+                              {[1, 2, 3, 4, 5].map((st) => (
+                                <FaStar
+                                  key={st}
+                                  className={`w-3 h-3 ${st <= rev.rating ? 'fill-amber-400' : 'text-stone-200'}`}
+                                />
+                              ))}
+                            </div>
+                            <span className="text-[11px] text-slate-400 font-medium">
+                              {new Date(rev.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Admin Delete Action */}
+                      {(user?.role === 'admin' || user?.id === rev.userId) && (
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteReview(rev.id)}
+                          className="inline-flex items-center gap-1 text-xs text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                          title="Delete review (Admin action)"
+                        >
+                          <FaTrash className="w-3 h-3" />
+                          <span>Delete Review</span>
+                        </button>
+                      )}
+                    </div>
+
+                    {rev.title && (
+                      <h5 className="font-bold text-slate-900 text-sm leading-snug">
+                        {rev.title}
+                      </h5>
+                    )}
+
+                    <p className="text-slate-700 text-xs sm:text-sm leading-relaxed font-normal">
+                      {rev.comment}
+                    </p>
+
+                    <div className="pt-2 border-t border-stone-100 flex items-center justify-between text-xs text-slate-500">
+                      <button
+                        type="button"
+                        onClick={() => toggleHelpful(rev.id)}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                          isHelpful
+                            ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                            : 'hover:bg-stone-100 text-slate-600'
+                        }`}
+                      >
+                        <FaThumbsUp className={`w-3 h-3 ${isHelpful ? 'text-emerald-600' : 'text-slate-400'}`} />
+                        <span>{isHelpful ? 'Helpful (1)' : 'Helpful'}</span>
+                      </button>
+
+                      <span className="text-[11px] text-slate-400">
+                        FreeProducts.online Tester Network
+                      </span>
+                    </div>
+
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+        </section>
+
       </main>
 
       {/* Footer (matching Home Page) */}
@@ -849,7 +1315,6 @@ export const ClientProductView: React.FC<ClientProductViewProps> = ({ productId 
             <Link href="/" className="hover:text-slate-900">Home</Link>
             <Link href="/products" className="hover:text-slate-900">Products</Link>
             <Link href="/#how-it-works" className="hover:text-slate-900">How It Works</Link>
-            <Link href="/admin" className="hover:text-slate-900">Admin Studio</Link>
           </div>
         </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-slate-400">

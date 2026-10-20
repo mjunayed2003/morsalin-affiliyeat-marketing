@@ -7,3 +7,4 @@ export type EmailOtp = Prisma.EmailOtpModel;
 export type Product = Prisma.ProductModel;
 export type ChatMessage = Prisma.ChatMessageModel;
 export type Inquiry = Prisma.InquiryModel;
+export type Review = Prisma.ReviewModel;

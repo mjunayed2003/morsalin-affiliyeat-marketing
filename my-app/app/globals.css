@@ -78,3 +78,12 @@ body {
 .btn-bytespace-blue:hover {
   background-color: var(--bytespace-blue-dark);
 }
+
+/* Hide scrollbar for horizontal chip bars & topbar */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

@@ -159,7 +159,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
 
       {/* Floating Action Buttons (WhatsApp & Live Chat at Right Bottom) */}
       {!isOpen && (
-        <div className="fixed bottom-6 right-4 sm:right-6 z-40 flex flex-col items-end gap-3 pointer-events-auto">
+        <div className="fixed bottom-4 right-3 sm:bottom-6 sm:right-6 z-40 flex flex-col items-end gap-2.5 sm:gap-3 pointer-events-auto">
           {/* WhatsApp Floating Action */}
           <div className="relative group flex items-center">
             {/* Tooltip on hover */}
@@ -172,14 +172,14 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
               href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#25D366] hover:bg-[#20ba59] active:scale-95 text-white shadow-xl shadow-emerald-950/25 hover:shadow-2xl hover:shadow-emerald-900/35 flex items-center justify-center transition-all duration-200 cursor-pointer group"
+              className="relative w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-[#25D366] hover:bg-[#20ba59] active:scale-95 text-white shadow-lg shadow-emerald-950/20 sm:shadow-xl sm:shadow-emerald-950/25 flex items-center justify-center transition-all duration-200 cursor-pointer group"
               title="Chat with us on WhatsApp"
               aria-label="Chat on WhatsApp"
             >
-              <FaWhatsapp className="w-6 h-6 sm:w-7 sm:h-7 group-hover:scale-110 transition-transform duration-200" />
-              <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5">
+              <FaWhatsapp className="w-5 h-5 sm:w-7 sm:h-7 group-hover:scale-110 transition-transform duration-200" />
+              <span className="absolute -top-0.5 -right-0.5 flex h-3 w-3 sm:h-3.5 sm:w-3.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-300 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-400 border-2 border-white"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 sm:h-3.5 sm:w-3.5 bg-emerald-400 border-2 border-white"></span>
               </span>
             </a>
           </div>
@@ -199,17 +199,17 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
 
             <button
               onClick={onOpen}
-              className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#1b3b2b] hover:bg-[#142e20] active:scale-95 text-white shadow-xl shadow-stone-900/30 hover:shadow-2xl hover:shadow-stone-900/40 flex items-center justify-center transition-all duration-200 cursor-pointer group"
+              className="relative w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-[#1b3b2b] hover:bg-[#142e20] active:scale-95 text-white shadow-lg shadow-stone-900/25 sm:shadow-xl sm:shadow-stone-900/30 flex items-center justify-center transition-all duration-200 cursor-pointer group"
               title="Live Chat Support"
               aria-label="Open Live Chat"
             >
-              <FaComments className="w-5 h-5 sm:w-6 sm:h-6 group-hover:scale-110 transition-transform duration-200" />
-              <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5">
+              <FaComments className="w-4.5 h-4.5 sm:w-6 sm:h-6 group-hover:scale-110 transition-transform duration-200" />
+              <span className="absolute -top-0.5 -right-0.5 flex h-3 w-3 sm:h-3.5 sm:w-3.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-white"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 sm:h-3.5 sm:w-3.5 bg-emerald-500 border-2 border-white"></span>
               </span>
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -left-1 bg-rose-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-xs">
+                <span className="absolute -top-1 -left-1 bg-rose-500 text-white text-[10px] font-bold w-4.5 h-4.5 sm:w-5 sm:h-5 rounded-full flex items-center justify-center border-2 border-white shadow-xs">
                   {unreadCount}
                 </span>
               )}

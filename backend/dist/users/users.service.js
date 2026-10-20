@@ -32,6 +32,7 @@ let UsersService = class UsersService {
                 verified: true,
                 verifiedAt: true,
                 role: true,
+                canReview: true,
                 createdAt: true,
                 updatedAt: true,
             },
@@ -52,6 +53,7 @@ let UsersService = class UsersService {
                 verified: true,
                 verifiedAt: true,
                 role: true,
+                canReview: true,
                 createdAt: true,
                 updatedAt: true,
                 inquiries: {
@@ -71,6 +73,13 @@ let UsersService = class UsersService {
         return this.prisma.user.update({
             where: { id },
             data: { role },
+        });
+    }
+    async updateReviewPermission(id, canReview) {
+        await this.findOne(id);
+        return this.prisma.user.update({
+            where: { id },
+            data: { canReview },
         });
     }
 };
