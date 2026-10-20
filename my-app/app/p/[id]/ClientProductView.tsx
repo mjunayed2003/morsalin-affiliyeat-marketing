@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { Navbar } from '@/components/Navbar';
 import { AuthModal } from '@/components/AuthModal';
+import { BrandLogo } from '@/components/BrandLogo';
 import { useApp } from '@/app/context/AppContext';
 import { useAuth } from '@/app/context/AuthContext';
 import { 
@@ -842,14 +843,17 @@ export const ClientProductView: React.FC<ClientProductViewProps> = ({ productId 
 
       {/* Footer (matching Home Page) */}
       <footer className="bg-white border-t border-stone-200/80 py-8 text-xs text-slate-500 mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p>© 2026 FreeProducts.online. All rights reserved.</p>
-          <div className="flex items-center gap-4">
-            <Link href="/" className="hover:text-slate-900 font-semibold">Home</Link>
-            <Link href="/products" className="hover:text-slate-900 font-semibold">Products</Link>
-            <Link href="/#how-it-works" className="hover:text-slate-900 font-semibold">How It Works</Link>
-            <Link href="/admin" className="hover:text-slate-900 font-semibold">Admin Studio</Link>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6 pb-6 border-b border-stone-200/80">
+          <BrandLogo size="sm" />
+          <div className="flex items-center gap-5 font-semibold text-slate-600">
+            <Link href="/" className="hover:text-slate-900">Home</Link>
+            <Link href="/products" className="hover:text-slate-900">Products</Link>
+            <Link href="/#how-it-works" className="hover:text-slate-900">How It Works</Link>
+            <Link href="/admin" className="hover:text-slate-900">Admin Studio</Link>
           </div>
+        </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-slate-400">
+          <p>© 2026 FreeProducts.online. All rights reserved.</p>
         </div>
       </footer>
 

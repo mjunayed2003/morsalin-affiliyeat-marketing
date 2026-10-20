@@ -7,6 +7,7 @@ import { Navbar } from '@/components/Navbar';
 import { ProductDetailModal } from '@/components/ProductDetailModal';
 import { ShareModal } from '@/components/ShareModal';
 import { AuthModal } from '@/components/AuthModal';
+import { BrandLogo } from '@/components/BrandLogo';
 import { useApp } from '@/app/context/AppContext';
 import { useAuth } from '@/app/context/AuthContext';
 import { Product } from '@/app/types';
@@ -675,19 +676,7 @@ export default function Home() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 pb-6 border-b border-slate-100">
             
             {/* Logo Left */}
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-[#1b3b2b] text-white flex items-center justify-center shrink-0 shadow-2xs">
-                <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M20 7h-2.18A3.996 3.996 0 0 0 16 3.07C14.89 2.43 13.56 2.5 12.63 3.25L12 3.75l-.63-.5C10.44 2.5 9.11 2.43 8 3.07 6.46 3.96 5.8 5.81 6.18 7H4c-1.1 0-2 .9-2 2v2c0 .55.45 1 1 1h1v8c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-8h1c.55 0 1-.45 1-1V9c0-1.1-.9-2-2-2zm-9-3c.53 0 1.04.2 1.42.58l.58.58-1.06 1.06-.58-.58A1.99 1.99 0 0 1 11 4zm-3 2c0-.53.2-1.04.58-1.42.78-.78 2.05-.78 2.83 0l.58.58-1.99 1.99L8 6.15A1.99 1.99 0 0 1 8 6zm5 14H6v-8h7v8zm7 0h-5v-8h5v8zm0-10H4V9h16v1z" />
-                </svg>
-              </div>
-              <div>
-                <p className="font-extrabold text-slate-900 text-sm">
-                  FreeProducts<span className="text-emerald-700 font-black">.online</span>
-                </p>
-                <p className="text-[11px] text-slate-400">Amazon Review Club • Test products, share honest reviews, keep them 100% free.</p>
-              </div>
-            </div>
+            <BrandLogo size="sm" />
 
             {/* Links Middle */}
             <div className="flex flex-wrap items-center justify-center gap-5 font-medium text-slate-600">
