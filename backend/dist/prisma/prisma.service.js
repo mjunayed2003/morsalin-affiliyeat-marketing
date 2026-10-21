@@ -15,7 +15,7 @@ let PrismaService = PrismaService_1 = class PrismaService extends PrismaClient {
     logger = new Logger(PrismaService_1.name);
     constructor() {
         const connectionString = process.env.DATABASE_URL ||
-            'postgresql://postgres:postgres@localhost:5432/productperks?schema=public';
+            'postgresql://postgres:postgres@localhost:5432/freeproducts?schema=public';
         const adapter = new PrismaPg({ connectionString });
         super({ adapter });
     }

@@ -169,7 +169,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
               <div className="space-y-2 text-xs">
                 <div className="p-2 rounded-xl bg-slate-50 border border-slate-100">
                   <p className="font-semibold text-slate-900">Amazon Review Perks Online</p>
-                  <p className="text-[11px] text-slate-500 mt-0.5">3 verified stores actively tracking clicks.</p>
+                  <p className="text-[11px] text-slate-500 mt-0.5">3 verified sellers actively tracking clicks.</p>
                 </div>
                 <div className="p-2 rounded-xl bg-slate-50 border border-slate-100">
                   <p className="font-semibold text-slate-900">Live Support Ready</p>

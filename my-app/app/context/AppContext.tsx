@@ -1,10 +1,10 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
-import { Product, ChatMessage, Review, AudioCallState } from '../types';
+import React, { createContext, useContext, useState, useEffect, useRef, useMemo } from 'react';
+import { Product, ChatMessage, Review, AudioCallState, NotificationItem } from '../types';
 import { INITIAL_PRODUCTS, INITIAL_CHAT_MESSAGES, INITIAL_REVIEWS } from '../data/initialProducts';
 import { getSocket, API_BASE_URL } from '@/lib/socket';
-import { showBrowserNotification, requestNotificationPermission } from '@/lib/firebase';
+import { showBrowserNotification, requestNotificationPermission, initFirebaseForegroundListener } from '@/lib/firebase';
 import { AudioCallModal } from '@/components/AudioCallModal';
 import { useAuth } from './AuthContext';
 
@@ -50,6 +50,11 @@ interface AppContextType {
   endAudioCall: () => void;
   toggleAudioCallMute: () => void;
   requestPushNotifications: () => Promise<void>;
+  notifications: NotificationItem[];
+  unreadNotificationsCount: number;
+  markNotificationAsRead: (id: string) => void;
+  markAllNotificationsAsRead: () => void;
+  clearNotifications: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -93,6 +98,36 @@ const dedupeMessages = (list: ChatMessage[]): ChatMessage[] => {
   return result;
 };
 
+const INITIAL_NOTIFICATIONS: NotificationItem[] = [
+  {
+    id: 'notif-welcome',
+    title: 'Welcome to FreeProducts.online! 🎁',
+    body: 'Get 100% free Amazon products to test and review with USA sellers. Keep every item you review!',
+    type: 'system',
+    timestamp: 'Just now',
+    read: false,
+    link: '/products',
+  },
+  {
+    id: 'notif-call-ready',
+    title: 'Audio Call & Real-time Alerts 📞',
+    body: 'Instant audio call support and Socket.IO notifications are active on your account.',
+    type: 'call',
+    timestamp: '10m ago',
+    read: false,
+    link: '/chat',
+  },
+  {
+    id: 'notif-amazon-deal',
+    title: 'New Amazon Product Perks Added ⭐',
+    body: 'High-ticket tech & home products added for verified reviewers. Claim yours before stock ends.',
+    type: 'order',
+    timestamp: '1h ago',
+    read: true,
+    link: '/products',
+  },
+];
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isAuthenticated } = useAuth();
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
@@ -105,10 +140,111 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [inquiryProduct, setInquiryProduct] = useState<Product | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [reviews, setReviews] = useState<Review[]>(INITIAL_REVIEWS);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [audioCall, setAudioCall] = useState<AudioCallState | null>(null);
   const callTimerRef = useRef<NodeJS.Timeout | null>(null);
   const ringtoneIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const userRef = useRef(user);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
+
+  // Helper to get user-specific notifications storage key so accounts NEVER leak or collide
+  const getNotificationsStorageKey = (u?: { id: string; role: string } | null) => {
+    if (!u) return 'freeproducts_notifications_guest';
+    return u.role === 'admin' ? 'freeproducts_notifications_admin' : `freeproducts_notifications_user_${u.id}`;
+  };
+
+  // Notifications state
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+
+  // Load user-specific notifications whenever user changes (login / logout / switch account)
+  useEffect(() => {
+    const key = getNotificationsStorageKey(user);
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem(key);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setNotifications(parsed);
+            return;
+          }
+        }
+      } catch (e) {}
+    }
+
+    // Role-specific initial notifications
+    const initialForUser: NotificationItem[] = user?.role === 'admin' 
+      ? [
+          {
+            id: 'notif-admin-welcome',
+            title: 'Admin Console Active 🛡️',
+            body: 'You will receive real-time notifications for customer inquiries, reviews, and audio calls.',
+            type: 'system',
+            timestamp: 'Just now',
+            read: true,
+            link: '/admin',
+          }
+        ]
+      : [
+          {
+            id: 'notif-welcome',
+            title: `Welcome to FreeProducts.online${user?.name ? `, ${user.name.split(' ')[0]}` : ''}! 🎁`,
+            body: 'Test high-value Amazon products for 100% free with verified USA sellers. Keep every item you review!',
+            type: 'system',
+            timestamp: 'Just now',
+            read: false,
+            link: '/products',
+          },
+          {
+            id: 'notif-call-ready',
+            title: 'Audio Call & Real-time Alerts 📞',
+            body: 'Direct audio call support and instant message notifications are active for your account.',
+            type: 'call',
+            timestamp: '5m ago',
+            read: false,
+            link: '/chat',
+          },
+        ];
+
+    setNotifications(initialForUser);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(key, JSON.stringify(initialForUser));
+      } catch (e) {}
+    }
+  }, [user?.id, user?.role]);
+
+  const unreadNotificationsCount = useMemo(
+    () => notifications.filter((n) => !n.read).length,
+    [notifications]
+  );
+
+  const persistNotifications = (updated: NotificationItem[]) => {
+    setNotifications(updated);
+    const key = getNotificationsStorageKey(user);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(key, JSON.stringify(updated));
+      } catch (e) {}
+    }
+  };
+
+  const markNotificationAsRead = (id: string) => {
+    persistNotifications(
+      notifications.map((n) => (n.id === id ? { ...n, read: true } : n))
+    );
+  };
+
+  const markAllNotificationsAsRead = () => {
+    persistNotifications(notifications.map((n) => ({ ...n, read: true })));
+  };
+
+  const clearNotifications = () => {
+    persistNotifications([]);
+  };
 
   // Initialize reviews from localStorage
   useEffect(() => {
@@ -116,12 +252,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const stored = localStorage.getItem('bytedesk_reviews_v2');
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
+        if (Array.isArray(parsed)) {
           setReviews(parsed);
           return;
         }
       }
-      localStorage.setItem('bytedesk_reviews_v2', JSON.stringify(INITIAL_REVIEWS));
+      setReviews([]);
     } catch (e) {}
   }, []);
 
@@ -388,22 +524,63 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
         const handleNotification = (notif: { title: string; body: string; sender: string; userId?: string }) => {
           const isAdmin = user?.role === 'admin';
-          if (!isAdmin && user?.id && notif.userId && notif.userId !== user.id) {
-            return;
+
+          // STRICT USER ISOLATION: A user must NEVER see anyone else's notification or notifications for their own actions
+          if (isAdmin) {
+            // Admin only receives notifications when customers send messages
+            if (notif.sender !== 'customer') return;
+          } else {
+            // Customer must be logged in and the notification MUST be targeted to their exact user ID
+            if (!user?.id) return;
+            if (!notif.userId || notif.userId !== user.id) return;
+            // Customer only receives notifications when admin replies
+            if (notif.sender !== 'admin') return;
           }
+
           playChime();
           showToast(`🔔 ${notif.title}: ${notif.body}`);
           showBrowserNotification(notif.title, {
             body: notif.body,
             url: '/chat',
           });
+
+          // Append to THIS user's private Notification Center
+          const newNotifItem: NotificationItem = {
+            id: `notif-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+            title: notif.title || 'New Notification',
+            body: notif.body || 'You have received an update.',
+            type: notif.title.toLowerCase().includes('call') ? 'call' : 'message',
+            timestamp: 'Just now',
+            read: false,
+            link: '/chat',
+            sender: notif.sender,
+          };
+
+          setNotifications((prev) => {
+            const nextList = [newNotifItem, ...prev.slice(0, 49)];
+            const key = getNotificationsStorageKey(user);
+            if (typeof window !== 'undefined') {
+              try {
+                localStorage.setItem(key, JSON.stringify(nextList));
+              } catch (e) {}
+            }
+            return nextList;
+          });
         };
 
         const handleIncomingAudioCall = (callData: any) => {
           const isAdmin = user?.role === 'admin';
-          if (!isAdmin && user?.id && callData.targetUserId && callData.targetUserId !== user.id) {
-            return;
+
+          // STRICT CALL RECIPIENT VALIDATION:
+          if (isAdmin) {
+            // Admin only receives incoming calls from customers
+            if (callData.callerRole === 'admin') return;
+          } else {
+            // Customer must be logged in and must be the exact target of the call
+            if (!user?.id || callData.targetUserId !== user.id) return;
+            if (callData.callerRole !== 'admin') return;
           }
+
           startRingtoneLoop();
           setAudioCall({
             callId: callData.callId,
@@ -418,6 +595,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           showToast(`📞 Incoming Audio Call from ${callData.callerName}!`);
           showBrowserNotification(`📞 Incoming Audio Call`, {
             body: `${callData.callerName} is calling you on FreeProducts.online`,
+          });
+
+          // Add call event to notifications list for THIS user only
+          const callNotifItem: NotificationItem = {
+            id: `notif-call-${Date.now()}`,
+            title: 'Incoming Audio Call 📞',
+            body: `${callData.callerName} called you on FreeProducts.online`,
+            type: 'call',
+            timestamp: 'Just now',
+            read: false,
+            link: '/chat',
+            sender: callData.callerName,
+          };
+          setNotifications((prev) => {
+            const nextList = [callNotifItem, ...prev.slice(0, 49)];
+            const key = getNotificationsStorageKey(user);
+            if (typeof window !== 'undefined') {
+              try {
+                localStorage.setItem(key, JSON.stringify(nextList));
+              } catch (e) {}
+            }
+            return nextList;
           });
         };
 
@@ -862,8 +1061,49 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setAudioCall((prev) => (prev ? { ...prev, isMuted: !prev.isMuted } : null));
   };
 
+  // Setup Firebase foreground listener with strict user isolation (initialized once)
+  useEffect(() => {
+    initFirebaseForegroundListener((payload) => {
+      const currentUser = userRef.current;
+      const targetUserId = payload.data?.userId || payload.data?.targetUserId;
+      const targetRole = payload.data?.role || payload.data?.targetRole;
+
+      // STRICT USER ISOLATION FOR PUSH NOTIFICATIONS
+      if (currentUser?.role === 'admin') {
+        if (targetRole && targetRole !== 'admin') return;
+      } else {
+        if (targetRole === 'admin') return;
+        if (targetUserId && currentUser?.id && targetUserId !== currentUser.id) return;
+      }
+
+      playChime();
+      const title = payload.notification?.title || payload.data?.title || 'FreeProducts Notification';
+      const body = payload.notification?.body || payload.data?.body || 'New message or update received.';
+      showToast(`🔔 ${title}: ${body}`);
+      const newNotifItem: NotificationItem = {
+        id: `fcm-${Date.now()}`,
+        title,
+        body,
+        type: 'system',
+        timestamp: 'Just now',
+        read: false,
+        link: payload.data?.url || '/chat',
+      };
+      setNotifications((prev) => {
+        const nextList = [newNotifItem, ...prev.slice(0, 49)];
+        const key = getNotificationsStorageKey(currentUser);
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem(key, JSON.stringify(nextList));
+          } catch (e) {}
+        }
+        return nextList;
+      });
+    });
+  }, []);
+
   const requestPushNotifications = async () => {
-    const res = await requestNotificationPermission();
+    const res = await requestNotificationPermission(user?.id, API_BASE_URL);
     if (res === 'granted') {
       showToast('Push Notifications enabled successfully!');
       showBrowserNotification('FreeProducts.online Notifications', {
@@ -918,6 +1158,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         endAudioCall,
         toggleAudioCallMute,
         requestPushNotifications,
+        notifications,
+        unreadNotificationsCount,
+        markNotificationAsRead,
+        markAllNotificationsAsRead,
+        clearNotifications,
       }}
     >
       {children}

@@ -29,9 +29,22 @@ let MailService = MailService_1 = class MailService {
             },
         });
     }
+    getSender() {
+        const appName = process.env.APP_NAME || process.env.SMTP_FROM_NAME || 'FreeProducts.online';
+        const email = process.env.SMTP_USER || 'morsalinislam8234@gmail.com';
+        return {
+            name: appName,
+            address: email,
+        };
+    }
+    getReplyTo() {
+        return process.env.SMTP_REPLY_TO || 'freeproductsonline1@gmail.com';
+    }
     async sendRegisterOtp(toEmail, code, name) {
-        const fromAddress = process.env.SMTP_FROM || '"ProductPerks" <morsalinislam8234@gmail.com>';
-        const subject = `Your Verification Code: ${code} - ProductPerks`;
+        const appName = process.env.APP_NAME || 'FreeProducts.online';
+        const from = this.getSender();
+        const replyTo = this.getReplyTo();
+        const subject = `Your Verification Code: ${code} - ${appName}`;
         const recipientName = name ? name.trim() : 'Reviewer';
         const html = `
       <!DOCTYPE html>
@@ -54,9 +67,11 @@ let MailService = MailService_1 = class MailService {
                         Amazon Review Club • Secure Verification
                       </span>
                     </div>
-                    <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700;">
-                      Product<span style="color: #86efac;">Perks</span>
-                    </h1>
+                    <div style="margin: 0 auto; display: inline-block;">
+                      <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.5px;">
+                        Free<span style="color: #34d399;">Products</span><span style="font-size: 13px; font-weight: 800; background: rgba(52,211,153,0.2); color: #6ee7b7; padding: 3px 8px; border-radius: 6px; margin-left: 6px; border: 1px solid rgba(52,211,153,0.35); vertical-align: middle;">.ONLINE</span>
+                      </h1>
+                    </div>
                   </td>
                 </tr>
 
@@ -67,7 +82,7 @@ let MailService = MailService_1 = class MailService {
                       Hello ${recipientName},
                     </h2>
                     <p style="margin: 0 0 24px; font-size: 15px; color: #475569; line-height: 1.6;">
-                      Thank you for registering with ProductPerks. Please use the following 6-digit One-Time Password (OTP) to verify your Gmail address and complete your account creation:
+                      Thank you for registering with <strong>FreeProducts.online</strong>. Please use the following 6-digit One-Time Password (OTP) to verify your Gmail address and complete your account creation:
                     </p>
 
                     <!-- OTP Code Box -->
@@ -93,7 +108,7 @@ let MailService = MailService_1 = class MailService {
                 <tr>
                   <td style="background: #f8fafc; border-top: 1px solid #f1f5f9; padding: 20px 32px; text-align: center;">
                     <p style="margin: 0; font-size: 12px; color: #94a3b8;">
-                      © ${new Date().getFullYear()} ProductPerks Review Club. All rights reserved.
+                      © ${new Date().getFullYear()} FreeProducts.online Review Club. All rights reserved.
                     </p>
                   </td>
                 </tr>
@@ -106,11 +121,12 @@ let MailService = MailService_1 = class MailService {
     `;
         try {
             const info = await this.transporter.sendMail({
-                from: fromAddress,
+                from,
+                replyTo,
                 to: toEmail,
                 subject,
                 html,
-                text: `Your ProductPerks verification code is: ${code}. Valid for 10 minutes.`,
+                text: `Your ${appName} verification code is: ${code}. Valid for 10 minutes.`,
             });
             this.logger.log(`✅ Registration OTP email sent to ${toEmail}: ${info.messageId}`);
             return true;
@@ -121,8 +137,10 @@ let MailService = MailService_1 = class MailService {
         }
     }
     async sendForgotPasswordOtp(toEmail, code, name) {
-        const fromAddress = process.env.SMTP_FROM || '"ProductPerks" <morsalinislam8234@gmail.com>';
-        const subject = `Password Reset Code: ${code} - ProductPerks`;
+        const appName = process.env.APP_NAME || 'FreeProducts.online';
+        const from = this.getSender();
+        const replyTo = this.getReplyTo();
+        const subject = `Password Reset Code: ${code} - ${appName}`;
         const recipientName = name ? name.trim() : 'User';
         const html = `
       <!DOCTYPE html>
@@ -145,9 +163,11 @@ let MailService = MailService_1 = class MailService {
                         Password Recovery
                       </span>
                     </div>
-                    <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700;">
-                      Product<span style="color: #86efac;">Perks</span>
-                    </h1>
+                    <div style="margin: 0 auto; display: inline-block;">
+                      <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.5px;">
+                        Free<span style="color: #34d399;">Products</span><span style="font-size: 13px; font-weight: 800; background: rgba(52,211,153,0.2); color: #6ee7b7; padding: 3px 8px; border-radius: 6px; margin-left: 6px; border: 1px solid rgba(52,211,153,0.35); vertical-align: middle;">.ONLINE</span>
+                      </h1>
+                    </div>
                   </td>
                 </tr>
 
@@ -158,7 +178,7 @@ let MailService = MailService_1 = class MailService {
                       Hello ${recipientName},
                     </h2>
                     <p style="margin: 0 0 24px; font-size: 15px; color: #475569; line-height: 1.6;">
-                      We received a request to reset the password for your ProductPerks account. Use the following 6-digit OTP code to create a new password:
+                      We received a request to reset the password for your <strong>FreeProducts.online</strong> account. Use the following 6-digit OTP code to create a new password:
                     </p>
 
                     <!-- OTP Code Box -->
@@ -184,7 +204,7 @@ let MailService = MailService_1 = class MailService {
                 <tr>
                   <td style="background: #f8fafc; border-top: 1px solid #f1f5f9; padding: 20px 32px; text-align: center;">
                     <p style="margin: 0; font-size: 12px; color: #94a3b8;">
-                      © ${new Date().getFullYear()} ProductPerks Review Club. All rights reserved.
+                      © ${new Date().getFullYear()} FreeProducts.online Review Club. All rights reserved.
                     </p>
                   </td>
                 </tr>
@@ -197,11 +217,12 @@ let MailService = MailService_1 = class MailService {
     `;
         try {
             const info = await this.transporter.sendMail({
-                from: fromAddress,
+                from,
+                replyTo,
                 to: toEmail,
                 subject,
                 html,
-                text: `Your ProductPerks password reset code is: ${code}. Valid for 10 minutes.`,
+                text: `Your ${appName} password reset code is: ${code}. Valid for 10 minutes.`,
             });
             this.logger.log(`✅ Forgot password OTP email sent to ${toEmail}: ${info.messageId}`);
             return true;

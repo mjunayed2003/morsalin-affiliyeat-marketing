@@ -19,7 +19,8 @@ import {
   FaCircleCheck,
   FaKey,
   FaCamera,
-  FaCheck
+  FaCheck,
+  FaImage
 } from 'react-icons/fa6';
 import { FaPaypal, FaAmazon } from 'react-icons/fa';
 
@@ -79,12 +80,13 @@ export const AuthCard: React.FC<AuthCardProps> = ({
   const [cameraError, setCameraError] = useState<string | null>(null);
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const streamRef = React.useRef<MediaStream | null>(null);
+  const selfieFileRef = React.useRef<HTMLInputElement>(null);
 
   const startCamera = async () => {
     setCameraError(null);
     try {
       if (typeof navigator === 'undefined' || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        setCameraError('Camera access is not supported on this browser or device. Please use a device with a front camera.');
+        setCameraError('Camera access is not supported on this browser. You can upload a photo instead.');
         return;
       }
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -103,9 +105,31 @@ export const AuthCard: React.FC<AuthCardProps> = ({
       setIsCameraActive(true);
     } catch (err: any) {
       console.warn('Camera permission denied or unavailable:', err);
-      setCameraError('Front camera permission is required to verify identity. Please allow camera access in your browser.');
+      if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+        setCameraError('No camera device detected on this computer. You can upload your selfie photo below.');
+      } else if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        setCameraError('Camera permission was blocked. Please allow camera in browser or upload your photo below.');
+      } else {
+        setCameraError('Camera is currently unavailable. You can upload your selfie photo below.');
+      }
       setIsCameraActive(false);
     }
+  };
+
+  const handleSelfieFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setCameraError('Please select a valid image file (JPG, PNG, WebP).');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setSelfieImage(reader.result as string);
+      setCameraError(null);
+      stopCamera();
+    };
+    reader.readAsDataURL(file);
   };
 
   const stopCamera = () => {
@@ -380,36 +404,15 @@ export const AuthCard: React.FC<AuthCardProps> = ({
 
   return (
     <div className="bg-white w-full max-w-lg rounded-3xl shadow-xl border border-stone-200/90 overflow-hidden flex flex-col">
-      {/* Card Header */}
-      <div className="bg-[#1b3b2b] text-white p-6 relative">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-2.5 py-0.5 rounded-full font-bold text-[10px] uppercase tracking-wider">
-            Reviewer Portal
-          </span>
-          <span className="text-emerald-100 text-xs flex items-center gap-1 font-medium">
-            <FaShieldHalved className="w-3 h-3 text-emerald-400" />
-            Verified & Secure Access
-          </span>
+      {/* Card Header with Original Logo */}
+      <div className="bg-[#1b3b2b] p-5 sm:p-6 flex items-center justify-center">
+        <div className="bg-white px-5 py-2.5 rounded-2xl shadow-md flex items-center justify-center">
+          <img
+            src="/logo.jpeg"
+            alt="FreeProducts.online"
+            className="h-9 sm:h-11 w-auto object-contain"
+          />
         </div>
-
-        <h2 className="text-2xl font-bold tracking-tight text-white">
-          {title || (
-            activeTab === 'login'
-              ? 'Reviewer Sign In'
-              : activeTab === 'register'
-              ? 'New Reviewer Registration'
-              : 'Password Recovery'
-          )}
-        </h2>
-        <p className="text-xs sm:text-sm text-emerald-100/90 mt-1 font-normal leading-relaxed">
-          {subtitle || (
-            activeTab === 'login' 
-              ? 'Enter your USA phone number or Gmail to access your account.' 
-              : activeTab === 'register'
-              ? 'Join FreeProducts.online Review Club. Gmail OTP verification is required.'
-              : 'Reset your password using the OTP code sent to your Gmail.'
-          )}
-        </p>
       </div>
 
       {/* Tab Switcher */}
@@ -561,13 +564,6 @@ export const AuthCard: React.FC<AuthCardProps> = ({
             {/* Step 1: Registration Form */}
             {regStep === 'form' && (
               <form onSubmit={handleSendRegOtp} className="space-y-3.5 animate-in fade-in duration-150">
-                <div className="p-3 bg-emerald-50/70 border border-emerald-200/80 rounded-xl text-xs text-emerald-900 flex items-start gap-2">
-                  <FaCircleCheck className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
-                  <span>
-                    A <strong>6-digit OTP</strong> will be sent to your Gmail for verification before opening your account.
-                  </span>
-                </div>
-
                 {/* Full Name */}
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
@@ -947,23 +943,40 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                   )}
                 </div>
 
-                {/* Live Camera Snap Controls - Strictly No File Uploads */}
+                {/* Camera / Upload Controls */}
                 {!isCameraActive && (
-                  <div className="pt-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
                     <button
                       type="button"
                       onClick={startCamera}
-                      className="w-full bg-[#1b3b2b] hover:bg-[#142e20] text-white text-xs font-bold py-2.5 px-4 rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                      className="w-full bg-[#1b3b2b] hover:bg-[#142e20] text-white text-xs font-bold py-2.5 px-3 rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
                     >
-                      <FaCamera className="w-4 h-4 text-emerald-300" />
-                      <span>{selfieImage ? 'Re-open Front Camera' : 'Turn On Front Camera'}</span>
+                      <FaCamera className="w-3.5 h-3.5 text-emerald-300" />
+                      <span>{selfieImage ? 'Re-open Camera' : 'Use Camera'}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => selfieFileRef.current?.click()}
+                      className="w-full bg-stone-100 hover:bg-stone-200 text-slate-800 text-xs font-bold py-2.5 px-3 rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer border border-stone-200 shadow-xs"
+                    >
+                      <FaImage className="w-3.5 h-3.5 text-emerald-700" />
+                      <span>Upload Photo</span>
                     </button>
                   </div>
                 )}
 
+                <input
+                  ref={selfieFileRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleSelfieFileUpload}
+                />
+
                 <div className="p-2.5 bg-stone-50 rounded-xl border border-stone-200 text-center">
                   <p className="text-[11px] text-slate-600 font-medium">
-                    🔒 <strong>Live Camera Only:</strong> File upload is strictly disabled. You must snap a real-time selfie via your device front camera.
+                    🔒 <strong>Identity Verification:</strong> Use your front camera or upload a clear, front-facing selfie to verify your USA reviewer profile.
                   </p>
                 </div>
 

@@ -257,22 +257,14 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
         <div className="fixed bottom-18 sm:bottom-6 right-2 sm:right-6 z-50 w-[calc(100vw-1rem)] sm:w-96 h-[540px] max-h-[78vh] sm:max-h-[85vh] bg-white rounded-3xl shadow-2xl border border-stone-200/90 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-200">
           
           {/* Header */}
-          <div className="bg-[#1b3b2b] text-white px-4 py-3.5 flex items-center justify-between shrink-0">
-            <div className="flex items-center gap-2.5">
-              <div className="relative">
-                <div className="w-9 h-9 rounded-full bg-[#264e3b] flex items-center justify-center font-bold text-white text-sm">
-                  <FaShieldHalved className="w-4 h-4 text-emerald-300" />
-                </div>
-                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-[#1b3b2b]"></span>
-              </div>
-              <div>
-                <h3 className="font-bold text-sm tracking-tight flex items-center gap-1.5 text-white">
-                  FreeProducts.online Support Desk
-                </h3>
-                <p className="text-[11px] text-emerald-200 flex items-center gap-1 font-medium">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                  Admin Online • Amazon Perks Support
-                </p>
+          <div className="bg-[#1b3b2b] text-white px-4 py-3 flex items-center justify-between shrink-0">
+            <div className="flex items-center">
+              <div className="bg-white px-2.5 py-1 rounded-xl shadow-xs flex items-center">
+                <img
+                  src="/logo.jpeg"
+                  alt="FreeProducts.online"
+                  className="h-7 sm:h-8 w-auto object-contain"
+                />
               </div>
             </div>
 
@@ -318,17 +310,15 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
           {!isAuthenticated || !user ? (
             <div className="flex-1 p-5 sm:p-6 flex flex-col justify-between bg-stone-50/60 overflow-y-auto">
               <div className="space-y-4 my-auto">
-                {/* Header Icon & Intro */}
-                <div className="text-center space-y-1.5">
-                  <div className="w-12 h-12 rounded-2xl bg-[#1b3b2b] text-white flex items-center justify-center mx-auto shadow-md shadow-emerald-950/20">
-                    <FaComments className="w-5 h-5 text-emerald-300" />
+                {/* Header Original Logo */}
+                <div className="text-center">
+                  <div className="inline-flex bg-white px-3.5 py-1.5 rounded-2xl shadow-sm border border-stone-200/80 mx-auto">
+                    <img
+                      src="/logo.jpeg"
+                      alt="FreeProducts.online"
+                      className="h-8 sm:h-9 w-auto object-contain"
+                    />
                   </div>
-                  <h4 className="font-bold text-slate-900 text-base sm:text-lg">
-                    Live Chat Support Desk
-                  </h4>
-                  <p className="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed">
-                    Chat with admin directly. Just enter your name and phone number to start.
-                  </p>
                 </div>
 
                 {/* Guest Form */}

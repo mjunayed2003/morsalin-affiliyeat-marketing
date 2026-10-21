@@ -57,7 +57,7 @@ let ChatController = class ChatController {
             ...dto,
             sender: isSenderAdmin ? 'admin' : 'customer',
             senderName: isSenderAdmin
-                ? (dto.senderName || currentUser?.name || 'ProductPerks Admin')
+                ? (dto.senderName || currentUser?.name || 'FreeProducts Support')
                 : (currentUser?.name || dto.senderName || 'Reviewer'),
             userId: resolvedUserId || undefined,
             localId: dto.localId,

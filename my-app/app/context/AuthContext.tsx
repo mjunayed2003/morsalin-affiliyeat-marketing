@@ -87,84 +87,6 @@ interface AuthContextType {
   startGuestChat: (name: string, phone: string) => Promise<{ success: boolean; message: string }>;
 }
 
-const DEFAULT_USERS: User[] = [
-  {
-    id: 'user-admin-1',
-    name: 'Morsalin Admin',
-    phone: '01340376081',
-    email: 'admin@freeproducts.online',
-    city: 'Dhaka',
-    address: 'Gulshan 2, Dhaka, Bangladesh',
-    avatar: 'https://api.dicebear.com/7.x/initials/svg?seed=Morsalin%20Admin&backgroundColor=1b3b2b',
-    verified: true,
-    verifiedAt: '2026-10-01T10:00:00Z',
-    createdAt: '2026-10-01T10:00:00Z',
-    role: 'admin',
-    status: 'ACTIVE',
-    canReview: true,
-  },
-  {
-    id: 'user-sarah-jenkins',
-    name: 'Sarah Jenkins',
-    phone: '01712345678',
-    email: 'sarah.j@gmail.com',
-    city: 'New York',
-    address: '450 Lexington Ave, New York, NY 10017',
-    avatar: 'https://api.dicebear.com/7.x/initials/svg?seed=Sarah%20Jenkins&backgroundColor=1b3b2b',
-    verified: true,
-    verifiedAt: '2026-10-05T12:00:00Z',
-    createdAt: '2026-10-05T12:00:00Z',
-    role: 'client',
-    status: 'ACTIVE',
-    canReview: true, // Review allowed by admin
-  },
-  {
-    id: 'user-michael-brown',
-    name: 'Michael Brown',
-    phone: '01655443322',
-    email: 'michael.b@gmail.com',
-    city: 'Los Angeles',
-    address: '1200 Wilshire Blvd, Los Angeles, CA 90017',
-    avatar: 'https://api.dicebear.com/7.x/initials/svg?seed=Michael%20Brown&backgroundColor=0d5bff',
-    verified: true,
-    verifiedAt: '2026-10-07T14:30:00Z',
-    createdAt: '2026-10-07T14:30:00Z',
-    role: 'client',
-    status: 'ACTIVE',
-    canReview: true, // Review allowed by admin
-  },
-  {
-    id: 'user-emily-watson',
-    name: 'Emily Watson',
-    phone: '01911223344',
-    email: 'emily.w@gmail.com',
-    city: 'Houston',
-    address: '1000 Louisiana St, Houston, TX 77002',
-    avatar: 'https://api.dicebear.com/7.x/initials/svg?seed=Emily%20Watson&backgroundColor=9f1239',
-    verified: true,
-    verifiedAt: '2026-10-10T16:45:00Z',
-    createdAt: '2026-10-10T16:45:00Z',
-    role: 'client',
-    status: 'ACTIVE',
-    canReview: false, // Review restricted
-  },
-  {
-    id: 'user-david-miller',
-    name: 'David Miller',
-    phone: '01898765432',
-    email: 'david.m@gmail.com',
-    city: 'Chicago',
-    address: '233 S Wacker Dr, Chicago, IL 60606',
-    avatar: 'https://api.dicebear.com/7.x/initials/svg?seed=David%20Miller&backgroundColor=d97706',
-    verified: true,
-    verifiedAt: '2026-10-09T09:15:00Z',
-    createdAt: '2026-10-09T09:15:00Z',
-    role: 'client',
-    status: 'ACTIVE',
-    canReview: false, // Review restricted
-  }
-];
-
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const normalizePhone = (phone: string): string => {
@@ -230,6 +152,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             address: u.address,
             city: u.city,
             avatar: u.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(u.name)}&backgroundColor=1b3b2b`,
+            selfieImage: u.selfieImage || undefined,
+            amazonProfileUrl: u.amazonProfileUrl || undefined,
+            paypalEmail: u.paypalEmail || undefined,
             verified: u.verified,
             verifiedAt: u.verifiedAt,
             createdAt: u.createdAt,
@@ -272,6 +197,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 address: verifiedUser.address,
                 city: verifiedUser.city,
                 avatar: verifiedUser.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(verifiedUser.name)}&backgroundColor=1b3b2b`,
+                selfieImage: verifiedUser.selfieImage || undefined,
+                amazonProfileUrl: verifiedUser.amazonProfileUrl || undefined,
+                paypalEmail: verifiedUser.paypalEmail || undefined,
                 verified: verifiedUser.verified,
                 verifiedAt: verifiedUser.verifiedAt,
                 createdAt: verifiedUser.createdAt,
@@ -307,7 +235,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(null);
         }
 
-        // Initialize users from storage or default initial set
+        // Initialize users from storage if available
         const storedUsers = localStorage.getItem('bytedesk_users_v2');
         if (storedUsers) {
           try {
@@ -315,16 +243,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (Array.isArray(parsed) && parsed.length > 0) {
               setUsers(parsed);
             } else {
-              setUsers(DEFAULT_USERS);
-              localStorage.setItem('bytedesk_users_v2', JSON.stringify(DEFAULT_USERS));
+              setUsers([]);
             }
           } catch {
-            setUsers(DEFAULT_USERS);
-            localStorage.setItem('bytedesk_users_v2', JSON.stringify(DEFAULT_USERS));
+            setUsers([]);
           }
         } else {
-          setUsers(DEFAULT_USERS);
-          localStorage.setItem('bytedesk_users_v2', JSON.stringify(DEFAULT_USERS));
+          setUsers([]);
         }
       } catch (e) {
         console.warn('Auth localstorage init error:', e);
@@ -625,6 +550,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           address: data.user.address || '',
           city: data.user.city || 'New York',
           avatar: data.user.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(data.user.name)}&backgroundColor=1b3b2b`,
+          selfieImage: data.user.selfieImage || undefined,
+          amazonProfileUrl: data.user.amazonProfileUrl || undefined,
+          paypalEmail: data.user.paypalEmail || undefined,
           verified: true,
           verifiedAt: new Date().toISOString(),
           createdAt: data.user.createdAt || new Date().toISOString(),

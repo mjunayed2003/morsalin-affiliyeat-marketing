@@ -163,7 +163,7 @@ let AuthService = class AuthService {
         });
         return {
             success: true,
-            message: `Account verified and created successfully! Welcome to ProductPerks, ${user.name}.`,
+            message: `Account verified and created successfully! Welcome to FreeProducts.online, ${user.name}.`,
             user,
             token,
         };
@@ -298,7 +298,7 @@ let AuthService = class AuthService {
         });
         return {
             success: true,
-            message: 'Account created successfully! Welcome to ProductPerks.',
+            message: 'Account created successfully! Welcome to FreeProducts.online.',
             user,
             token,
         };
@@ -347,6 +347,10 @@ let AuthService = class AuthService {
             address: user.address,
             city: user.city,
             avatar: user.avatar,
+            selfieImage: user.selfieImage,
+            amazonProfileUrl: user.amazonProfileUrl,
+            paypalEmail: user.paypalEmail,
+            canReview: user.canReview,
             verified: user.verified,
             role: user.role,
             createdAt: user.createdAt,
@@ -382,6 +386,10 @@ let AuthService = class AuthService {
                 address: true,
                 city: true,
                 avatar: true,
+                selfieImage: true,
+                amazonProfileUrl: true,
+                paypalEmail: true,
+                canReview: true,
                 verified: true,
                 role: true,
                 createdAt: true,

@@ -89,6 +89,17 @@ export interface AudioCallState {
   isMuted?: boolean;
 }
 
+export interface NotificationItem {
+  id: string;
+  title: string;
+  body: string;
+  type: 'message' | 'system' | 'call' | 'order' | 'review';
+  timestamp: string;
+  read: boolean;
+  link?: string;
+  sender?: string;
+}
+
 export type ViewMode = 'store' | 'admin' | 'client';
 
 export const maskPhone = (phone?: string): string => {
@@ -98,3 +109,4 @@ export const maskPhone = (phone?: string): string => {
   if (clean.length <= 6) return clean.slice(0, 2) + '****' + clean.slice(-2);
   return `${clean.slice(0, 4)}****${clean.slice(-3)}`;
 };
+

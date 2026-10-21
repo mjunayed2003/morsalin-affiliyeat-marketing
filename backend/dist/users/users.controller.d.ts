@@ -5,10 +5,8 @@ export declare class UsersController {
     constructor(usersService: UsersService);
     findAll(role?: string): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        name: string;
         phone: string;
+        name: string;
         email: string | null;
         address: string | null;
         city: string | null;
@@ -20,17 +18,34 @@ export declare class UsersController {
         verifiedAt: Date | null;
         role: import("../generated/prisma/enums.js").Role;
         canReview: boolean;
+        createdAt: Date;
+        updatedAt: Date;
     }[]>;
     findOne(id: string, currentUser: AuthenticatedUser): Promise<{
         id: string;
+        phone: string;
+        name: string;
+        email: string | null;
+        address: string | null;
+        city: string | null;
+        avatar: string | null;
+        selfieImage: string | null;
+        amazonProfileUrl: string | null;
+        paypalEmail: string | null;
+        verified: boolean;
+        verifiedAt: Date | null;
+        role: import("../generated/prisma/enums.js").Role;
+        canReview: boolean;
         createdAt: Date;
         updatedAt: Date;
         inquiries: ({
             product: {
-                category: string;
-                description: string;
-                title: string;
                 id: string;
+                createdAt: Date;
+                updatedAt: Date;
+                title: string;
+                description: string;
+                category: string;
                 subCategory: string | null;
                 price: number;
                 originalPrice: number;
@@ -46,8 +61,6 @@ export declare class UsersController {
                 inStock: boolean;
                 store: string | null;
                 amazonUrl: string | null;
-                createdAt: Date;
-                updatedAt: Date;
             };
         } & {
             id: string;
@@ -60,26 +73,11 @@ export declare class UsersController {
             reviewUrl: string | null;
             notes: string | null;
         })[];
-        name: string;
-        phone: string;
-        email: string | null;
-        address: string | null;
-        city: string | null;
-        avatar: string | null;
-        selfieImage: string | null;
-        amazonProfileUrl: string | null;
-        paypalEmail: string | null;
-        verified: boolean;
-        verifiedAt: Date | null;
-        role: import("../generated/prisma/enums.js").Role;
-        canReview: boolean;
     }>;
     updateRole(id: string, role: 'CLIENT' | 'ADMIN'): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        name: string;
         phone: string;
+        name: string;
         password: string | null;
         email: string | null;
         address: string | null;
@@ -93,13 +91,13 @@ export declare class UsersController {
         verifiedAt: Date | null;
         role: import("../generated/prisma/enums.js").Role;
         canReview: boolean;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     updateReviewPermission(id: string, canReview: boolean): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        name: string;
         phone: string;
+        name: string;
         password: string | null;
         email: string | null;
         address: string | null;
@@ -113,13 +111,13 @@ export declare class UsersController {
         verifiedAt: Date | null;
         role: import("../generated/prisma/enums.js").Role;
         canReview: boolean;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     updateSelfie(id: string, selfieImage: string, currentUser: AuthenticatedUser): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        name: string;
         phone: string;
+        name: string;
         password: string | null;
         email: string | null;
         address: string | null;
@@ -133,13 +131,13 @@ export declare class UsersController {
         verifiedAt: Date | null;
         role: import("../generated/prisma/enums.js").Role;
         canReview: boolean;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     updateFcmToken(id: string, fcmToken: string, currentUser: AuthenticatedUser): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        name: string;
         phone: string;
+        name: string;
         password: string | null;
         email: string | null;
         address: string | null;
@@ -153,5 +151,7 @@ export declare class UsersController {
         verifiedAt: Date | null;
         role: import("../generated/prisma/enums.js").Role;
         canReview: boolean;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
 }

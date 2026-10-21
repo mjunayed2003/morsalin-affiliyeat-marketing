@@ -20,6 +20,7 @@ import { useAuth } from '@/app/context/AuthContext';
 import { maskPhone } from '@/app/types';
 import { TopBar } from '@/components/TopBar';
 import { BrandLogo } from '@/components/BrandLogo';
+import { NotificationCenter } from '@/components/NotificationCenter';
 
 interface NavbarProps {
   onSearchClick?: () => void;
@@ -83,7 +84,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       <TopBar />
       <div className="bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-2xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-18 sm:h-20 gap-4">
+          <div className="flex items-center justify-between h-20 sm:h-24 gap-4">
           
           {/* Logo */}
           <BrandLogo />
@@ -145,6 +146,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </button>
               )}
             </div>
+
+            {/* Notification Center */}
+            <NotificationCenter />
 
             {/* Authenticated User Menu OR Log In / Sign Up Buttons */}
             {isAuthenticated && user ? (

@@ -87,7 +87,7 @@ let ChatService = class ChatService {
         const created = await this.prisma.chatMessage.create({
             data: {
                 sender: dto.sender,
-                senderName: dto.senderName || (dto.sender === 'customer' ? 'Reviewer' : 'ProductPerks Admin'),
+                senderName: dto.senderName || (dto.sender === 'customer' ? 'Reviewer' : 'FreeProducts Support'),
                 text: dto.text,
                 image: dto.image || null,
                 productId: dto.productInfo?.id || null,

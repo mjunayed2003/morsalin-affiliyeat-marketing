@@ -118,7 +118,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // Strictly enforce sender role & identity from verified token
     if (isAdmin) {
       payload.sender = 'admin';
-      payload.senderName = payload.senderName || user?.name || 'ProductPerks Admin';
+      payload.senderName = payload.senderName || user?.name || 'FreeProducts Support';
       if (!payload.userId) {
         const lastCustomer = await this.chatService.getLastCustomerMessage();
         if (lastCustomer?.userId) {
@@ -187,13 +187,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         .to(`room_${savedMessage.userId}`)
         .to('admin_room')
         .emit('newMessage', savedMessage);
-      this.server
-        .to(`room_${savedMessage.userId}`)
-        .to('admin_room')
-        .emit('notification', notificationPayload);
+
+      // STRICT USER ISOLATION: Notification is sent ONLY to the recipient (never to sender or other clients)
+      if (payload.sender === 'customer') {
+        this.server.to('admin_room').emit('notification', notificationPayload);
+      } else {
+        this.server.to(`room_${savedMessage.userId}`).emit('notification', notificationPayload);
+      }
     } else {
       this.server.to('admin_room').emit('newMessage', savedMessage);
-      this.server.to('admin_room').emit('notification', notificationPayload);
+      if (payload.sender === 'customer') {
+        this.server.to('admin_room').emit('notification', notificationPayload);
+      }
     }
 
     // 4. Send auto-reply ONLY if 5 hours have passed without messaging (first message only)
@@ -213,7 +218,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         const lower = (payload.text || '').toLowerCase();
 
         if (lower.includes('free') || lower.includes('cost') || lower.includes('price')) {
-          replyText = 'Yes! All review club items on ProductPerks are 100% free for verified Amazon reviewers. Zero hidden fees!';
+          replyText = 'Yes! All review club items on FreeProducts.online are 100% free for verified Amazon reviewers. Zero hidden fees!';
         } else if (lower.includes('link') || lower.includes('order') || lower.includes('buy')) {
           replyText = 'Please click the "View on Amazon" button on the product details card or share your Amazon profile to receive the direct test link.';
         } else if (lower.includes('work') || lower.includes('program') || lower.includes('how')) {
@@ -222,7 +227,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
         const autoAdminMessage = await this.chatService.createMessage({
           sender: 'admin',
-          senderName: 'ProductPerks Admin',
+          senderName: 'FreeProducts Support',
           text: replyText,
           userId: payload.userId,
         });
@@ -230,6 +235,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         if (payload.userId) {
           this.server.to(`room_${payload.userId}`).to('admin_room').emit('typing', { isTyping: false, sender: 'admin', userId: payload.userId });
           this.server.to(`room_${payload.userId}`).to('admin_room').emit('newMessage', autoAdminMessage);
+          // Notify ONLY this specific customer in their private room
+          this.server.to(`room_${payload.userId}`).emit('notification', {
+            id: `notif-${Date.now()}`,
+            title: 'Support Reply from FreeProducts Support',
+            body: replyText.slice(0, 100),
+            sender: 'admin',
+            senderName: 'FreeProducts Support',
+            userId: payload.userId,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          });
         } else {
           this.server.to('admin_room').emit('typing', { isTyping: false, sender: 'admin' });
           this.server.to('admin_room').emit('newMessage', autoAdminMessage);

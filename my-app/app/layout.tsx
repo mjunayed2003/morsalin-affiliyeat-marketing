@@ -76,13 +76,13 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/icon.svg', type: 'image/svg+xml' },
-      { url: '/favicon.ico' },
+      { url: '/browser-icon.png', type: 'image/png' },
+      { url: '/favicon.png', type: 'image/png' },
     ],
     apple: [
-      { url: '/apple-icon.svg', type: 'image/svg+xml' },
+      { url: '/browser-icon.png', type: 'image/png' },
     ],
-    shortcut: '/icon.svg',
+    shortcut: '/browser-icon.png',
   },
 };
 
@@ -106,9 +106,9 @@ const jsonLd = {
       "@id": "https://freeproducts.online/#organization",
       "name": "FreeProducts.online",
       "url": "https://freeproducts.online",
-      "logo": "https://freeproducts.online/icon.svg",
+      "logo": "https://freeproducts.online/logo.jpeg",
       "sameAs": [
-        "https://www.instagram.com/onlinefreeproducts"
+        "https://www.facebook.com/share/1dAcJt9QhV/"
       ],
       "contactPoint": {
         "@type": "ContactPoint",
@@ -128,8 +128,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full antialiased">
       <head>
-        <link rel="icon" type="image/svg+xml" href="/icon.svg" />
-        <link rel="apple-touch-icon" href="/icon.svg" />
+        <link rel="icon" type="image/png" href="/browser-icon.png" />
+        <link rel="apple-touch-icon" href="/browser-icon.png" />
+        <link rel="shortcut icon" href="/browser-icon.png" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

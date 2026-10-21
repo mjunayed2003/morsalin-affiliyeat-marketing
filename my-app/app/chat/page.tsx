@@ -183,17 +183,14 @@ export default function ChatPage() {
 
         <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 my-8 z-10">
           {/* Brand Header */}
-          <div className="text-center max-w-lg mb-6 space-y-2.5">
-            <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-800 border border-emerald-200 px-3.5 py-1 rounded-full text-xs font-bold">
-              <FaComments className="w-3.5 h-3.5 text-[#1b3b2b]" />
-              <span>Reviewer Chat Support Desk</span>
+          <div className="text-center mb-6">
+            <div className="inline-flex bg-white px-4 py-2 rounded-2xl shadow-sm border border-stone-200/80">
+              <img
+                src="/logo.jpeg"
+                alt="FreeProducts.online"
+                className="h-10 sm:h-12 w-auto object-contain"
+              />
             </div>
-            <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight">
-              Start Live Chat Support
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-600 max-w-md mx-auto leading-relaxed">
-              Chat with our team directly without logging in. Just enter your name and phone number to begin!
-            </p>
           </div>
 
           {authViewTab === 'guest' ? (
@@ -320,27 +317,13 @@ export default function ChatPage() {
         {/* Chat Header Card */}
         <div className="bg-[#1b3b2b] text-white rounded-t-3xl p-4 sm:p-5 shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shrink-0">
           
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <div className="w-11 h-11 rounded-2xl bg-[#264e3b] border border-emerald-400/20 flex items-center justify-center font-bold text-white shadow-xs">
-                <FaShieldHalved className="w-5 h-5 text-emerald-300" />
-              </div>
-              <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 rounded-full border-2 border-[#1b3b2b]"></span>
-            </div>
-
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-base sm:text-lg font-bold tracking-tight text-white">
-                  FreeProducts.online Support Desk
-                </h1>
-                <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full">
-                  Live
-                </span>
-              </div>
-              <p className="text-xs text-emerald-100/90 font-medium flex items-center gap-1.5 mt-0.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>Admin Online • Amazon Perks Support • Replies in minutes</span>
-              </p>
+          <div className="flex items-center">
+            <div className="bg-white px-3.5 py-1.5 rounded-2xl shadow-xs flex items-center">
+              <img
+                src="/logo.jpeg"
+                alt="FreeProducts.online"
+                className="h-8 sm:h-9 w-auto object-contain"
+              />
             </div>
           </div>
 
@@ -540,10 +523,10 @@ export default function ChatPage() {
               Get Amazon Link
             </button>
             <button
-              onClick={() => handleQuickQuestion('Which Amazon stores are verified for reviews?')}
+              onClick={() => handleQuickQuestion('Which Amazon sellers are verified for reviews?')}
               className="shrink-0 bg-stone-100 hover:bg-[#1b3b2b] hover:text-white text-slate-700 px-3 py-1 rounded-full border border-stone-200/80 transition-colors cursor-pointer"
             >
-              Verified Stores?
+              Verified Sellers?
             </button>
           </div>
 

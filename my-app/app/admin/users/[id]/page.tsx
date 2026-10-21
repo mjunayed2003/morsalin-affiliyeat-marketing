@@ -31,7 +31,8 @@ import { useAuth } from '@/app/context/AuthContext';
 import { useApp } from '@/app/context/AppContext';
 import { Badge } from '@/components/admin/Badge';
 import { ConfirmModal } from '@/components/admin/ConfirmModal';
-import { maskPhone } from '@/app/types';
+import { maskPhone, User } from '@/app/types';
+import { API_BASE_URL } from '@/lib/socket';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -43,9 +44,61 @@ export default function AdminUserDetailPage({ params }: PageProps) {
   const { getUserById, blockUser, unblockUser, toggleUserReviewPermission } = useAuth();
   const { messages, reviews, deleteReview, getProductById, showToast } = useApp();
 
-  const user = getUserById(id);
+  const contextUser = getUserById(id);
+  const [liveUser, setLiveUser] = useState<User | null>(null);
+  const [isLoadingUser, setIsLoadingUser] = useState(true);
   const [confirmBlockOpen, setConfirmBlockOpen] = useState(false);
   const [showSelfieModal, setShowSelfieModal] = useState(false);
+
+  // Directly fetch fresh user record from database so all fields (selfie, amazon, paypal) load 100%
+  React.useEffect(() => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('bytedesk_token_v2') : null;
+    fetch(`${API_BASE_URL}/users/${id}`, {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) {
+          const directUser: User = {
+            id: data.id,
+            phone: data.phone,
+            name: data.name,
+            email: data.email,
+            address: data.address,
+            city: data.city,
+            avatar: data.avatar || data.selfieImage || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(data.name)}&backgroundColor=1b3b2b`,
+            selfieImage: data.selfieImage || (data.avatar && data.avatar.startsWith('data:image') ? data.avatar : undefined),
+            amazonProfileUrl: data.amazonProfileUrl || undefined,
+            paypalEmail: data.paypalEmail || undefined,
+            verified: data.verified,
+            verifiedAt: data.verifiedAt,
+            createdAt: data.createdAt,
+            role: data.role?.toLowerCase() === 'admin' ? 'admin' : 'client',
+            status: 'ACTIVE',
+            canReview: data.canReview,
+          };
+          setLiveUser(directUser);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        setIsLoadingUser(false);
+      });
+  }, [id]);
+
+  const user = liveUser || contextUser;
+
+  if (isLoadingUser && !user) {
+    return (
+      <div className="bg-white rounded-3xl p-12 text-center border border-slate-200/80 max-w-lg mx-auto mt-12 animate-pulse">
+        <div className="w-12 h-12 bg-slate-200 rounded-full mx-auto mb-3" />
+        <h2 className="text-base font-bold text-slate-700">Loading Reviewer Details...</h2>
+        <p className="text-xs text-slate-400 mt-1">Retrieving profile, selfie, and reviewer data.</p>
+      </div>
+    );
+  }
 
   if (!user) {
     return (
@@ -67,6 +120,7 @@ export default function AdminUserDetailPage({ params }: PageProps) {
   }
 
   const isBlocked = user.status === 'BLOCKED';
+  const userSelfie = user.selfieImage || (user.avatar && user.avatar.startsWith('data:image') ? user.avatar : null);
 
   // Customer messages from this user
   const userMessages = messages.filter((m) => m.sender === 'customer');
@@ -91,14 +145,14 @@ export default function AdminUserDetailPage({ params }: PageProps) {
               </Badge>
               {user.verified && <Badge variant="verified">Verified</Badge>}
               {user.canReview ? (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                  <FaStar className="w-2.5 h-2.5 text-emerald-600 fill-emerald-600" />
-                  <span>Reviewer Allowed</span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-300 shadow-2xs">
+                  <FaCircleCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Review Access: Allowed</span>
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
-                  <FaLock className="w-2.5 h-2.5 text-slate-400" />
-                  <span>Review Restricted</span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 shadow-2xs">
+                  <FaLock className="w-3.5 h-3.5 text-rose-500" />
+                  <span>Review Access: Restricted</span>
                 </span>
               )}
             </div>
@@ -112,6 +166,9 @@ export default function AdminUserDetailPage({ params }: PageProps) {
             onClick={() => {
               const nextVal = !user.canReview;
               toggleUserReviewPermission(user.id, nextVal);
+              if (liveUser) {
+                setLiveUser({ ...liveUser, canReview: nextVal });
+              }
               showToast(`Review permission ${nextVal ? 'granted to' : 'revoked from'} ${user.name}`);
             }}
             className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all shadow-2xs cursor-pointer ${
@@ -200,48 +257,88 @@ export default function AdminUserDetailPage({ params }: PageProps) {
               </div>
 
               {/* Amazon Profile Link */}
-              <div className="flex items-start justify-between pt-2 border-t border-slate-100">
-                <span className="text-slate-400 flex items-center gap-2 shrink-0">
-                  <FaAmazon className="w-3 h-3 text-amber-600" />
+              <div className="flex items-start justify-between pt-2.5 border-t border-slate-100">
+                <span className="text-slate-600 font-medium flex items-center gap-2 shrink-0">
+                  <FaAmazon className="w-3.5 h-3.5 text-amber-600" />
                   Amazon Profile
                 </span>
                 {user.amazonProfileUrl ? (
-                  <a
-                    href={user.amazonProfileUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-medium text-amber-700 hover:underline text-right max-w-[180px] truncate"
-                    title={user.amazonProfileUrl}
-                  >
-                    View Amazon Profile ↗
-                  </a>
+                  <div className="flex flex-col items-end gap-1 max-w-[220px]">
+                    <a
+                      href={user.amazonProfileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-100 transition-colors shadow-2xs truncate"
+                      title={user.amazonProfileUrl}
+                    >
+                      <FaAmazon className="w-3 h-3 text-[#ff9900] shrink-0" />
+                      <span className="truncate">View Amazon Profile ↗</span>
+                    </a>
+                    <span className="text-[10px] text-emerald-700 font-medium">✓ Provided on Sign Up</span>
+                  </div>
                 ) : (
-                  <span className="font-medium text-slate-400">Not provided</span>
+                  <span className="text-xs text-slate-400 font-medium italic">Not provided</span>
                 )}
               </div>
 
               {/* PayPal Email */}
-              <div className="flex items-center justify-between">
-                <span className="text-slate-400 flex items-center gap-2">
-                  <FaPaypal className="w-3 h-3 text-blue-600" />
+              <div className="flex items-center justify-between pt-2.5 border-t border-slate-100">
+                <span className="text-slate-600 font-medium flex items-center gap-2">
+                  <FaPaypal className="w-3.5 h-3.5 text-blue-600" />
                   PayPal Payout
                 </span>
-                <span className="font-mono font-medium text-blue-700 truncate max-w-[180px]">
-                  {user.paypalEmail || 'Not provided'}
-                </span>
+                {user.paypalEmail ? (
+                  <div className="flex flex-col items-end gap-0.5">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-mono font-bold bg-blue-50 text-blue-800 border border-blue-200 shadow-2xs">
+                      <FaPaypal className="w-3 h-3 text-blue-600 shrink-0" />
+                      <span>{user.paypalEmail}</span>
+                    </span>
+                    <span className="text-[10px] text-emerald-700 font-medium">✓ 100% Refund Account</span>
+                  </div>
+                ) : (
+                  <span className="text-xs text-slate-400 font-medium italic">Not provided</span>
+                )}
               </div>
 
-              <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-                <span className="text-slate-400 flex items-center gap-2">
-                  <FaStar className="w-3 h-3 text-amber-500" />
+              {/* Review Permission */}
+              <div className="flex items-center justify-between pt-2.5 border-t border-slate-100">
+                <span className="text-slate-600 font-medium flex items-center gap-2">
+                  <FaStar className="w-3.5 h-3.5 text-amber-500" />
                   Review Permission
                 </span>
-                <span className={`font-semibold ${user.canReview ? 'text-emerald-700 font-bold' : 'text-slate-500'}`}>
-                  {user.canReview ? 'Allowed by Admin' : 'Restricted'}
-                </span>
+                <div className="flex items-center gap-2">
+                  {user.canReview ? (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-300 shadow-2xs">
+                      <FaCircleCheck className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Allowed by Admin</span>
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 shadow-2xs">
+                      <FaLock className="w-3.5 h-3.5 text-rose-600" />
+                      <span>Restricted</span>
+                    </span>
+                  )}
+                  <button
+                    onClick={() => {
+                      const nextVal = !user.canReview;
+                      toggleUserReviewPermission(user.id, nextVal);
+                      if (liveUser) {
+                        setLiveUser({ ...liveUser, canReview: nextVal });
+                      }
+                      showToast(`Review permission ${nextVal ? 'granted to' : 'revoked from'} ${user.name}`);
+                    }}
+                    className={`text-[11px] font-bold px-2.5 py-0.5 rounded-lg border transition-all cursor-pointer ${
+                      user.canReview 
+                        ? 'border-slate-200 text-slate-600 hover:bg-slate-100' 
+                        : 'border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100'
+                    }`}
+                  >
+                    {user.canReview ? 'Revoke' : 'Allow'}
+                  </button>
+                </div>
               </div>
 
-              <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+              <div className="flex items-center justify-between pt-2.5 border-t border-slate-100">
                 <span className="text-slate-400 flex items-center gap-2">
                   <FaCalendarDays className="w-3 h-3 text-slate-400" />
                   Registered On
@@ -260,7 +357,7 @@ export default function AdminUserDetailPage({ params }: PageProps) {
                 <FaCamera className="w-4 h-4 text-emerald-700" />
                 <h3 className="font-bold text-sm text-slate-900">Verification Selfie</h3>
               </div>
-              {user.selfieImage ? (
+              {userSelfie ? (
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
                   <FaCircleCheck className="w-2.5 h-2.5 text-emerald-600" />
                   <span>Submitted</span>
@@ -272,14 +369,14 @@ export default function AdminUserDetailPage({ params }: PageProps) {
               )}
             </div>
 
-            {user.selfieImage ? (
+            {userSelfie ? (
               <div className="space-y-3">
                 <div 
                   onClick={() => setShowSelfieModal(true)}
                   className="relative group cursor-pointer overflow-hidden rounded-xl border border-slate-200 bg-slate-900 aspect-4/3 flex items-center justify-center shadow-xs"
                 >
                   <img
-                    src={user.selfieImage}
+                    src={userSelfie}
                     alt={`${user.name} verification selfie`}
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
@@ -291,7 +388,7 @@ export default function AdminUserDetailPage({ params }: PageProps) {
                 <div className="p-2.5 bg-emerald-50/70 rounded-xl border border-emerald-100 text-[11px] text-emerald-900">
                   <p className="font-semibold flex items-center gap-1.5">
                     <FaCheck className="w-3 h-3 text-emerald-600 shrink-0" />
-                    <span>Captured during OTP step</span>
+                    <span>Captured on Registration</span>
                   </p>
                   <p className="text-[10px] text-emerald-700/80 mt-0.5">
                     User identity snapped via live webcam/front camera upon registration.
@@ -446,7 +543,7 @@ export default function AdminUserDetailPage({ params }: PageProps) {
       />
 
       {/* Selfie Zoom Modal */}
-      {showSelfieModal && user.selfieImage && (
+      {showSelfieModal && userSelfie && (
         <div 
           onClick={() => setShowSelfieModal(false)}
           className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
@@ -469,7 +566,7 @@ export default function AdminUserDetailPage({ params }: PageProps) {
             </div>
             <div className="mt-3 rounded-2xl overflow-hidden bg-slate-950 aspect-4/3 flex items-center justify-center">
               <img 
-                src={user.selfieImage} 
+                src={userSelfie} 
                 alt={user.name} 
                 className="w-full h-full object-contain"
               />

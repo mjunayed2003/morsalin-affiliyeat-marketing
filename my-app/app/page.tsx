@@ -139,7 +139,7 @@ export default function Home() {
                     100% Free Products
                   </span>
                   <span className="inline-flex items-center bg-stone-100 text-stone-700 border border-stone-200 px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold tracking-wide uppercase">
-                    Verified Stores
+                    Verified Sellers
                   </span>
                 </div>
 
@@ -152,7 +152,7 @@ export default function Home() {
 
                 {/* Paragraph Description */}
                 <p className="text-xs sm:text-base text-slate-600 font-normal leading-relaxed max-w-xl">
-                  Join FreeProducts.online Review Club! Get brand-new items from verified Amazon stores (LONG YUE, Lickoon, Imps Hair Creates & more). Test quality products, share your authentic Amazon feedback, and keep every item with zero hidden costs.
+                  Join FreeProducts.online Review Club! Get brand-new items from verified Amazon sellers (LONG YUE, Lickoon, Imps Hair Creates & more). Test quality products, share your authentic Amazon feedback, and keep every item with zero hidden costs.
                 </p>
 
                 {/* Action Buttons */}
@@ -196,7 +196,7 @@ export default function Home() {
                       <FaAmazon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#e08500]" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[11px] sm:text-xs font-bold text-slate-900 leading-tight truncate">Verified Stores</p>
+                      <p className="text-[11px] sm:text-xs font-bold text-slate-900 leading-tight truncate">Verified Sellers</p>
                       <p className="text-[10px] sm:text-[11px] text-slate-500 font-medium leading-tight mt-0.5 truncate">LONG YUE & more</p>
                     </div>
                   </div>
@@ -235,14 +235,14 @@ export default function Home() {
                   <div className="relative aspect-4/3 sm:aspect-5/4 w-full overflow-hidden bg-stone-100">
                     <img 
                       src="https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&w=1000&q=80" 
-                      alt="ProductPerks Member Delivery Box"
+                      alt="FreeProducts.online Member Delivery Box"
                       className="w-full h-full object-cover object-center"
                     />
 
                     {/* Subtle warm lighting vignette */}
                     <div className="absolute inset-0 bg-gradient-to-t from-stone-900/30 via-transparent to-transparent pointer-events-none" />
 
-                    {/* Branded ProductPerks stamp badge centered on the box */}
+                    {/* Branded FreeProducts.online stamp badge centered on the box */}
                     <div className="absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 bg-[#f4ebe1]/95 backdrop-blur-xs px-5 py-2.5 rounded-2xl border border-[#d6c5b3] shadow-md flex items-center gap-2.5">
                       <div className="w-7 h-7 rounded-lg bg-[#1b3b2b] text-white flex items-center justify-center">
                         <FaAmazon className="w-4 h-4 text-[#ff9900]" />
@@ -286,7 +286,7 @@ export default function Home() {
                   Featured Amazon Products
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
-                  Active testing campaigns from top verified Amazon stores. Claim your free unit today!
+                  Active testing campaigns from top verified Amazon sellers. Claim your free unit today!
                 </p>
               </div>
 
@@ -458,7 +458,7 @@ export default function Home() {
                       Pick An Amazon Item
                     </h4>
                     <p className="text-xs text-slate-500 font-medium mt-1 leading-relaxed">
-                      Select any product from verified partner stores like LONG YUE, Lickoon & Imps Hair.
+                      Select any product from verified partner sellers like LONG YUE, Lickoon & Imps Hair.
                     </p>
                   </div>
                 </div>
@@ -540,10 +540,10 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 sm:mb-12 gap-3">
               <div>
                 <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-                  Trusted by Amazon Reviewers
+                  About Us Experience
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
-                  Real shoppers who test, review, and keep top Amazon store products.
+                  Real shoppers who test, review, and keep top Amazon seller products.
                 </p>
               </div>
 

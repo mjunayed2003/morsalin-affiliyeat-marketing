@@ -21,9 +21,8 @@ export declare class AuthService {
         message: string;
         user: {
             id: string;
-            createdAt: Date;
-            name: string;
             phone: string;
+            name: string;
             email: string | null;
             address: string | null;
             city: string | null;
@@ -33,6 +32,7 @@ export declare class AuthService {
             paypalEmail: string | null;
             verified: boolean;
             role: import("../generated/prisma/enums.js").Role;
+            createdAt: Date;
         };
         token: string;
     }>;
@@ -50,15 +50,15 @@ export declare class AuthService {
         message: string;
         user: {
             id: string;
-            createdAt: Date;
-            name: string;
             phone: string;
+            name: string;
             email: string | null;
             address: string | null;
             city: string | null;
             avatar: string | null;
             verified: boolean;
             role: import("../generated/prisma/enums.js").Role;
+            createdAt: Date;
         };
         token: string;
     }>;
@@ -73,6 +73,10 @@ export declare class AuthService {
             address: string | null;
             city: string | null;
             avatar: string | null;
+            selfieImage: string | null;
+            amazonProfileUrl: string | null;
+            paypalEmail: string | null;
+            canReview: boolean;
             verified: boolean;
             role: import("../generated/prisma/enums.js").Role;
             createdAt: Date;
@@ -81,15 +85,19 @@ export declare class AuthService {
     }>;
     getProfile(userId: string): Promise<{
         id: string;
-        createdAt: Date;
-        name: string;
         phone: string;
+        name: string;
         email: string | null;
         address: string | null;
         city: string | null;
         avatar: string | null;
+        selfieImage: string | null;
+        amazonProfileUrl: string | null;
+        paypalEmail: string | null;
         verified: boolean;
         role: import("../generated/prisma/enums.js").Role;
+        canReview: boolean;
+        createdAt: Date;
     }>;
     guestLogin(dto: {
         name: string;

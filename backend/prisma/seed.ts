@@ -4,7 +4,7 @@ import { PrismaClient } from '../src/generated/prisma/client.js';
 
 const connectionString = 
   process.env.DATABASE_URL || 
-  'postgresql://postgres:postgres@localhost:5432/productperks?schema=public';
+  'postgresql://postgres:postgres@localhost:5432/freeproducts?schema=public';
 const adapter = new PrismaPg({ connectionString });
 const prisma = new PrismaClient({ adapter });
 

@@ -9,7 +9,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   constructor() {
     const connectionString = 
       process.env.DATABASE_URL || 
-      'postgresql://postgres:postgres@localhost:5432/productperks?schema=public';
+      'postgresql://postgres:postgres@localhost:5432/freeproducts?schema=public';
     const adapter = new PrismaPg({ connectionString });
     super({ adapter });
   }

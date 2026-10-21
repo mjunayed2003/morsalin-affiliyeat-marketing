@@ -111,7 +111,7 @@ export default function AdminAnalyticsPage() {
             <FaStore className="w-4 h-4 text-amber-600" />
             <span>Amazon Partner Seller Breakdown</span>
           </h3>
-          <p className="text-xs text-slate-500 mt-0.5">Verified stores with active listings in the catalog</p>
+          <p className="text-xs text-slate-500 mt-0.5">Verified sellers with active listings in the catalog</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
