@@ -42,6 +42,12 @@ let UsersController = class UsersController {
         }
         return this.usersService.updateSelfie(id, selfieImage);
     }
+    async updateFcmToken(id, fcmToken, currentUser) {
+        if (currentUser.role !== 'ADMIN' && currentUser.id !== id) {
+            throw new ForbiddenException('Access Denied: You can only update your own notification settings.');
+        }
+        return this.usersService.updateFcmToken(id, fcmToken);
+    }
 };
 __decorate([
     Get(),
@@ -86,6 +92,15 @@ __decorate([
     __metadata("design:paramtypes", [String, String, Object]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "updateSelfie", null);
+__decorate([
+    Patch(':id/fcm-token'),
+    __param(0, Param('id')),
+    __param(1, Body('fcmToken')),
+    __param(2, CurrentUser()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "updateFcmToken", null);
 UsersController = __decorate([
     Controller('users'),
     UseGuards(JwtAuthGuard, RolesGuard),

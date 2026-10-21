@@ -19,9 +19,9 @@ import {
   FaCircleCheck,
   FaKey,
   FaCamera,
-  FaImage,
   FaCheck
 } from 'react-icons/fa6';
+import { FaPaypal, FaAmazon } from 'react-icons/fa';
 
 interface AuthCardProps {
   title?: string;
@@ -64,6 +64,8 @@ export const AuthCard: React.FC<AuthCardProps> = ({
   const [regConfirmPassword, setRegConfirmPassword] = useState('');
   const [regCity, setRegCity] = useState('');
   const [regAddress, setRegAddress] = useState('');
+  const [regAmazonProfile, setRegAmazonProfile] = useState('');
+  const [regPaypalEmail, setRegPaypalEmail] = useState('');
   const [regOtp, setRegOtp] = useState('');
   const [regError, setRegError] = useState('');
   const [isSendingRegOtp, setIsSendingRegOtp] = useState(false);
@@ -71,19 +73,18 @@ export const AuthCard: React.FC<AuthCardProps> = ({
   const [showRegPassword, setShowRegPassword] = useState(false);
   const [regTimer, setRegTimer] = useState<number>(600); // 10 mins
 
-  // Camera & Selfie state
+  // Camera & Selfie state (Strictly Live Camera Snap Only)
   const [selfieImage, setSelfieImage] = useState<string | null>(null);
   const [isCameraActive, setIsCameraActive] = useState<boolean>(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const videoRef = React.useRef<HTMLVideoElement>(null);
-  const selfieFileRef = React.useRef<HTMLInputElement>(null);
   const streamRef = React.useRef<MediaStream | null>(null);
 
   const startCamera = async () => {
     setCameraError(null);
     try {
       if (typeof navigator === 'undefined' || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        setCameraError('Camera access is not supported on this browser. Please upload a photo instead.');
+        setCameraError('Camera access is not supported on this browser or device. Please use a device with a front camera.');
         return;
       }
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -102,7 +103,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
       setIsCameraActive(true);
     } catch (err: any) {
       console.warn('Camera permission denied or unavailable:', err);
-      setCameraError('Could not access your front camera. Please allow camera permissions or upload a selfie photo below.');
+      setCameraError('Front camera permission is required to verify identity. Please allow camera access in your browser.');
       setIsCameraActive(false);
     }
   };
@@ -130,21 +131,12 @@ export const AuthCard: React.FC<AuthCardProps> = ({
     }
   };
 
-  const handleSelfieFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith('image/')) {
-      setRegError('Please choose a valid image file (JPG, PNG, or WebP).');
-      return;
+  // Auto-launch camera when user advances to the selfie verification step
+  useEffect(() => {
+    if (regStep === 'selfie' && !selfieImage && !isCameraActive) {
+      startCamera();
     }
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      setSelfieImage(event.target?.result as string);
-      stopCamera();
-    };
-    reader.readAsDataURL(file);
-    e.target.value = '';
-  };
+  }, [regStep]);
 
   useEffect(() => {
     return () => {
@@ -250,6 +242,8 @@ export const AuthCard: React.FC<AuthCardProps> = ({
         password: regPassword,
         address: regAddress.trim(),
         city: regCity.trim() || 'New York',
+        amazonProfileUrl: regAmazonProfile.trim() || undefined,
+        paypalEmail: regPaypalEmail.trim() || undefined,
       });
 
       if (res.success) {
@@ -277,6 +271,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
     }
 
     setRegStep('selfie');
+    startCamera();
   };
 
   // Handle Step 3: Submit Selfie & Complete Registration
@@ -285,13 +280,19 @@ export const AuthCard: React.FC<AuthCardProps> = ({
     setRegError('');
 
     if (!selfieImage) {
-      setRegError('Please take or upload your selfie photo before completing registration.');
+      setRegError('Please snap a live front camera selfie to complete your account registration.');
       return;
     }
 
     setIsVerifyingRegOtp(true);
     try {
-      const res = await verifyRegisterOtp(regEmail.trim(), regOtp.trim(), selfieImage);
+      const res = await verifyRegisterOtp(
+        regEmail.trim(), 
+        regOtp.trim(), 
+        selfieImage, 
+        regAmazonProfile.trim() || undefined, 
+        regPaypalEmail.trim() || undefined
+      );
       if (res.success) {
         showToast(res.message);
         stopCamera();
@@ -673,6 +674,61 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                   </div>
                 </div>
 
+                {/* Reviewer Credentials: Amazon Profile & PayPal */}
+                <div className="p-3 bg-amber-50/70 border border-amber-200/80 rounded-2xl space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-amber-900 uppercase tracking-wider flex items-center gap-1.5">
+                      <FaAmazon className="w-3 h-3 text-amber-600" />
+                      Reviewer Payout & Verification Info
+                    </span>
+                    <span className="text-[10px] bg-amber-200/80 text-amber-900 font-bold px-2 py-0.5 rounded-full">
+                      Required for Cash Back
+                    </span>
+                  </div>
+
+                  {/* 1. Amazon Profile Link */}
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        <FaAmazon className="w-3.5 h-3.5 text-amber-600" />
+                        1. Amazon Profile Link <span className="text-rose-500">*</span>
+                      </span>
+                      <span className="text-[10px] text-slate-400">Public profile</span>
+                    </label>
+                    <input
+                      type="url"
+                      placeholder="https://www.amazon.com/gp/profile/amzn1.account..."
+                      value={regAmazonProfile}
+                      onChange={(e) => setRegAmazonProfile(e.target.value)}
+                      className="w-full bg-white text-slate-900 px-3.5 py-2 text-sm rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-[#1b3b2b]/15 focus:border-[#1b3b2b] font-medium transition-all"
+                    />
+                    <p className="text-[10px] text-slate-500">
+                      Paste your public Amazon profile link to verify your reviewer eligibility.
+                    </p>
+                  </div>
+
+                  {/* 2. PayPal Email */}
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        <FaPaypal className="w-3.5 h-3.5 text-blue-600" />
+                        2. PayPal Email Address <span className="text-rose-500">*</span>
+                      </span>
+                      <span className="text-[10px] text-emerald-800 font-bold bg-emerald-100 px-1.5 py-0.2 rounded">100% Refund</span>
+                    </label>
+                    <input
+                      type="email"
+                      placeholder="yourname@paypal.com"
+                      value={regPaypalEmail}
+                      onChange={(e) => setRegPaypalEmail(e.target.value)}
+                      className="w-full bg-white text-slate-900 px-3.5 py-2 text-sm rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-[#1b3b2b]/15 focus:border-[#1b3b2b] font-medium transition-all"
+                    />
+                    <p className="text-[10px] text-slate-500">
+                      Where our team will send your 100% item refund & testing incentives.
+                    </p>
+                  </div>
+                </div>
+
                 {/* Optional Location */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
@@ -806,7 +862,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                   </div>
                   <h3 className="font-bold text-slate-900 text-base">Identity Selfie Verification</h3>
                   <p className="text-xs text-slate-600 mt-0.5">
-                    Step 3 of 3: Take or upload a clear, front-facing selfie to complete your reviewer registration.
+                    Step 3 of 3: Snap a live front camera selfie to complete your reviewer registration.
                   </p>
                 </div>
 
@@ -891,37 +947,25 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                   )}
                 </div>
 
-                {/* Action Buttons: Open Camera vs Upload from Device */}
+                {/* Live Camera Snap Controls - Strictly No File Uploads */}
                 {!isCameraActive && (
-                  <div className="grid grid-cols-2 gap-2.5 pt-1">
+                  <div className="pt-1">
                     <button
                       type="button"
                       onClick={startCamera}
-                      className="bg-stone-100 hover:bg-stone-200 text-slate-800 text-xs font-bold py-2.5 px-3 rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer border border-stone-200"
+                      className="w-full bg-[#1b3b2b] hover:bg-[#142e20] text-white text-xs font-bold py-2.5 px-4 rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
                     >
-                      <FaCamera className="w-3.5 h-3.5 text-emerald-700" />
-                      <span>{selfieImage ? 'Re-open Camera' : 'Use Camera'}</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => selfieFileRef.current?.click()}
-                      className="bg-stone-100 hover:bg-stone-200 text-slate-800 text-xs font-bold py-2.5 px-3 rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer border border-stone-200"
-                    >
-                      <FaImage className="w-3.5 h-3.5 text-emerald-700" />
-                      <span>Upload Photo</span>
+                      <FaCamera className="w-4 h-4 text-emerald-300" />
+                      <span>{selfieImage ? 'Re-open Front Camera' : 'Turn On Front Camera'}</span>
                     </button>
                   </div>
                 )}
 
-                <input
-                  ref={selfieFileRef}
-                  type="file"
-                  accept="image/*"
-                  capture="user"
-                  className="hidden"
-                  onChange={handleSelfieFileUpload}
-                />
+                <div className="p-2.5 bg-stone-50 rounded-xl border border-stone-200 text-center">
+                  <p className="text-[11px] text-slate-600 font-medium">
+                    🔒 <strong>Live Camera Only:</strong> File upload is strictly disabled. You must snap a real-time selfie via your device front camera.
+                  </p>
+                </div>
 
                 {/* Final Submit Button */}
                 <button

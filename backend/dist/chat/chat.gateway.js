@@ -131,14 +131,30 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
             this.lastCustomerMessageTimes.set(clientKey, now);
         }
         const savedMessage = await this.chatService.createMessage(payload);
+        const notificationPayload = {
+            id: `notif-${Date.now()}`,
+            title: payload.sender === 'customer'
+                ? `New Message from ${payload.senderName || 'Reviewer'}`
+                : `Support Reply from ${payload.senderName || 'Admin'}`,
+            body: payload.text?.slice(0, 100) || 'Sent an attachment',
+            sender: payload.sender,
+            senderName: payload.senderName,
+            userId: savedMessage.userId,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        };
         if (savedMessage.userId) {
             this.server
                 .to(`room_${savedMessage.userId}`)
                 .to('admin_room')
                 .emit('newMessage', savedMessage);
+            this.server
+                .to(`room_${savedMessage.userId}`)
+                .to('admin_room')
+                .emit('notification', notificationPayload);
         }
         else {
             this.server.to('admin_room').emit('newMessage', savedMessage);
+            this.server.to('admin_room').emit('notification', notificationPayload);
         }
         if (shouldAutoReply && payload.sender === 'customer') {
             this.logger.log(`🤖 5-hour inactivity threshold met: Triggering auto-reply for customer ${clientKey}`);
@@ -203,6 +219,52 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
         this.server.emit('messagesRead', { ids: payload.ids });
         return { success: true };
     }
+    async handleStartAudioCall(client, payload) {
+        const user = await this.resolveSocketUser(client, payload?.token);
+        const callerId = user?.id || client.id;
+        const callerName = payload.callerName || user?.name || 'Reviewer';
+        const callerRole = user?.role?.toUpperCase() === 'ADMIN' ? 'admin' : 'customer';
+        this.logger.log(`📞 Audio call initiated by ${callerName} (${callerRole}) for ${payload.targetUserId || 'admin_room'}`);
+        const callData = {
+            callId: `call_${Date.now()}`,
+            callerId,
+            callerName,
+            callerRole,
+            targetUserId: payload.targetUserId,
+            timestamp: new Date().toISOString(),
+        };
+        if (callerRole === 'admin' && payload.targetUserId) {
+            this.server.to(`room_${payload.targetUserId}`).emit('incomingAudioCall', callData);
+        }
+        else {
+            this.server.to('admin_room').emit('incomingAudioCall', callData);
+        }
+        return { success: true, callData };
+    }
+    async handleAcceptAudioCall(client, payload) {
+        this.logger.log(`📞 Audio call accepted for callId ${payload.callId}`);
+        if (payload.targetUserId) {
+            this.server.to(`room_${payload.targetUserId}`).emit('audioCallAccepted', { callId: payload.callId });
+        }
+        this.server.to('admin_room').emit('audioCallAccepted', { callId: payload.callId });
+        return { success: true };
+    }
+    async handleRejectAudioCall(client, payload) {
+        this.logger.log(`📞 Audio call rejected for callId ${payload.callId}`);
+        if (payload.targetUserId) {
+            this.server.to(`room_${payload.targetUserId}`).emit('audioCallRejected', { callId: payload.callId, reason: payload.reason });
+        }
+        this.server.to('admin_room').emit('audioCallRejected', { callId: payload.callId, reason: payload.reason });
+        return { success: true };
+    }
+    async handleEndAudioCall(client, payload) {
+        this.logger.log(`📞 Audio call ended for callId ${payload.callId}`);
+        if (payload.targetUserId) {
+            this.server.to(`room_${payload.targetUserId}`).emit('audioCallEnded', payload);
+        }
+        this.server.to('admin_room').emit('audioCallEnded', payload);
+        return { success: true };
+    }
 };
 __decorate([
     WebSocketServer(),
@@ -239,6 +301,38 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], ChatGateway.prototype, "handleMarkAsRead", null);
+__decorate([
+    SubscribeMessage('startAudioCall'),
+    __param(0, ConnectedSocket()),
+    __param(1, MessageBody()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Socket, Object]),
+    __metadata("design:returntype", Promise)
+], ChatGateway.prototype, "handleStartAudioCall", null);
+__decorate([
+    SubscribeMessage('acceptAudioCall'),
+    __param(0, ConnectedSocket()),
+    __param(1, MessageBody()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Socket, Object]),
+    __metadata("design:returntype", Promise)
+], ChatGateway.prototype, "handleAcceptAudioCall", null);
+__decorate([
+    SubscribeMessage('rejectAudioCall'),
+    __param(0, ConnectedSocket()),
+    __param(1, MessageBody()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Socket, Object]),
+    __metadata("design:returntype", Promise)
+], ChatGateway.prototype, "handleRejectAudioCall", null);
+__decorate([
+    SubscribeMessage('endAudioCall'),
+    __param(0, ConnectedSocket()),
+    __param(1, MessageBody()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Socket, Object]),
+    __metadata("design:returntype", Promise)
+], ChatGateway.prototype, "handleEndAudioCall", null);
 ChatGateway = ChatGateway_1 = __decorate([
     WebSocketGateway({
         cors: {

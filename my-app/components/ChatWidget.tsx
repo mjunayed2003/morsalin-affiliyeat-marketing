@@ -16,6 +16,7 @@ import { FaWhatsapp } from 'react-icons/fa';
 import { FiX } from 'react-icons/fi';
 import { ChatMessage, Product } from '../app/types';
 import { useAuth } from '../app/context/AuthContext';
+import { useApp } from '../app/context/AppContext';
 
 interface ChatWidgetProps {
   isOpen: boolean;
@@ -46,6 +47,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
 }) => {
   const pathname = usePathname();
   const { user, isAuthenticated, openAuthModal, startGuestChat } = useAuth();
+  const { startAudioCall, audioCall } = useApp();
   const [inputText, setInputText] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [previewModalImage, setPreviewModalImage] = useState<string | null>(null);
@@ -275,6 +277,16 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
             </div>
 
             <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => startAudioCall()}
+                disabled={!!audioCall}
+                className="text-[10px] bg-emerald-700 hover:bg-emerald-600 active:scale-95 text-white px-2.5 py-1 rounded-md font-bold shadow-xs transition-all flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                title="Start Audio Call with Support Desk"
+              >
+                <FaPhone className="w-2.5 h-2.5 text-emerald-200" />
+                <span>Call</span>
+              </button>
               <a
                 href={whatsappUrl}
                 target="_blank"

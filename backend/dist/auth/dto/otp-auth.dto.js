@@ -5,11 +5,15 @@ export class SendRegisterOtpDto {
     password;
     address;
     city;
+    amazonProfileUrl;
+    paypalEmail;
 }
 export class VerifyRegisterOtpDto {
     email;
     code;
     selfieImage;
+    amazonProfileUrl;
+    paypalEmail;
 }
 export class SendForgotPasswordOtpDto {
     email;

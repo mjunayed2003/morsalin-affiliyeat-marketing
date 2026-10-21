@@ -8,6 +8,7 @@ import { ProductDetailModal } from '@/components/ProductDetailModal';
 import { ShareModal } from '@/components/ShareModal';
 import { AuthModal } from '@/components/AuthModal';
 import { BrandLogo } from '@/components/BrandLogo';
+import { AdvertisementBanner } from '@/components/AdvertisementBanner';
 import { useApp } from '@/app/context/AppContext';
 import { useAuth } from '@/app/context/AuthContext';
 import { Product } from '@/app/types';
@@ -194,6 +195,11 @@ export default function ProductsPage() {
           </div>
 
         </div>
+
+        {/* ========================================================================= */}
+        {/* SPONSORED PROMOTION / ADVERTISEMENT SYSTEM                                */}
+        {/* ========================================================================= */}
+        <AdvertisementBanner className="mb-6" />
 
         {/* ========================================================================= */}
         {/* PRODUCT CARDS GRID                                                       */}

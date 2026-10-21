@@ -24,8 +24,11 @@ export const TopBar: React.FC = () => {
 
   const phoneNumber = '+880 1340-376081';
   const cleanPhoneForLink = '8801340376081';
+  const telegramNumber = '01603383215';
   const whatsappUrl = `https://wa.me/${cleanPhoneForLink}?text=${encodeURIComponent('Hello FreeProducts.online Support, I would like to inquire about Amazon review products.')}`;
-  const telegramUrl = `https://t.me/+${cleanPhoneForLink}`;
+  const telegramUrl = `https://t.me/+8801603383215`;
+  const facebookUrl = 'https://www.facebook.com/share/1dAcJt9QhV/';
+  const emailUrl = 'mailto:freeproductsonline1@gmail.com';
   const telUrl = `tel:+${cleanPhoneForLink}`;
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -143,16 +146,16 @@ export const TopBar: React.FC = () => {
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="hidden sm:inline-flex text-slate-300 hover:text-[#229ED9] transition-transform hover:scale-110 p-0.5" 
-                title={`Telegram: ${phoneNumber}`}
+                title={`Telegram: ${telegramNumber}`}
               >
                 <FaTelegram className="w-3.5 h-3.5" />
               </a>
               <a 
-                href="https://facebook.com" 
+                href={facebookUrl} 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="hidden sm:inline-flex hover:text-white transition-transform hover:scale-110 p-0.5" 
-                title="Facebook"
+                className="hidden sm:inline-flex text-slate-300 hover:text-[#1877F2] transition-transform hover:scale-110 p-0.5" 
+                title="Facebook Official Page"
               >
                 <FaFacebookF className="w-3 h-3" />
               </a>

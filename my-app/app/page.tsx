@@ -8,10 +8,11 @@ import { ProductDetailModal } from '@/components/ProductDetailModal';
 import { ShareModal } from '@/components/ShareModal';
 import { AuthModal } from '@/components/AuthModal';
 import { BrandLogo } from '@/components/BrandLogo';
+import { AdvertisementBanner } from '@/components/AdvertisementBanner';
 import { useApp } from '@/app/context/AppContext';
 import { useAuth } from '@/app/context/AuthContext';
 import { Product } from '@/app/types';
-import { FaAmazon, FaStore } from 'react-icons/fa';
+import { FaAmazon, FaStore, FaWhatsapp } from 'react-icons/fa';
 import { 
   FaArrowRight, 
   FaCheck, 
@@ -27,7 +28,10 @@ import {
   FaInstagram,
   FaXTwitter,
   FaSliders,
-  FaComments
+  FaComments,
+  FaTelegram,
+  FaEnvelope,
+  FaPhone
 } from 'react-icons/fa6';
 
 // Pastel category badges map
@@ -294,6 +298,9 @@ export default function Home() {
                 <FaArrowRight className="w-3 h-3" />
               </Link>
             </div>
+
+            {/* Sponsored Deals / Advertisement Banner */}
+            <AdvertisementBanner className="mb-6" />
 
             {/* Product Cards Grid (2 Columns on mobile, 3 on desktop) */}
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-7">
@@ -697,35 +704,71 @@ export default function Home() {
               </button>
             </div>
 
-            {/* Social Icons & Copyright Right */}
-            <div className="flex items-center gap-4">
-              <a href="#" className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:text-slate-950 hover:bg-slate-200 transition-colors">
+            {/* Social Icons & Contact Links */}
+            <div className="flex items-center gap-3">
+              <a 
+                href="https://www.facebook.com/share/1dAcJt9QhV/" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:text-[#1877F2] hover:bg-slate-200 transition-colors shadow-2xs"
+                title="Facebook Page"
+              >
                 <FaFacebookF className="w-3.5 h-3.5" />
+              </a>
+              <a 
+                href="https://t.me/+8801603383215" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:text-[#229ED9] hover:bg-slate-200 transition-colors shadow-2xs"
+                title="Telegram Support: 01603383215"
+              >
+                <FaTelegram className="w-3.5 h-3.5" />
+              </a>
+              <a 
+                href="https://wa.me/8801340376081" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:text-[#25D366] hover:bg-slate-200 transition-colors shadow-2xs"
+                title="WhatsApp: 01340376081"
+              >
+                <FaWhatsapp className="w-3.5 h-3.5" />
               </a>
               <a 
                 href="https://www.instagram.com/onlinefreeproducts" 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:text-[#e1306c] hover:bg-slate-200 transition-colors"
+                className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:text-[#e1306c] hover:bg-slate-200 transition-colors shadow-2xs"
                 title="Instagram (@onlinefreeproducts)"
               >
                 <FaInstagram className="w-3.5 h-3.5" />
               </a>
-              <a href="#" className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:text-slate-950 hover:bg-slate-200 transition-colors">
-                <FaXTwitter className="w-3.5 h-3.5" />
+              <a 
+                href="mailto:freeproductsonline1@gmail.com" 
+                className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:text-[#EA4335] hover:bg-slate-200 transition-colors shadow-2xs"
+                title="Email: freeproductsonline1@gmail.com"
+              >
+                <FaEnvelope className="w-3.5 h-3.5" />
               </a>
             </div>
 
           </div>
 
-          {/* Bottom Copyright & Discreet Portal Links */}
+          {/* Bottom Copyright & Contact Info */}
           <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-slate-400">
-            <p>© 2026 FreeProducts.online. All rights reserved.</p>
+            <div className="flex flex-wrap items-center gap-3">
+              <p>© 2026 FreeProducts.online. All rights reserved.</p>
+              <span className="hidden sm:inline text-slate-300">•</span>
+              <a href="mailto:freeproductsonline1@gmail.com" className="hover:text-slate-600 transition-colors">
+                freeproductsonline1@gmail.com
+              </a>
+              <span className="hidden sm:inline text-slate-300">•</span>
+              <span>Telegram: 01603383215</span>
+            </div>
             
             <div className="flex items-center gap-4">
-              <Link href="/chat" className="hover:text-slate-600 transition-colors flex items-center gap-1">
-                <FaComments className="w-3 h-3" />
-                <span>Live Chat Support</span>
+              <Link href="/chat" className="hover:text-slate-600 transition-colors flex items-center gap-1 font-semibold text-emerald-800">
+                <FaComments className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Live Support Desk</span>
               </Link>
             </div>
           </div>

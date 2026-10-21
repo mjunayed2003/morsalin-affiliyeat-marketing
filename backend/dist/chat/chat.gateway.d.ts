@@ -53,4 +53,42 @@ export declare class ChatGateway implements OnGatewayConnection, OnGatewayDiscon
     }): Promise<{
         success: boolean;
     }>;
+    handleStartAudioCall(client: Socket, payload: {
+        targetUserId?: string;
+        callerName?: string;
+        callerRole?: string;
+        token?: string;
+    }): Promise<{
+        success: boolean;
+        callData: {
+            callId: string;
+            callerId: string;
+            callerName: string;
+            callerRole: string;
+            targetUserId: string | undefined;
+            timestamp: string;
+        };
+    }>;
+    handleAcceptAudioCall(client: Socket, payload: {
+        callId: string;
+        targetUserId?: string;
+        token?: string;
+    }): Promise<{
+        success: boolean;
+    }>;
+    handleRejectAudioCall(client: Socket, payload: {
+        callId: string;
+        targetUserId?: string;
+        reason?: string;
+        token?: string;
+    }): Promise<{
+        success: boolean;
+    }>;
+    handleEndAudioCall(client: Socket, payload: {
+        callId: string;
+        targetUserId?: string;
+        durationSeconds?: number;
+    }): Promise<{
+        success: boolean;
+    }>;
 }

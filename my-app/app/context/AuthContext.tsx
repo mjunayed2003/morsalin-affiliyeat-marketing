@@ -46,11 +46,15 @@ interface AuthContextType {
     password: string;
     address?: string;
     city?: string;
+    amazonProfileUrl?: string;
+    paypalEmail?: string;
   }) => Promise<{ success: boolean; message: string; email?: string; phone?: string }>;
   verifyRegisterOtp: (
     email: string,
     code: string,
-    selfieImage?: string
+    selfieImage?: string,
+    amazonProfileUrl?: string,
+    paypalEmail?: string
   ) => Promise<{ success: boolean; message: string; user?: User }>;
   uploadUserSelfie: (selfieImage: string) => Promise<{ success: boolean; message: string }>;
   sendForgotPasswordOtp: (
@@ -381,6 +385,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     password: string;
     address?: string;
     city?: string;
+    amazonProfileUrl?: string;
+    paypalEmail?: string;
   }) => {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/send-register-otp`, {
@@ -414,12 +420,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   /**
    * STEP 2: Verify Registration OTP and Complete Sign Up
    */
-  const verifyRegisterOtp = async (email: string, code: string, selfieImage?: string) => {
+  const verifyRegisterOtp = async (
+    email: string, 
+    code: string, 
+    selfieImage?: string,
+    amazonProfileUrl?: string,
+    paypalEmail?: string
+  ) => {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/verify-register-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, code, selfieImage }),
+        body: JSON.stringify({ email, code, selfieImage, amazonProfileUrl, paypalEmail }),
       });
 
       const data = await response.json();
@@ -433,6 +445,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           city: data.user.city || 'New York',
           avatar: data.user.avatar || selfieImage || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(data.user.name)}&backgroundColor=1b3b2b`,
           selfieImage: data.user.selfieImage || selfieImage,
+          amazonProfileUrl: data.user.amazonProfileUrl || amazonProfileUrl,
+          paypalEmail: data.user.paypalEmail || paypalEmail,
           verified: true,
           verifiedAt: new Date().toISOString(),
           createdAt: data.user.createdAt || new Date().toISOString(),

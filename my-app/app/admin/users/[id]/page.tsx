@@ -26,6 +26,7 @@ import {
   FaMagnifyingGlassPlus,
   FaXmark
 } from 'react-icons/fa6';
+import { FaAmazon, FaPaypal } from 'react-icons/fa';
 import { useAuth } from '@/app/context/AuthContext';
 import { useApp } from '@/app/context/AppContext';
 import { Badge } from '@/components/admin/Badge';
@@ -195,6 +196,38 @@ export default function AdminUserDetailPage({ params }: PageProps) {
                 </span>
                 <span className="font-medium text-slate-800 text-right max-w-[180px]">
                   {user.address || 'Not provided'}
+                </span>
+              </div>
+
+              {/* Amazon Profile Link */}
+              <div className="flex items-start justify-between pt-2 border-t border-slate-100">
+                <span className="text-slate-400 flex items-center gap-2 shrink-0">
+                  <FaAmazon className="w-3 h-3 text-amber-600" />
+                  Amazon Profile
+                </span>
+                {user.amazonProfileUrl ? (
+                  <a
+                    href={user.amazonProfileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-amber-700 hover:underline text-right max-w-[180px] truncate"
+                    title={user.amazonProfileUrl}
+                  >
+                    View Amazon Profile ↗
+                  </a>
+                ) : (
+                  <span className="font-medium text-slate-400">Not provided</span>
+                )}
+              </div>
+
+              {/* PayPal Email */}
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400 flex items-center gap-2">
+                  <FaPaypal className="w-3 h-3 text-blue-600" />
+                  PayPal Payout
+                </span>
+                <span className="font-mono font-medium text-blue-700 truncate max-w-[180px]">
+                  {user.paypalEmail || 'Not provided'}
                 </span>
               </div>
 

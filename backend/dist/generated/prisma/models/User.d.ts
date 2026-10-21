@@ -17,6 +17,9 @@ export type UserMinAggregateOutputType = {
     city: string | null;
     avatar: string | null;
     selfieImage: string | null;
+    amazonProfileUrl: string | null;
+    paypalEmail: string | null;
+    fcmToken: string | null;
     verified: boolean | null;
     verifiedAt: Date | null;
     role: $Enums.Role | null;
@@ -34,6 +37,9 @@ export type UserMaxAggregateOutputType = {
     city: string | null;
     avatar: string | null;
     selfieImage: string | null;
+    amazonProfileUrl: string | null;
+    paypalEmail: string | null;
+    fcmToken: string | null;
     verified: boolean | null;
     verifiedAt: Date | null;
     role: $Enums.Role | null;
@@ -51,6 +57,9 @@ export type UserCountAggregateOutputType = {
     city: number;
     avatar: number;
     selfieImage: number;
+    amazonProfileUrl: number;
+    paypalEmail: number;
+    fcmToken: number;
     verified: number;
     verifiedAt: number;
     role: number;
@@ -69,6 +78,9 @@ export type UserMinAggregateInputType = {
     city?: true;
     avatar?: true;
     selfieImage?: true;
+    amazonProfileUrl?: true;
+    paypalEmail?: true;
+    fcmToken?: true;
     verified?: true;
     verifiedAt?: true;
     role?: true;
@@ -86,6 +98,9 @@ export type UserMaxAggregateInputType = {
     city?: true;
     avatar?: true;
     selfieImage?: true;
+    amazonProfileUrl?: true;
+    paypalEmail?: true;
+    fcmToken?: true;
     verified?: true;
     verifiedAt?: true;
     role?: true;
@@ -103,6 +118,9 @@ export type UserCountAggregateInputType = {
     city?: true;
     avatar?: true;
     selfieImage?: true;
+    amazonProfileUrl?: true;
+    paypalEmail?: true;
+    fcmToken?: true;
     verified?: true;
     verifiedAt?: true;
     role?: true;
@@ -145,6 +163,9 @@ export type UserGroupByOutputType = {
     city: string | null;
     avatar: string | null;
     selfieImage: string | null;
+    amazonProfileUrl: string | null;
+    paypalEmail: string | null;
+    fcmToken: string | null;
     verified: boolean;
     verifiedAt: Date | null;
     role: $Enums.Role;
@@ -171,6 +192,9 @@ export type UserWhereInput = {
     city?: Prisma.StringNullableFilter<"User"> | string | null;
     avatar?: Prisma.StringNullableFilter<"User"> | string | null;
     selfieImage?: Prisma.StringNullableFilter<"User"> | string | null;
+    amazonProfileUrl?: Prisma.StringNullableFilter<"User"> | string | null;
+    paypalEmail?: Prisma.StringNullableFilter<"User"> | string | null;
+    fcmToken?: Prisma.StringNullableFilter<"User"> | string | null;
     verified?: Prisma.BoolFilter<"User"> | boolean;
     verifiedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null;
     role?: Prisma.EnumRoleFilter<"User"> | $Enums.Role;
@@ -191,6 +215,9 @@ export type UserOrderByWithRelationInput = {
     city?: Prisma.SortOrderInput | Prisma.SortOrder;
     avatar?: Prisma.SortOrderInput | Prisma.SortOrder;
     selfieImage?: Prisma.SortOrderInput | Prisma.SortOrder;
+    amazonProfileUrl?: Prisma.SortOrderInput | Prisma.SortOrder;
+    paypalEmail?: Prisma.SortOrderInput | Prisma.SortOrder;
+    fcmToken?: Prisma.SortOrderInput | Prisma.SortOrder;
     verified?: Prisma.SortOrder;
     verifiedAt?: Prisma.SortOrderInput | Prisma.SortOrder;
     role?: Prisma.SortOrder;
@@ -214,6 +241,9 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
     city?: Prisma.StringNullableFilter<"User"> | string | null;
     avatar?: Prisma.StringNullableFilter<"User"> | string | null;
     selfieImage?: Prisma.StringNullableFilter<"User"> | string | null;
+    amazonProfileUrl?: Prisma.StringNullableFilter<"User"> | string | null;
+    paypalEmail?: Prisma.StringNullableFilter<"User"> | string | null;
+    fcmToken?: Prisma.StringNullableFilter<"User"> | string | null;
     verified?: Prisma.BoolFilter<"User"> | boolean;
     verifiedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null;
     role?: Prisma.EnumRoleFilter<"User"> | $Enums.Role;
@@ -234,6 +264,9 @@ export type UserOrderByWithAggregationInput = {
     city?: Prisma.SortOrderInput | Prisma.SortOrder;
     avatar?: Prisma.SortOrderInput | Prisma.SortOrder;
     selfieImage?: Prisma.SortOrderInput | Prisma.SortOrder;
+    amazonProfileUrl?: Prisma.SortOrderInput | Prisma.SortOrder;
+    paypalEmail?: Prisma.SortOrderInput | Prisma.SortOrder;
+    fcmToken?: Prisma.SortOrderInput | Prisma.SortOrder;
     verified?: Prisma.SortOrder;
     verifiedAt?: Prisma.SortOrderInput | Prisma.SortOrder;
     role?: Prisma.SortOrder;
@@ -257,6 +290,9 @@ export type UserScalarWhereWithAggregatesInput = {
     city?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null;
     avatar?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null;
     selfieImage?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null;
+    amazonProfileUrl?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null;
+    paypalEmail?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null;
+    fcmToken?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null;
     verified?: Prisma.BoolWithAggregatesFilter<"User"> | boolean;
     verifiedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null;
     role?: Prisma.EnumRoleWithAggregatesFilter<"User"> | $Enums.Role;
@@ -274,6 +310,9 @@ export type UserCreateInput = {
     city?: string | null;
     avatar?: string | null;
     selfieImage?: string | null;
+    amazonProfileUrl?: string | null;
+    paypalEmail?: string | null;
+    fcmToken?: string | null;
     verified?: boolean;
     verifiedAt?: Date | string | null;
     role?: $Enums.Role;
@@ -294,6 +333,9 @@ export type UserUncheckedCreateInput = {
     city?: string | null;
     avatar?: string | null;
     selfieImage?: string | null;
+    amazonProfileUrl?: string | null;
+    paypalEmail?: string | null;
+    fcmToken?: string | null;
     verified?: boolean;
     verifiedAt?: Date | string | null;
     role?: $Enums.Role;
@@ -314,6 +356,9 @@ export type UserUpdateInput = {
     city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     selfieImage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    amazonProfileUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    paypalEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     verified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role;
@@ -334,6 +379,9 @@ export type UserUncheckedUpdateInput = {
     city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     selfieImage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    amazonProfileUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    paypalEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     verified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role;
@@ -354,6 +402,9 @@ export type UserCreateManyInput = {
     city?: string | null;
     avatar?: string | null;
     selfieImage?: string | null;
+    amazonProfileUrl?: string | null;
+    paypalEmail?: string | null;
+    fcmToken?: string | null;
     verified?: boolean;
     verifiedAt?: Date | string | null;
     role?: $Enums.Role;
@@ -371,6 +422,9 @@ export type UserUpdateManyMutationInput = {
     city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     selfieImage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    amazonProfileUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    paypalEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     verified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role;
@@ -388,6 +442,9 @@ export type UserUncheckedUpdateManyInput = {
     city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     selfieImage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    amazonProfileUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    paypalEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     verified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role;
@@ -405,6 +462,9 @@ export type UserCountOrderByAggregateInput = {
     city?: Prisma.SortOrder;
     avatar?: Prisma.SortOrder;
     selfieImage?: Prisma.SortOrder;
+    amazonProfileUrl?: Prisma.SortOrder;
+    paypalEmail?: Prisma.SortOrder;
+    fcmToken?: Prisma.SortOrder;
     verified?: Prisma.SortOrder;
     verifiedAt?: Prisma.SortOrder;
     role?: Prisma.SortOrder;
@@ -422,6 +482,9 @@ export type UserMaxOrderByAggregateInput = {
     city?: Prisma.SortOrder;
     avatar?: Prisma.SortOrder;
     selfieImage?: Prisma.SortOrder;
+    amazonProfileUrl?: Prisma.SortOrder;
+    paypalEmail?: Prisma.SortOrder;
+    fcmToken?: Prisma.SortOrder;
     verified?: Prisma.SortOrder;
     verifiedAt?: Prisma.SortOrder;
     role?: Prisma.SortOrder;
@@ -439,6 +502,9 @@ export type UserMinOrderByAggregateInput = {
     city?: Prisma.SortOrder;
     avatar?: Prisma.SortOrder;
     selfieImage?: Prisma.SortOrder;
+    amazonProfileUrl?: Prisma.SortOrder;
+    paypalEmail?: Prisma.SortOrder;
+    fcmToken?: Prisma.SortOrder;
     verified?: Prisma.SortOrder;
     verifiedAt?: Prisma.SortOrder;
     role?: Prisma.SortOrder;
@@ -520,6 +586,9 @@ export type UserCreateWithoutChatMessagesInput = {
     city?: string | null;
     avatar?: string | null;
     selfieImage?: string | null;
+    amazonProfileUrl?: string | null;
+    paypalEmail?: string | null;
+    fcmToken?: string | null;
     verified?: boolean;
     verifiedAt?: Date | string | null;
     role?: $Enums.Role;
@@ -539,6 +608,9 @@ export type UserUncheckedCreateWithoutChatMessagesInput = {
     city?: string | null;
     avatar?: string | null;
     selfieImage?: string | null;
+    amazonProfileUrl?: string | null;
+    paypalEmail?: string | null;
+    fcmToken?: string | null;
     verified?: boolean;
     verifiedAt?: Date | string | null;
     role?: $Enums.Role;
@@ -571,6 +643,9 @@ export type UserUpdateWithoutChatMessagesInput = {
     city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     selfieImage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    amazonProfileUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    paypalEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     verified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role;
@@ -590,6 +665,9 @@ export type UserUncheckedUpdateWithoutChatMessagesInput = {
     city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     selfieImage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    amazonProfileUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    paypalEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     verified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role;
@@ -609,6 +687,9 @@ export type UserCreateWithoutInquiriesInput = {
     city?: string | null;
     avatar?: string | null;
     selfieImage?: string | null;
+    amazonProfileUrl?: string | null;
+    paypalEmail?: string | null;
+    fcmToken?: string | null;
     verified?: boolean;
     verifiedAt?: Date | string | null;
     role?: $Enums.Role;
@@ -628,6 +709,9 @@ export type UserUncheckedCreateWithoutInquiriesInput = {
     city?: string | null;
     avatar?: string | null;
     selfieImage?: string | null;
+    amazonProfileUrl?: string | null;
+    paypalEmail?: string | null;
+    fcmToken?: string | null;
     verified?: boolean;
     verifiedAt?: Date | string | null;
     role?: $Enums.Role;
@@ -660,6 +744,9 @@ export type UserUpdateWithoutInquiriesInput = {
     city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     selfieImage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    amazonProfileUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    paypalEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     verified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role;
@@ -679,6 +766,9 @@ export type UserUncheckedUpdateWithoutInquiriesInput = {
     city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     selfieImage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    amazonProfileUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    paypalEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     verified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role;
@@ -698,6 +788,9 @@ export type UserCreateWithoutReviewsInput = {
     city?: string | null;
     avatar?: string | null;
     selfieImage?: string | null;
+    amazonProfileUrl?: string | null;
+    paypalEmail?: string | null;
+    fcmToken?: string | null;
     verified?: boolean;
     verifiedAt?: Date | string | null;
     role?: $Enums.Role;
@@ -717,6 +810,9 @@ export type UserUncheckedCreateWithoutReviewsInput = {
     city?: string | null;
     avatar?: string | null;
     selfieImage?: string | null;
+    amazonProfileUrl?: string | null;
+    paypalEmail?: string | null;
+    fcmToken?: string | null;
     verified?: boolean;
     verifiedAt?: Date | string | null;
     role?: $Enums.Role;
@@ -749,6 +845,9 @@ export type UserUpdateWithoutReviewsInput = {
     city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     selfieImage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    amazonProfileUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    paypalEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     verified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role;
@@ -768,6 +867,9 @@ export type UserUncheckedUpdateWithoutReviewsInput = {
     city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     selfieImage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    amazonProfileUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    paypalEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     verified?: Prisma.BoolFieldUpdateOperationsInput | boolean;
     verifiedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null;
     role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role;
@@ -809,6 +911,9 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
     city?: boolean;
     avatar?: boolean;
     selfieImage?: boolean;
+    amazonProfileUrl?: boolean;
+    paypalEmail?: boolean;
+    fcmToken?: boolean;
     verified?: boolean;
     verifiedAt?: boolean;
     role?: boolean;
@@ -830,6 +935,9 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
     city?: boolean;
     avatar?: boolean;
     selfieImage?: boolean;
+    amazonProfileUrl?: boolean;
+    paypalEmail?: boolean;
+    fcmToken?: boolean;
     verified?: boolean;
     verifiedAt?: boolean;
     role?: boolean;
@@ -847,6 +955,9 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
     city?: boolean;
     avatar?: boolean;
     selfieImage?: boolean;
+    amazonProfileUrl?: boolean;
+    paypalEmail?: boolean;
+    fcmToken?: boolean;
     verified?: boolean;
     verifiedAt?: boolean;
     role?: boolean;
@@ -864,6 +975,9 @@ export type UserSelectScalar = {
     city?: boolean;
     avatar?: boolean;
     selfieImage?: boolean;
+    amazonProfileUrl?: boolean;
+    paypalEmail?: boolean;
+    fcmToken?: boolean;
     verified?: boolean;
     verifiedAt?: boolean;
     role?: boolean;
@@ -871,7 +985,7 @@ export type UserSelectScalar = {
     createdAt?: boolean;
     updatedAt?: boolean;
 };
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "phone" | "name" | "password" | "email" | "address" | "city" | "avatar" | "selfieImage" | "verified" | "verifiedAt" | "role" | "canReview" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>;
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "phone" | "name" | "password" | "email" | "address" | "city" | "avatar" | "selfieImage" | "amazonProfileUrl" | "paypalEmail" | "fcmToken" | "verified" | "verifiedAt" | "role" | "canReview" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>;
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
     chatMessages?: boolean | Prisma.User$chatMessagesArgs<ExtArgs>;
     inquiries?: boolean | Prisma.User$inquiriesArgs<ExtArgs>;
@@ -897,6 +1011,9 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
         city: string | null;
         avatar: string | null;
         selfieImage: string | null;
+        amazonProfileUrl: string | null;
+        paypalEmail: string | null;
+        fcmToken: string | null;
         verified: boolean;
         verifiedAt: Date | null;
         role: $Enums.Role;
@@ -972,6 +1089,9 @@ export interface UserFieldRefs {
     readonly city: Prisma.FieldRef<"User", 'String'>;
     readonly avatar: Prisma.FieldRef<"User", 'String'>;
     readonly selfieImage: Prisma.FieldRef<"User", 'String'>;
+    readonly amazonProfileUrl: Prisma.FieldRef<"User", 'String'>;
+    readonly paypalEmail: Prisma.FieldRef<"User", 'String'>;
+    readonly fcmToken: Prisma.FieldRef<"User", 'String'>;
     readonly verified: Prisma.FieldRef<"User", 'Boolean'>;
     readonly verifiedAt: Prisma.FieldRef<"User", 'DateTime'>;
     readonly role: Prisma.FieldRef<"User", 'Role'>;

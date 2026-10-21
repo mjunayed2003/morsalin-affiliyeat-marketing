@@ -84,6 +84,8 @@ export class AuthService {
       password: hashedPassword,
       address: dto.address?.trim() || null,
       city: dto.city?.trim() || 'New York',
+      amazonProfileUrl: dto.amazonProfileUrl?.trim() || null,
+      paypalEmail: dto.paypalEmail?.trim() || null,
     };
 
     // Remove any previous registration OTP for this email
@@ -169,6 +171,8 @@ export class AuthService {
         city: pendingData.city,
         avatar: dto.selfieImage || pendingData.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(pendingData.name)}&backgroundColor=1b3b2b`,
         selfieImage: dto.selfieImage || null,
+        amazonProfileUrl: dto.amazonProfileUrl || pendingData.amazonProfileUrl || null,
+        paypalEmail: dto.paypalEmail || pendingData.paypalEmail || null,
         verified: true,
         verifiedAt: new Date(),
         role: 'CLIENT',
@@ -182,6 +186,8 @@ export class AuthService {
         city: true,
         avatar: true,
         selfieImage: true,
+        amazonProfileUrl: true,
+        paypalEmail: true,
         verified: true,
         role: true,
         createdAt: true,

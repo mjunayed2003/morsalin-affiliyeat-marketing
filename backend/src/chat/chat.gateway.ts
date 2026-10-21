@@ -170,13 +170,30 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const savedMessage = await this.chatService.createMessage(payload);
 
     // 3. Broadcast STRICTLY to the target user's private room and the admin room
+    const notificationPayload = {
+      id: `notif-${Date.now()}`,
+      title: payload.sender === 'customer' 
+        ? `New Message from ${payload.senderName || 'Reviewer'}` 
+        : `Support Reply from ${payload.senderName || 'Admin'}`,
+      body: payload.text?.slice(0, 100) || 'Sent an attachment',
+      sender: payload.sender,
+      senderName: payload.senderName,
+      userId: savedMessage.userId,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+
     if (savedMessage.userId) {
       this.server
         .to(`room_${savedMessage.userId}`)
         .to('admin_room')
         .emit('newMessage', savedMessage);
+      this.server
+        .to(`room_${savedMessage.userId}`)
+        .to('admin_room')
+        .emit('notification', notificationPayload);
     } else {
       this.server.to('admin_room').emit('newMessage', savedMessage);
+      this.server.to('admin_room').emit('notification', notificationPayload);
     }
 
     // 4. Send auto-reply ONLY if 5 hours have passed without messaging (first message only)
@@ -252,6 +269,75 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     await this.chatService.markAsRead(payload.ids);
     this.server.emit('messagesRead', { ids: payload.ids });
+    return { success: true };
+  }
+
+  @SubscribeMessage('startAudioCall')
+  async handleStartAudioCall(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: { targetUserId?: string; callerName?: string; callerRole?: string; token?: string },
+  ) {
+    const user = await this.resolveSocketUser(client, payload?.token);
+    const callerId = user?.id || client.id;
+    const callerName = payload.callerName || user?.name || 'Reviewer';
+    const callerRole = user?.role?.toUpperCase() === 'ADMIN' ? 'admin' : 'customer';
+
+    this.logger.log(`📞 Audio call initiated by ${callerName} (${callerRole}) for ${payload.targetUserId || 'admin_room'}`);
+
+    const callData = {
+      callId: `call_${Date.now()}`,
+      callerId,
+      callerName,
+      callerRole,
+      targetUserId: payload.targetUserId,
+      timestamp: new Date().toISOString(),
+    };
+
+    if (callerRole === 'admin' && payload.targetUserId) {
+      this.server.to(`room_${payload.targetUserId}`).emit('incomingAudioCall', callData);
+    } else {
+      this.server.to('admin_room').emit('incomingAudioCall', callData);
+    }
+
+    return { success: true, callData };
+  }
+
+  @SubscribeMessage('acceptAudioCall')
+  async handleAcceptAudioCall(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: { callId: string; targetUserId?: string; token?: string },
+  ) {
+    this.logger.log(`📞 Audio call accepted for callId ${payload.callId}`);
+    if (payload.targetUserId) {
+      this.server.to(`room_${payload.targetUserId}`).emit('audioCallAccepted', { callId: payload.callId });
+    }
+    this.server.to('admin_room').emit('audioCallAccepted', { callId: payload.callId });
+    return { success: true };
+  }
+
+  @SubscribeMessage('rejectAudioCall')
+  async handleRejectAudioCall(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: { callId: string; targetUserId?: string; reason?: string; token?: string },
+  ) {
+    this.logger.log(`📞 Audio call rejected for callId ${payload.callId}`);
+    if (payload.targetUserId) {
+      this.server.to(`room_${payload.targetUserId}`).emit('audioCallRejected', { callId: payload.callId, reason: payload.reason });
+    }
+    this.server.to('admin_room').emit('audioCallRejected', { callId: payload.callId, reason: payload.reason });
+    return { success: true };
+  }
+
+  @SubscribeMessage('endAudioCall')
+  async handleEndAudioCall(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: { callId: string; targetUserId?: string; durationSeconds?: number },
+  ) {
+    this.logger.log(`📞 Audio call ended for callId ${payload.callId}`);
+    if (payload.targetUserId) {
+      this.server.to(`room_${payload.targetUserId}`).emit('audioCallEnded', payload);
+    }
+    this.server.to('admin_room').emit('audioCallEnded', payload);
     return { success: true };
   }
 }

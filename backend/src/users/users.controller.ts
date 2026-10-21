@@ -70,5 +70,18 @@ export class UsersController {
     }
     return this.usersService.updateSelfie(id, selfieImage);
   }
+
+  // Users can register their Firebase Cloud Messaging push notification token
+  @Patch(':id/fcm-token')
+  async updateFcmToken(
+    @Param('id') id: string,
+    @Body('fcmToken') fcmToken: string,
+    @CurrentUser() currentUser: AuthenticatedUser,
+  ) {
+    if (currentUser.role !== 'ADMIN' && currentUser.id !== id) {
+      throw new ForbiddenException('Access Denied: You can only update your own notification settings.');
+    }
+    return this.usersService.updateFcmToken(id, fcmToken);
+  }
 }
 

@@ -65,6 +65,8 @@ export interface User {
   city?: string;
   avatar?: string;
   selfieImage?: string;
+  amazonProfileUrl?: string;
+  paypalEmail?: string;
   verified: boolean;
   verifiedAt?: string;
   createdAt: string;
@@ -76,6 +78,16 @@ export interface User {
   canReview?: boolean; // Admin granted permission to post reviews
 }
 
+export interface AudioCallState {
+  callId: string;
+  callerId: string;
+  callerName: string;
+  callerRole: 'admin' | 'customer';
+  targetUserId?: string;
+  status: 'calling' | 'incoming' | 'connected';
+  durationSeconds: number;
+  isMuted?: boolean;
+}
 
 export type ViewMode = 'store' | 'admin' | 'client';
 

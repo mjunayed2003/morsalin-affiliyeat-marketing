@@ -1,9 +1,11 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Product, ChatMessage, Review } from '../types';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { Product, ChatMessage, Review, AudioCallState } from '../types';
 import { INITIAL_PRODUCTS, INITIAL_CHAT_MESSAGES, INITIAL_REVIEWS } from '../data/initialProducts';
 import { getSocket, API_BASE_URL } from '@/lib/socket';
+import { showBrowserNotification, requestNotificationPermission } from '@/lib/firebase';
+import { AudioCallModal } from '@/components/AudioCallModal';
 import { useAuth } from './AuthContext';
 
 interface AppContextType {
@@ -41,6 +43,13 @@ interface AppContextType {
   addReview: (reviewData: { productId: string; rating: number; title?: string; comment: string }) => { success: boolean; message: string };
   deleteReview: (reviewId: string) => { success: boolean; message: string };
   getProductReviews: (productId: string) => Review[];
+  audioCall: AudioCallState | null;
+  startAudioCall: (targetUserId?: string, partnerName?: string) => void;
+  acceptAudioCall: () => void;
+  rejectAudioCall: () => void;
+  endAudioCall: () => void;
+  toggleAudioCallMute: () => void;
+  requestPushNotifications: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -97,6 +106,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [inquiryProduct, setInquiryProduct] = useState<Product | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [reviews, setReviews] = useState<Review[]>(INITIAL_REVIEWS);
+  const [audioCall, setAudioCall] = useState<AudioCallState | null>(null);
+  const callTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const ringtoneIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Initialize reviews from localStorage
   useEffect(() => {
@@ -233,6 +245,59 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (e) {}
   };
 
+  // Ringtone synthesizer for audio calls
+  const playRingtone = () => {
+    try {
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const osc1 = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc1.type = 'sine';
+      osc2.type = 'sine';
+      osc1.frequency.setValueAtTime(440, ctx.currentTime);
+      osc2.frequency.setValueAtTime(480, ctx.currentTime);
+      gain.gain.setValueAtTime(0.06, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.005, ctx.currentTime + 1.2);
+      osc1.connect(gain);
+      osc2.connect(gain);
+      gain.connect(ctx.destination);
+      osc1.start();
+      osc2.start();
+      osc1.stop(ctx.currentTime + 1.2);
+      osc2.stop(ctx.currentTime + 1.2);
+    } catch (e) {}
+  };
+
+  const startRingtoneLoop = () => {
+    stopRingtoneLoop();
+    playRingtone();
+    ringtoneIntervalRef.current = setInterval(playRingtone, 2800);
+  };
+
+  const stopRingtoneLoop = () => {
+    if (ringtoneIntervalRef.current) {
+      clearInterval(ringtoneIntervalRef.current);
+      ringtoneIntervalRef.current = null;
+    }
+  };
+
+  // Connected call duration timer
+  useEffect(() => {
+    if (audioCall?.status === 'connected') {
+      callTimerRef.current = setInterval(() => {
+        setAudioCall((prev) => (prev ? { ...prev, durationSeconds: prev.durationSeconds + 1 } : null));
+      }, 1000);
+    } else {
+      if (callTimerRef.current) {
+        clearInterval(callTimerRef.current);
+        callTimerRef.current = null;
+      }
+    }
+    return () => {
+      if (callTimerRef.current) clearInterval(callTimerRef.current);
+    };
+  }, [audioCall?.status]);
+
   // Helper to get user-specific localStorage cache key so different accounts never collide
   const getMessagesStorageKey = (u?: { id: string; role: string } | null) => {
     if (!u) return null;
@@ -321,12 +386,75 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           setTypingSender(data?.sender || null);
         };
 
+        const handleNotification = (notif: { title: string; body: string; sender: string; userId?: string }) => {
+          const isAdmin = user?.role === 'admin';
+          if (!isAdmin && user?.id && notif.userId && notif.userId !== user.id) {
+            return;
+          }
+          playChime();
+          showToast(`🔔 ${notif.title}: ${notif.body}`);
+          showBrowserNotification(notif.title, {
+            body: notif.body,
+            url: '/chat',
+          });
+        };
+
+        const handleIncomingAudioCall = (callData: any) => {
+          const isAdmin = user?.role === 'admin';
+          if (!isAdmin && user?.id && callData.targetUserId && callData.targetUserId !== user.id) {
+            return;
+          }
+          startRingtoneLoop();
+          setAudioCall({
+            callId: callData.callId,
+            callerId: callData.callerId,
+            callerName: callData.callerName,
+            callerRole: callData.callerRole,
+            targetUserId: callData.targetUserId,
+            status: 'incoming',
+            durationSeconds: 0,
+            isMuted: false,
+          });
+          showToast(`📞 Incoming Audio Call from ${callData.callerName}!`);
+          showBrowserNotification(`📞 Incoming Audio Call`, {
+            body: `${callData.callerName} is calling you on FreeProducts.online`,
+          });
+        };
+
+        const handleAudioCallAccepted = () => {
+          stopRingtoneLoop();
+          setAudioCall((prev) => (prev ? { ...prev, status: 'connected' } : null));
+          showToast('📞 Call connected.');
+        };
+
+        const handleAudioCallRejected = (data?: any) => {
+          stopRingtoneLoop();
+          setAudioCall(null);
+          showToast(data?.reason || 'Call was declined.');
+        };
+
+        const handleAudioCallEnded = (data?: any) => {
+          stopRingtoneLoop();
+          setAudioCall(null);
+          showToast('📞 Call ended.');
+        };
+
         socket.on('newMessage', handleNewMessage);
         socket.on('typing', handleTypingEvent);
+        socket.on('notification', handleNotification);
+        socket.on('incomingAudioCall', handleIncomingAudioCall);
+        socket.on('audioCallAccepted', handleAudioCallAccepted);
+        socket.on('audioCallRejected', handleAudioCallRejected);
+        socket.on('audioCallEnded', handleAudioCallEnded);
 
         return () => {
           socket.off('newMessage', handleNewMessage);
           socket.off('typing', handleTypingEvent);
+          socket.off('notification', handleNotification);
+          socket.off('incomingAudioCall', handleIncomingAudioCall);
+          socket.off('audioCallAccepted', handleAudioCallAccepted);
+          socket.off('audioCallRejected', handleAudioCallRejected);
+          socket.off('audioCallEnded', handleAudioCallEnded);
         };
       }
     } catch (e) {
@@ -653,6 +781,99 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const unreadCount = messages.filter((m) => m.sender === 'admin' && !m.read).length;
 
+  // Audio Call Actions
+  const startAudioCall = (targetUserId?: string, partnerName?: string) => {
+    const socket = getSocket();
+    const token = typeof window !== 'undefined' ? localStorage.getItem('bytedesk_token_v2') : null;
+    const callerName = user?.name || 'Reviewer';
+    const callerRole = user?.role === 'admin' ? ('admin' as const) : ('customer' as const);
+
+    startRingtoneLoop();
+    setAudioCall({
+      callId: `call_${Date.now()}`,
+      callerId: user?.id || 'guest',
+      callerName: partnerName || (callerRole === 'admin' ? 'Customer' : 'FreeProducts Support Desk'),
+      callerRole,
+      targetUserId,
+      status: 'calling',
+      durationSeconds: 0,
+      isMuted: false,
+    });
+
+    if (socket && socket.connected) {
+      socket.emit('startAudioCall', {
+        targetUserId,
+        callerName,
+        callerRole,
+        token: token || undefined,
+      });
+    }
+    showToast('Calling support desk...');
+  };
+
+  const acceptAudioCall = () => {
+    stopRingtoneLoop();
+    if (!audioCall) return;
+    const socket = getSocket();
+    const token = typeof window !== 'undefined' ? localStorage.getItem('bytedesk_token_v2') : null;
+    if (socket && socket.connected) {
+      socket.emit('acceptAudioCall', {
+        callId: audioCall.callId,
+        targetUserId: audioCall.targetUserId,
+        token: token || undefined,
+      });
+    }
+    setAudioCall((prev) => (prev ? { ...prev, status: 'connected' } : null));
+  };
+
+  const rejectAudioCall = () => {
+    stopRingtoneLoop();
+    if (!audioCall) return;
+    const socket = getSocket();
+    const token = typeof window !== 'undefined' ? localStorage.getItem('bytedesk_token_v2') : null;
+    if (socket && socket.connected) {
+      socket.emit('rejectAudioCall', {
+        callId: audioCall.callId,
+        targetUserId: audioCall.targetUserId,
+        reason: 'Call declined',
+        token: token || undefined,
+      });
+    }
+    setAudioCall(null);
+  };
+
+  const endAudioCall = () => {
+    stopRingtoneLoop();
+    if (callTimerRef.current) clearInterval(callTimerRef.current);
+    if (!audioCall) return;
+    const socket = getSocket();
+    if (socket && socket.connected) {
+      socket.emit('endAudioCall', {
+        callId: audioCall.callId,
+        targetUserId: audioCall.targetUserId,
+        durationSeconds: audioCall.durationSeconds,
+      });
+    }
+    setAudioCall(null);
+    showToast('Call ended.');
+  };
+
+  const toggleAudioCallMute = () => {
+    setAudioCall((prev) => (prev ? { ...prev, isMuted: !prev.isMuted } : null));
+  };
+
+  const requestPushNotifications = async () => {
+    const res = await requestNotificationPermission();
+    if (res === 'granted') {
+      showToast('Push Notifications enabled successfully!');
+      showBrowserNotification('FreeProducts.online Notifications', {
+        body: 'You will receive real-time alerts when messages or order perks arrive.',
+      });
+    } else {
+      showToast('Notification permission was dismissed or blocked in browser settings.');
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -690,9 +911,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addReview,
         deleteReview,
         getProductReviews,
+        audioCall,
+        startAudioCall,
+        acceptAudioCall,
+        rejectAudioCall,
+        endAudioCall,
+        toggleAudioCallMute,
+        requestPushNotifications,
       }}
     >
       {children}
+      <AudioCallModal
+        callState={audioCall}
+        onAccept={acceptAudioCall}
+        onReject={rejectAudioCall}
+        onEnd={endAudioCall}
+        onToggleMute={toggleAudioCallMute}
+      />
     </AppContext.Provider>
   );
 };

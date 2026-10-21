@@ -22,6 +22,8 @@ export class UsersService {
         city: true,
         avatar: true,
         selfieImage: true,
+        amazonProfileUrl: true,
+        paypalEmail: true,
         verified: true,
         verifiedAt: true,
         role: true,
@@ -45,6 +47,8 @@ export class UsersService {
         city: true,
         avatar: true,
         selfieImage: true,
+        amazonProfileUrl: true,
+        paypalEmail: true,
         verified: true,
         verifiedAt: true,
         role: true,
@@ -90,6 +94,14 @@ export class UsersService {
         selfieImage, 
         avatar: selfieImage 
       },
+    });
+  }
+
+  async updateFcmToken(id: string, fcmToken: string) {
+    await this.findOne(id);
+    return this.prisma.user.update({
+      where: { id },
+      data: { fcmToken },
     });
   }
 }

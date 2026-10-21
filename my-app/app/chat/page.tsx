@@ -34,6 +34,9 @@ export default function ChatPage() {
     openDetailModal,
     isTyping: realIsTyping,
     emitTyping,
+    audioCall,
+    startAudioCall,
+    requestPushNotifications,
   } = useApp();
 
   const { user, isAuthenticated, openAuthModal, startGuestChat } = useAuth();
@@ -343,6 +346,17 @@ export default function ChatPage() {
 
           {/* Quick Action Controls */}
           <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 border-white/10 pt-2 sm:pt-0">
+            {/* Audio Call button */}
+            <button
+              onClick={() => startAudioCall()}
+              disabled={!!audioCall}
+              className="bg-emerald-700 hover:bg-emerald-600 active:scale-95 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              title="Start Live Audio Call with Support Desk"
+            >
+              <FaPhone className="w-3 h-3 text-emerald-200" />
+              <span>Audio Call</span>
+            </button>
+
             {/* Direct WhatsApp shortcut */}
             <a
               href={whatsappUrl}

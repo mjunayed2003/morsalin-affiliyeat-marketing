@@ -13,6 +13,8 @@ export declare class UsersService {
         city: string | null;
         avatar: string | null;
         selfieImage: string | null;
+        amazonProfileUrl: string | null;
+        paypalEmail: string | null;
         verified: boolean;
         verifiedAt: Date | null;
         role: import("../generated/prisma/enums.js").Role;
@@ -64,6 +66,8 @@ export declare class UsersService {
         city: string | null;
         avatar: string | null;
         selfieImage: string | null;
+        amazonProfileUrl: string | null;
+        paypalEmail: string | null;
         verified: boolean;
         verifiedAt: Date | null;
         role: import("../generated/prisma/enums.js").Role;
@@ -81,6 +85,9 @@ export declare class UsersService {
         city: string | null;
         avatar: string | null;
         selfieImage: string | null;
+        amazonProfileUrl: string | null;
+        paypalEmail: string | null;
+        fcmToken: string | null;
         verified: boolean;
         verifiedAt: Date | null;
         role: import("../generated/prisma/enums.js").Role;
@@ -98,6 +105,9 @@ export declare class UsersService {
         city: string | null;
         avatar: string | null;
         selfieImage: string | null;
+        amazonProfileUrl: string | null;
+        paypalEmail: string | null;
+        fcmToken: string | null;
         verified: boolean;
         verifiedAt: Date | null;
         role: import("../generated/prisma/enums.js").Role;
@@ -115,6 +125,29 @@ export declare class UsersService {
         city: string | null;
         avatar: string | null;
         selfieImage: string | null;
+        amazonProfileUrl: string | null;
+        paypalEmail: string | null;
+        fcmToken: string | null;
+        verified: boolean;
+        verifiedAt: Date | null;
+        role: import("../generated/prisma/enums.js").Role;
+        canReview: boolean;
+    }>;
+    updateFcmToken(id: string, fcmToken: string): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        name: string;
+        phone: string;
+        password: string | null;
+        email: string | null;
+        address: string | null;
+        city: string | null;
+        avatar: string | null;
+        selfieImage: string | null;
+        amazonProfileUrl: string | null;
+        paypalEmail: string | null;
+        fcmToken: string | null;
         verified: boolean;
         verifiedAt: Date | null;
         role: import("../generated/prisma/enums.js").Role;
