@@ -85,7 +85,14 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
     async handleSendMessage(client, payload) {
         const user = await this.resolveSocketUser(client, payload?.token);
         const isAdmin = user?.role?.toUpperCase() === 'ADMIN';
-        if (isAdmin) {
+        if (payload.sender === 'customer') {
+            payload.sender = 'customer';
+            if (user) {
+                payload.userId = user.id;
+                payload.senderName = payload.senderName || user.name || 'Reviewer';
+            }
+        }
+        else if (isAdmin) {
             payload.sender = 'admin';
             payload.senderName = payload.senderName || user?.name || 'FreeProducts Support';
             if (!payload.userId) {
@@ -142,23 +149,29 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
             senderName: payload.senderName,
             userId: savedMessage.userId,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            link: payload.sender === 'customer' ? '/admin/inbox' : '/chat',
         };
         if (savedMessage.userId) {
             this.server
                 .to(`room_${savedMessage.userId}`)
                 .to('admin_room')
                 .emit('newMessage', savedMessage);
+            client.broadcast.emit('newMessage', savedMessage);
             if (payload.sender === 'customer') {
                 this.server.to('admin_room').emit('notification', notificationPayload);
+                client.broadcast.emit('notification', notificationPayload);
             }
             else {
                 this.server.to(`room_${savedMessage.userId}`).emit('notification', notificationPayload);
+                client.broadcast.emit('notification', notificationPayload);
             }
         }
         else {
             this.server.to('admin_room').emit('newMessage', savedMessage);
+            client.broadcast.emit('newMessage', savedMessage);
             if (payload.sender === 'customer') {
                 this.server.to('admin_room').emit('notification', notificationPayload);
+                client.broadcast.emit('notification', notificationPayload);
             }
         }
         if (shouldAutoReply && payload.sender === 'customer') {
@@ -252,7 +265,7 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
         const user = await this.resolveSocketUser(client, payload?.token);
         const callerId = user?.id || client.id;
         const callerName = payload.callerName || user?.name || 'Reviewer';
-        const callerRole = user?.role?.toUpperCase() === 'ADMIN' ? 'admin' : 'customer';
+        const callerRole = (payload.callerRole === 'admin' || user?.role?.toUpperCase() === 'ADMIN') ? 'admin' : 'customer';
         const callId = `call_${Date.now()}`;
         const callData = {
             callId,
@@ -264,12 +277,16 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
             status: 'calling',
         };
         this.activeAudioCalls.set(callId, callData);
-        this.logger.log(`📞 Audio call initiated by ${callerName} (${callerRole}) for ${payload.targetUserId || 'admin_room'}`);
-        if (callerRole === 'admin' && payload.targetUserId) {
-            this.server.to(`room_${payload.targetUserId}`).emit('incomingAudioCall', callData);
+        this.logger.log(`📞 Audio call initiated by ${callerName} (${callerRole}) for target: ${payload.targetUserId || 'admin_room'}`);
+        if (callerRole === 'admin') {
+            if (payload.targetUserId) {
+                this.server.to(`room_${payload.targetUserId}`).emit('incomingAudioCall', callData);
+            }
+            client.broadcast.emit('incomingAudioCall', callData);
         }
         else {
             this.server.to('admin_room').emit('incomingAudioCall', callData);
+            client.broadcast.emit('incomingAudioCall', callData);
         }
         return { success: true, callData };
     }
@@ -280,16 +297,7 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
             call.startTime = Date.now();
         }
         this.logger.log(`📞 Audio call accepted for callId ${payload.callId}`);
-        const targetUserId = payload.targetUserId || call?.targetUserId || (call?.callerRole === 'customer' ? call.callerId : undefined);
-        const callerId = call?.callerId;
-        if (targetUserId) {
-            this.server.to(`room_${targetUserId}`).emit('audioCallAccepted', { callId: payload.callId });
-        }
-        if (callerId) {
-            this.server.to(`room_${callerId}`).emit('audioCallAccepted', { callId: payload.callId });
-        }
-        this.server.to('admin_room').emit('audioCallAccepted', { callId: payload.callId });
-        client.broadcast.emit('audioCallAccepted', { callId: payload.callId });
+        this.server.emit('audioCallAccepted', { callId: payload.callId });
         return { success: true };
     }
     async handleRejectAudioCall(client, payload) {
@@ -298,14 +306,7 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
         const targetUserId = payload.targetUserId || call?.targetUserId;
         const callerId = payload.callerId || call?.callerId;
         const customerUserId = (call?.callerRole === 'customer' ? call.callerId : targetUserId) || targetUserId || callerId;
-        if (targetUserId) {
-            this.server.to(`room_${targetUserId}`).emit('audioCallRejected', { callId: payload.callId, reason: payload.reason || 'Call declined' });
-        }
-        if (callerId) {
-            this.server.to(`room_${callerId}`).emit('audioCallRejected', { callId: payload.callId, reason: payload.reason || 'Call declined' });
-        }
-        this.server.to('admin_room').emit('audioCallRejected', { callId: payload.callId, reason: payload.reason || 'Call declined' });
-        client.broadcast.emit('audioCallRejected', { callId: payload.callId, reason: payload.reason || 'Call declined' });
+        this.server.emit('audioCallRejected', { callId: payload.callId, reason: payload.reason || 'Call declined' });
         try {
             const missedMsg = await this.chatService.createMessage({
                 sender: call?.callerRole === 'admin' ? 'admin' : 'customer',
@@ -328,18 +329,10 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
     }
     async handleEndAudioCall(client, payload) {
         const call = this.activeAudioCalls.get(payload.callId);
-        this.logger.log(`📞 Audio call ended for callId ${payload.callId}`);
         const targetUserId = payload.targetUserId || call?.targetUserId;
         const callerId = payload.callerId || call?.callerId;
         const customerUserId = (call?.callerRole === 'customer' ? call.callerId : targetUserId) || targetUserId || callerId;
-        if (targetUserId) {
-            this.server.to(`room_${targetUserId}`).emit('audioCallEnded', payload);
-        }
-        if (callerId) {
-            this.server.to(`room_${callerId}`).emit('audioCallEnded', payload);
-        }
-        this.server.to('admin_room').emit('audioCallEnded', payload);
-        client.broadcast.emit('audioCallEnded', payload);
+        this.server.emit('audioCallEnded', payload);
         try {
             let callText = '📞 Missed Audio Call';
             const duration = payload.durationSeconds || (call?.startTime ? Math.round((Date.now() - call.startTime) / 1000) : 0);

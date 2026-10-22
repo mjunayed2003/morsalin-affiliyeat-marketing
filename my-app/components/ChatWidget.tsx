@@ -10,7 +10,9 @@ import {
   FaCircleCheck,
   FaLock,
   FaUser,
-  FaPhone
+  FaPhone,
+  FaCheck,
+  FaCheckDouble
 } from 'react-icons/fa6';
 import { FaWhatsapp } from 'react-icons/fa';
 import { FiX } from 'react-icons/fi';
@@ -47,7 +49,13 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
 }) => {
   const pathname = usePathname();
   const { user, isAuthenticated, openAuthModal, startGuestChat } = useAuth();
-  const { startAudioCall, audioCall } = useApp();
+  const { startAudioCall, audioCall, markConversationAsRead } = useApp();
+
+  useEffect(() => {
+    if (isOpen) {
+      markConversationAsRead();
+    }
+  }, [isOpen, messages.length]);
   const [inputText, setInputText] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [previewModalImage, setPreviewModalImage] = useState<string | null>(null);
@@ -496,9 +504,22 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
                     )}
                   </div>
 
-                  <span className="text-[9px] text-slate-400 mt-0.5 px-1">
-                    {msg.timestamp}
-                  </span>
+                  <div className="flex items-center gap-1 text-[9px] text-slate-400 mt-0.5 px-1">
+                    <span className="font-mono">{msg.timestamp}</span>
+                    {isCustomer && (
+                      msg.read ? (
+                        <span className="inline-flex items-center gap-0.5 text-sky-600 font-bold ml-0.5" title="Seen by Support Desk">
+                          <FaCheckDouble className="w-2.5 h-2.5 text-sky-500" />
+                          <span className="text-[8px]">Seen</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-0.5 text-slate-400 font-normal ml-0.5" title="Delivered">
+                          <FaCheck className="w-2 h-2 text-slate-400" />
+                          <span className="text-[8px]">Sent</span>
+                        </span>
+                      )
+                    )}
+                  </div>
                 </div>
               );
             })}

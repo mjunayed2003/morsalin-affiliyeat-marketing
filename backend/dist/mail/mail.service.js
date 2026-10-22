@@ -9,25 +9,40 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 var MailService_1;
 import { Injectable, Logger } from '@nestjs/common';
+import { Resend } from 'resend';
 import nodemailer from 'nodemailer';
 let MailService = MailService_1 = class MailService {
     logger = new Logger(MailService_1.name);
-    transporter;
+    resend = null;
+    transporter = null;
     constructor() {
+        const resendApiKey = process.env.RESEND_API_KEY;
+        if (resendApiKey) {
+            this.resend = new Resend(resendApiKey);
+            this.logger.log('✅ Resend Node.js SDK initialized successfully.');
+        }
+        else {
+            this.logger.warn('⚠️ RESEND_API_KEY is not defined in environment variables.');
+        }
         const host = process.env.SMTP_HOST || 'smtp.gmail.com';
         const port = Number(process.env.SMTP_PORT) || 465;
         const secure = process.env.SMTP_SECURE === 'true' || port === 465;
         const user = process.env.SMTP_USER || 'morsalinislam8234@gmail.com';
         const pass = (process.env.SMTP_PASS || 'zikklagqxbnwecxx').replace(/\s+/g, '');
-        this.transporter = nodemailer.createTransport({
-            host,
-            port,
-            secure,
-            auth: {
-                user,
-                pass,
-            },
-        });
+        try {
+            this.transporter = nodemailer.createTransport({
+                host,
+                port,
+                secure,
+                auth: {
+                    user,
+                    pass,
+                },
+            });
+        }
+        catch (e) {
+            this.logger.warn(`Could not initialize secondary SMTP transporter: ${e.message}`);
+        }
     }
     getSender() {
         const appName = process.env.APP_NAME || process.env.SMTP_FROM_NAME || 'FreeProducts.online';
@@ -40,10 +55,94 @@ let MailService = MailService_1 = class MailService {
     getReplyTo() {
         return process.env.SMTP_REPLY_TO || 'freeproductsonline1@gmail.com';
     }
+    async sendEmail(options) {
+        const fromAddress = options.from || process.env.RESEND_FROM || 'FreeProducts.online <support@freeproducts.online>';
+        const replyTo = options.replyTo || this.getReplyTo();
+        if (this.resend) {
+            const { data, error } = await this.resend.emails.send({
+                from: fromAddress,
+                to: options.to,
+                subject: options.subject,
+                html: options.html,
+                text: options.text,
+                replyTo,
+                ...(options.idempotencyKey ? { idempotencyKey: options.idempotencyKey } : {}),
+                ...(options.tags ? { tags: options.tags } : {}),
+            });
+            if (error) {
+                this.logger.error(`❌ Resend email dispatch error to ${options.to}: ${error.message} (${error.name})`);
+                if (this.transporter) {
+                    this.logger.log(`🔄 Attempting fallback delivery via SMTP to ${options.to}...`);
+                    try {
+                        const info = await this.transporter.sendMail({
+                            from: this.getSender(),
+                            replyTo,
+                            to: options.to,
+                            subject: options.subject,
+                            html: options.html,
+                            text: options.text,
+                        });
+                        this.logger.log(`✅ Fallback SMTP email delivered: ${info.messageId}`);
+                        return {
+                            success: true,
+                            provider: 'smtp',
+                            id: info.messageId,
+                        };
+                    }
+                    catch (smtpErr) {
+                        this.logger.error(`❌ Fallback SMTP delivery also failed: ${smtpErr.message}`);
+                    }
+                }
+                return {
+                    success: false,
+                    provider: 'resend',
+                    error: {
+                        message: error.message,
+                        name: error.name,
+                    },
+                };
+            }
+            this.logger.log(`✅ Email successfully sent via Resend to ${options.to} (Message ID: ${data?.id})`);
+            return {
+                success: true,
+                provider: 'resend',
+                id: data?.id,
+            };
+        }
+        if (this.transporter) {
+            try {
+                const info = await this.transporter.sendMail({
+                    from: this.getSender(),
+                    replyTo,
+                    to: options.to,
+                    subject: options.subject,
+                    html: options.html,
+                    text: options.text,
+                });
+                this.logger.log(`✅ Email sent via SMTP to ${options.to}: ${info.messageId}`);
+                return {
+                    success: true,
+                    provider: 'smtp',
+                    id: info.messageId,
+                };
+            }
+            catch (err) {
+                this.logger.error(`❌ SMTP delivery failed: ${err.message}`);
+                return {
+                    success: false,
+                    provider: 'smtp',
+                    error: { message: err.message },
+                };
+            }
+        }
+        return {
+            success: false,
+            provider: 'none',
+            error: { message: 'No email service configured (missing RESEND_API_KEY and SMTP configuration)' },
+        };
+    }
     async sendRegisterOtp(toEmail, code, name) {
         const appName = process.env.APP_NAME || 'FreeProducts.online';
-        const from = this.getSender();
-        const replyTo = this.getReplyTo();
         const subject = `Your Verification Code: ${code} - ${appName}`;
         const recipientName = name ? name.trim() : 'Reviewer';
         const html = `
@@ -119,27 +218,24 @@ let MailService = MailService_1 = class MailService {
       </body>
       </html>
     `;
-        try {
-            const info = await this.transporter.sendMail({
-                from,
-                replyTo,
-                to: toEmail,
-                subject,
-                html,
-                text: `Your ${appName} verification code is: ${code}. Valid for 10 minutes.`,
-            });
-            this.logger.log(`✅ Registration OTP email sent to ${toEmail}: ${info.messageId}`);
-            return true;
+        const result = await this.sendEmail({
+            to: toEmail,
+            subject,
+            html,
+            text: `Your ${appName} verification code is: ${code}. Valid for 10 minutes.`,
+            idempotencyKey: `register-otp-${toEmail}-${code}`,
+            tags: [
+                { name: 'category', value: 'otp-verification' },
+                { name: 'type', value: 'register' },
+            ],
+        });
+        if (!result.success) {
+            throw new Error(result.error?.message || 'Failed to dispatch registration OTP email');
         }
-        catch (error) {
-            this.logger.error(`❌ Failed to send registration OTP email to ${toEmail}: ${error.message}`);
-            throw error;
-        }
+        return true;
     }
     async sendForgotPasswordOtp(toEmail, code, name) {
         const appName = process.env.APP_NAME || 'FreeProducts.online';
-        const from = this.getSender();
-        const replyTo = this.getReplyTo();
         const subject = `Password Reset Code: ${code} - ${appName}`;
         const recipientName = name ? name.trim() : 'User';
         const html = `
@@ -215,22 +311,21 @@ let MailService = MailService_1 = class MailService {
       </body>
       </html>
     `;
-        try {
-            const info = await this.transporter.sendMail({
-                from,
-                replyTo,
-                to: toEmail,
-                subject,
-                html,
-                text: `Your ${appName} password reset code is: ${code}. Valid for 10 minutes.`,
-            });
-            this.logger.log(`✅ Forgot password OTP email sent to ${toEmail}: ${info.messageId}`);
-            return true;
+        const result = await this.sendEmail({
+            to: toEmail,
+            subject,
+            html,
+            text: `Your ${appName} password reset code is: ${code}. Valid for 10 minutes.`,
+            idempotencyKey: `forgot-password-otp-${toEmail}-${code}`,
+            tags: [
+                { name: 'category', value: 'password-reset' },
+                { name: 'type', value: 'recovery' },
+            ],
+        });
+        if (!result.success) {
+            throw new Error(result.error?.message || 'Failed to dispatch forgot password OTP email');
         }
-        catch (error) {
-            this.logger.error(`❌ Failed to send forgot password OTP email to ${toEmail}: ${error.message}`);
-            throw error;
-        }
+        return true;
     }
 };
 MailService = MailService_1 = __decorate([

@@ -6,10 +6,12 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 import { Module } from '@nestjs/common';
 import { MailService } from './mail.service.js';
+import { MailController } from './mail.controller.js';
 let MailModule = class MailModule {
 };
 MailModule = __decorate([
     Module({
+        controllers: [MailController],
         providers: [MailService],
         exports: [MailService],
     })

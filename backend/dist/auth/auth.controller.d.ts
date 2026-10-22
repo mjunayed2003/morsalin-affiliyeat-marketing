@@ -18,9 +18,8 @@ export declare class AuthController {
         message: string;
         user: {
             id: string;
-            createdAt: Date;
-            name: string;
             phone: string;
+            name: string;
             email: string | null;
             address: string | null;
             city: string | null;
@@ -30,6 +29,7 @@ export declare class AuthController {
             paypalEmail: string | null;
             verified: boolean;
             role: import("../generated/prisma/enums.js").Role;
+            createdAt: Date;
         };
         token: string;
     }>;
@@ -47,15 +47,15 @@ export declare class AuthController {
         message: string;
         user: {
             id: string;
-            createdAt: Date;
-            name: string;
             phone: string;
+            name: string;
             email: string | null;
             address: string | null;
             city: string | null;
             avatar: string | null;
             verified: boolean;
             role: import("../generated/prisma/enums.js").Role;
+            createdAt: Date;
         };
         token: string;
     }>;
@@ -96,9 +96,8 @@ export declare class AuthController {
     }>;
     getProfile(currentUser: AuthenticatedUser): Promise<{
         id: string;
-        createdAt: Date;
-        name: string;
         phone: string;
+        name: string;
         email: string | null;
         address: string | null;
         city: string | null;
@@ -109,5 +108,6 @@ export declare class AuthController {
         verified: boolean;
         role: import("../generated/prisma/enums.js").Role;
         canReview: boolean;
+        createdAt: Date;
     }>;
 }

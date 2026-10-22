@@ -14,8 +14,12 @@ import {
   FaEnvelope,
   FaCircleCheck,
   FaArrowLeft,
-  FaWhatsapp
+  FaWhatsapp,
+  FaArrowDown,
+  FaCheck,
+  FaCheckDouble
 } from 'react-icons/fa6';
+import { IoSend } from 'react-icons/io5';
 import { FiX } from 'react-icons/fi';
 import { useApp } from '@/app/context/AppContext';
 import { useAuth } from '@/app/context/AuthContext';
@@ -91,6 +95,10 @@ export default function AdminInboxPage() {
   const chatFeedRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const typingTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [showScrollBottom, setShowScrollBottom] = useState(false);
+  const isNearBottomRef = useRef(true);
+  const prevConvIdRef = useRef<string>('');
+  const prevMsgCountRef = useRef<number>(0);
 
   // Group and sort conversations: NEWEST MESSAGE ALWAYS ON TOP
   const conversations = useMemo(() => {
@@ -216,12 +224,54 @@ export default function AdminInboxPage() {
     }
   }, [activeConversation?.id, messages.length]);
 
-  // Auto scroll chat feed internally when messages change
-  useEffect(() => {
+  const scrollToBottom = (smooth = true) => {
     if (chatFeedRef.current) {
-      chatFeedRef.current.scrollTop = chatFeedRef.current.scrollHeight;
+      if (smooth) {
+        chatFeedRef.current.scrollTo({
+          top: chatFeedRef.current.scrollHeight,
+          behavior: 'smooth',
+        });
+      } else {
+        chatFeedRef.current.scrollTop = chatFeedRef.current.scrollHeight;
+      }
     }
-  }, [activeMessages, selectedImage, isTyping]);
+  };
+
+  const handleScroll = () => {
+    if (!chatFeedRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = chatFeedRef.current;
+    // Within 120px from bottom is considered at bottom
+    const isNearBottom = scrollHeight - scrollTop - clientHeight < 120;
+    isNearBottomRef.current = isNearBottom;
+    setShowScrollBottom(!isNearBottom);
+  };
+
+  // Smart auto-scroll:
+  // 1. When switching conversation -> jump to bottom immediately
+  // 2. When new messages arrive -> ONLY scroll if user is already near bottom!
+  // 3. If user has scrolled up to read earlier history -> DO NOT force them down!
+  useEffect(() => {
+    const currentConvId = activeConversation?.id || '';
+    const isDifferentConv = prevConvIdRef.current !== currentConvId;
+    prevConvIdRef.current = currentConvId;
+
+    if (isDifferentConv) {
+      isNearBottomRef.current = true;
+      setShowScrollBottom(false);
+      requestAnimationFrame(() => scrollToBottom(false));
+      prevMsgCountRef.current = activeMessages.length;
+      return;
+    }
+
+    const hasNewMessages = activeMessages.length > prevMsgCountRef.current;
+    prevMsgCountRef.current = activeMessages.length;
+
+    if (hasNewMessages) {
+      if (isNearBottomRef.current) {
+        requestAnimationFrame(() => scrollToBottom(true));
+      }
+    }
+  }, [activeMessages.length, activeConversation?.id]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setReplyText(e.target.value);
@@ -250,6 +300,11 @@ export default function AdminInboxPage() {
     setReplyText('');
     setSelectedImage(null);
     showToast(`Reply sent to ${activeConversation?.name || 'Reviewer'}.`);
+
+    // Always scroll to bottom when admin sends a message
+    isNearBottomRef.current = true;
+    setShowScrollBottom(false);
+    requestAnimationFrame(() => scrollToBottom(true));
   };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -500,8 +555,13 @@ export default function AdminInboxPage() {
             </div>
           </div>
 
-          {/* Messages Feed */}
-          <div ref={chatFeedRef} className="flex-1 overflow-y-auto overscroll-contain min-h-0 p-4 sm:p-5 space-y-3.5 bg-stone-50/40">
+          {/* Messages Feed Container */}
+          <div className="relative flex-1 flex flex-col min-h-0">
+            <div 
+              ref={chatFeedRef} 
+              onScroll={handleScroll}
+              className="flex-1 overflow-y-auto overscroll-contain min-h-0 p-4 sm:p-5 space-y-3.5 bg-stone-50/40"
+            >
             {hasMoreMessages && (
               <div className="flex justify-center my-1">
                 <button
@@ -624,6 +684,30 @@ export default function AdminInboxPage() {
                     >
                       {msg.text}
                     </div>
+
+                    {/* Delivery & Seen Status */}
+                    <div className="flex items-center gap-1.5 px-1 text-[10px]">
+                      {isAdmin ? (
+                        msg.read ? (
+                          <span className="inline-flex items-center gap-1 text-sky-600 font-bold" title="Seen by customer">
+                            <FaCheckDouble className="w-3 h-3 text-sky-500" />
+                            <span>Seen</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-slate-400 font-medium" title="Delivered to customer">
+                            <FaCheck className="w-2.5 h-2.5 text-slate-400" />
+                            <span>Sent</span>
+                          </span>
+                        )
+                      ) : (
+                        !msg.read && (
+                          <span className="inline-flex items-center gap-1 text-rose-500 font-bold">
+                            <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                            <span>Unread</span>
+                          </span>
+                        )
+                      )}
+                    </div>
                   </div>
                 );
               })
@@ -641,6 +725,24 @@ export default function AdminInboxPage() {
                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-bounce [animation-delay:0.4s]"></div>
                 </div>
               </div>
+            )}
+            </div>
+
+            {/* Floating Scroll to Latest Button */}
+            {showScrollBottom && (
+              <button
+                type="button"
+                onClick={() => {
+                  isNearBottomRef.current = true;
+                  setShowScrollBottom(false);
+                  scrollToBottom(true);
+                }}
+                className="absolute bottom-3 right-4 sm:right-6 z-20 bg-slate-900/90 hover:bg-slate-950 text-white px-3.5 py-2 rounded-full shadow-lg border border-slate-700/60 backdrop-blur-xs flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 cursor-pointer animate-in fade-in"
+                title="Scroll down to latest messages"
+              >
+                <FaArrowDown className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Latest</span>
+              </button>
             )}
           </div>
 
@@ -687,15 +789,25 @@ export default function AdminInboxPage() {
                 className="flex-1 h-10 px-4 text-xs sm:text-sm bg-stone-50 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-[#1b3b2b]/20 focus:border-[#1b3b2b] focus:bg-white transition-all font-medium text-slate-900"
               />
 
-              <button
-                type="submit"
-                disabled={!replyText.trim() && !selectedImage}
-                className="h-10 px-4 sm:px-5 rounded-xl bg-[#1b3b2b] hover:bg-emerald-800 active:scale-95 disabled:opacity-35 disabled:hover:bg-[#1b3b2b] disabled:pointer-events-none text-white shadow-xs transition-all cursor-pointer font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shrink-0"
-                title="Send reply"
-              >
-                <span className="hidden sm:inline">Send</span>
-                <FaPaperPlane className="w-3.5 h-3.5 text-emerald-200" />
-              </button>
+              {/* Crisp Send Button */}
+              {(() => {
+                const canSend = !!replyText.trim() || !!selectedImage;
+                return (
+                  <button
+                    type="submit"
+                    disabled={!canSend}
+                    className={`h-10 px-3.5 sm:px-5 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shrink-0 transition-all duration-200 select-none ${
+                      canSend
+                        ? 'bg-[#1b3b2b] hover:bg-[#142e20] text-white shadow-sm active:scale-95 cursor-pointer'
+                        : 'bg-slate-100 border border-slate-200 text-slate-400 cursor-not-allowed opacity-75'
+                    }`}
+                    title={canSend ? 'Send reply' : 'Type a reply to send'}
+                  >
+                    <span className="hidden sm:inline">Send</span>
+                    <IoSend className={`w-4 h-4 transition-transform ${canSend ? 'text-white translate-x-[1px]' : 'text-slate-400'}`} />
+                  </button>
+                );
+              })()}
             </form>
           </div>
 

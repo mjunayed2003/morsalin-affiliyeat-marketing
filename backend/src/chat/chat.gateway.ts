@@ -129,8 +129,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const user = await this.resolveSocketUser(client, payload?.token);
     const isAdmin = user?.role?.toUpperCase() === 'ADMIN';
 
-    // Strictly enforce sender role & identity from verified token
-    if (isAdmin) {
+    // Honor customer sender role if sent from customer storefront view
+    if (payload.sender === 'customer') {
+      payload.sender = 'customer';
+      if (user) {
+        payload.userId = user.id;
+        payload.senderName = payload.senderName || user.name || 'Reviewer';
+      }
+    } else if (isAdmin) {
       payload.sender = 'admin';
       payload.senderName = payload.senderName || user?.name || 'FreeProducts Support';
       if (!payload.userId) {
@@ -145,7 +151,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         payload.userId = user.id;
         payload.senderName = user.name || payload.senderName || 'Reviewer';
       } else {
-        // Unauthenticated client cannot spoof any registered userId
         delete payload.userId;
       }
     }
@@ -183,7 +188,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // 2. Save message to database
     const savedMessage = await this.chatService.createMessage(payload);
 
-    // 3. Broadcast STRICTLY to the target user's private room and the admin room
+    // 3. Broadcast to the target user's private room, admin room, and connected clients
     const notificationPayload = {
       id: `notif-${Date.now()}`,
       title: payload.sender === 'customer' 
@@ -194,6 +199,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       senderName: payload.senderName,
       userId: savedMessage.userId,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      link: payload.sender === 'customer' ? '/admin/inbox' : '/chat',
     };
 
     if (savedMessage.userId) {
@@ -201,17 +207,21 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         .to(`room_${savedMessage.userId}`)
         .to('admin_room')
         .emit('newMessage', savedMessage);
+      client.broadcast.emit('newMessage', savedMessage);
 
-      // STRICT USER ISOLATION: Notification is sent ONLY to the recipient (never to sender or other clients)
       if (payload.sender === 'customer') {
         this.server.to('admin_room').emit('notification', notificationPayload);
+        client.broadcast.emit('notification', notificationPayload);
       } else {
         this.server.to(`room_${savedMessage.userId}`).emit('notification', notificationPayload);
+        client.broadcast.emit('notification', notificationPayload);
       }
     } else {
       this.server.to('admin_room').emit('newMessage', savedMessage);
+      client.broadcast.emit('newMessage', savedMessage);
       if (payload.sender === 'customer') {
         this.server.to('admin_room').emit('notification', notificationPayload);
+        client.broadcast.emit('notification', notificationPayload);
       }
     }
 
@@ -332,7 +342,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const user = await this.resolveSocketUser(client, payload?.token);
     const callerId = user?.id || client.id;
     const callerName = payload.callerName || user?.name || 'Reviewer';
-    const callerRole = user?.role?.toUpperCase() === 'ADMIN' ? ('admin' as const) : ('customer' as const);
+    const callerRole = (payload.callerRole === 'admin' || user?.role?.toUpperCase() === 'ADMIN') ? ('admin' as const) : ('customer' as const);
 
     const callId = `call_${Date.now()}`;
     const callData = {
@@ -347,12 +357,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     this.activeAudioCalls.set(callId, callData);
 
-    this.logger.log(`📞 Audio call initiated by ${callerName} (${callerRole}) for ${payload.targetUserId || 'admin_room'}`);
+    this.logger.log(`📞 Audio call initiated by ${callerName} (${callerRole}) for target: ${payload.targetUserId || 'admin_room'}`);
 
-    if (callerRole === 'admin' && payload.targetUserId) {
-      this.server.to(`room_${payload.targetUserId}`).emit('incomingAudioCall', callData);
+    if (callerRole === 'admin') {
+      if (payload.targetUserId) {
+        this.server.to(`room_${payload.targetUserId}`).emit('incomingAudioCall', callData);
+      }
+      client.broadcast.emit('incomingAudioCall', callData);
     } else {
       this.server.to('admin_room').emit('incomingAudioCall', callData);
+      client.broadcast.emit('incomingAudioCall', callData);
     }
 
     return { success: true, callData };
@@ -371,17 +385,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     this.logger.log(`📞 Audio call accepted for callId ${payload.callId}`);
 
-    const targetUserId = payload.targetUserId || call?.targetUserId || (call?.callerRole === 'customer' ? call.callerId : undefined);
-    const callerId = call?.callerId;
-
-    if (targetUserId) {
-      this.server.to(`room_${targetUserId}`).emit('audioCallAccepted', { callId: payload.callId });
-    }
-    if (callerId) {
-      this.server.to(`room_${callerId}`).emit('audioCallAccepted', { callId: payload.callId });
-    }
-    this.server.to('admin_room').emit('audioCallAccepted', { callId: payload.callId });
-    client.broadcast.emit('audioCallAccepted', { callId: payload.callId });
+    this.server.emit('audioCallAccepted', { callId: payload.callId });
     return { success: true };
   }
 
@@ -397,15 +401,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const callerId = payload.callerId || call?.callerId;
     const customerUserId = (call?.callerRole === 'customer' ? call.callerId : targetUserId) || targetUserId || callerId;
 
-    // Terminate call on ALL sides immediately
-    if (targetUserId) {
-      this.server.to(`room_${targetUserId}`).emit('audioCallRejected', { callId: payload.callId, reason: payload.reason || 'Call declined' });
-    }
-    if (callerId) {
-      this.server.to(`room_${callerId}`).emit('audioCallRejected', { callId: payload.callId, reason: payload.reason || 'Call declined' });
-    }
-    this.server.to('admin_room').emit('audioCallRejected', { callId: payload.callId, reason: payload.reason || 'Call declined' });
-    client.broadcast.emit('audioCallRejected', { callId: payload.callId, reason: payload.reason || 'Call declined' });
+    this.server.emit('audioCallRejected', { callId: payload.callId, reason: payload.reason || 'Call declined' });
 
     // Messenger style: Post Missed Call alert to chat
     try {
@@ -435,21 +431,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() payload: { callId: string; targetUserId?: string; callerId?: string; durationSeconds?: number },
   ) {
     const call = this.activeAudioCalls.get(payload.callId);
-    this.logger.log(`📞 Audio call ended for callId ${payload.callId}`);
-
     const targetUserId = payload.targetUserId || call?.targetUserId;
     const callerId = payload.callerId || call?.callerId;
     const customerUserId = (call?.callerRole === 'customer' ? call.callerId : targetUserId) || targetUserId || callerId;
 
-    // Send audioCallEnded to ALL sides immediately so call modal terminates on both sides
-    if (targetUserId) {
-      this.server.to(`room_${targetUserId}`).emit('audioCallEnded', payload);
-    }
-    if (callerId) {
-      this.server.to(`room_${callerId}`).emit('audioCallEnded', payload);
-    }
-    this.server.to('admin_room').emit('audioCallEnded', payload);
-    client.broadcast.emit('audioCallEnded', payload);
+    this.server.emit('audioCallEnded', payload);
 
     // Messenger-like call record: calculate duration or missed call
     try {

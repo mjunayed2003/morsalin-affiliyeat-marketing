@@ -12,6 +12,7 @@ import {
   FaShieldHalved, 
   FaTrashCan,
   FaCheck,
+  FaCheckDouble,
   FaPhone,
   FaBagShopping,
   FaLock,
@@ -42,6 +43,7 @@ export default function ChatPage() {
     isLoadingOlderMessages,
     loadOlderMessages,
     chatTotal,
+    markConversationAsRead,
   } = useApp();
 
   const { user, isAuthenticated, isLoading, openAuthModal, startGuestChat } = useAuth();
@@ -63,10 +65,14 @@ export default function ChatPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showScrollBottom, setShowScrollBottom] = useState(false);
 
+  const isNearBottomRef = useRef(true);
+  const prevMsgCountRef = useRef<number>(0);
+
   const handleScroll = () => {
     if (!chatFeedRef.current) return;
     const { scrollTop, scrollHeight, clientHeight } = chatFeedRef.current;
     const isNearBottom = scrollHeight - scrollTop - clientHeight < 120;
+    isNearBottomRef.current = isNearBottom;
     setShowScrollBottom(!isNearBottom);
   };
 
@@ -78,10 +84,19 @@ export default function ChatPage() {
     }
   };
 
-  // Auto scroll to bottom internally when new messages arrive without scrolling the window
+  // Auto scroll to bottom only when user is near bottom or initial load
   useEffect(() => {
-    scrollToBottom(true);
-  }, [messages.length, isTyping, selectedImage, inquiryProduct]);
+    const hasNew = messages.length > prevMsgCountRef.current;
+    prevMsgCountRef.current = messages.length;
+    if (hasNew && isNearBottomRef.current) {
+      requestAnimationFrame(() => scrollToBottom(true));
+    }
+  }, [messages.length]);
+
+  // Auto mark incoming admin messages as read when viewing chat
+  useEffect(() => {
+    markConversationAsRead();
+  }, [messages.length]);
 
   // Handle Image Selection
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -553,12 +568,22 @@ export default function ChatPage() {
                       )}
 
                       {/* Timestamp & checkmark */}
-                      <div className={`flex items-center justify-end gap-1 text-[10px] mt-1.5 ${
+                      <div className={`flex items-center justify-end gap-1.5 text-[10px] mt-1.5 ${
                         isCustomer ? 'text-emerald-200' : 'text-slate-400'
                       }`}>
-                        <span>{msg.timestamp}</span>
+                        <span className="font-mono">{msg.timestamp}</span>
                         {isCustomer && (
-                          <FaCheck className="w-2.5 h-2.5 text-emerald-300" />
+                          msg.read ? (
+                            <span className="inline-flex items-center gap-1 text-sky-300 font-bold" title="Seen by Support Desk">
+                              <FaCheckDouble className="w-3 h-3 text-sky-300" />
+                              <span className="text-[9px]">Seen</span>
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-emerald-200/70 font-normal" title="Delivered to Support Desk">
+                              <FaCheck className="w-2.5 h-2.5 text-emerald-200/70" />
+                              <span className="text-[9px]">Sent</span>
+                            </span>
+                          )
                         )}
                       </div>
                     </div>

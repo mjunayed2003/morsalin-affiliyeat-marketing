@@ -213,6 +213,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [audioCall, setAudioCall] = useState<AudioCallState | null>(null);
+  const audioCallRef = useRef<AudioCallState | null>(null);
+
+  useEffect(() => {
+    audioCallRef.current = audioCall;
+  }, [audioCall]);
+
   const [chatPage, setChatPage] = useState(1);
   const [chatTotal, setChatTotal] = useState(0);
   const [hasMoreMessages, setHasMoreMessages] = useState(false);
@@ -718,18 +724,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           const isAdmin = user?.role === 'admin';
           const isBroadcast = Boolean(notif.isBroadcast || notif.type === 'product');
 
-          // If NOT a broadcast, enforce strict user isolation:
+          // If NOT a broadcast, only discard if current client is the actual sender of this message
           if (!isBroadcast) {
-            if (isAdmin) {
-              // Admin only receives notifications when customers send messages
-              if (notif.sender !== 'customer') return;
-            } else {
-              // Customer must be logged in and the notification MUST be targeted to their exact user ID
-              if (!user?.id) return;
-              if (!notif.userId || notif.userId !== user.id) return;
-              // Customer only receives notifications when admin replies
-              if (notif.sender !== 'admin') return;
-            }
+            // Admin sent this -> Don't notify admin of their own message
+            if (isAdmin && notif.sender === 'admin') return;
+            // Customer sent this -> Don't notify customer of their own message
+            if (!isAdmin && notif.sender === 'customer' && notif.userId === user?.id) return;
+            // Target customer check: customer should only receive notifications destined for them
+            if (!isAdmin && notif.userId && user?.id && notif.userId !== user.id) return;
           }
 
           playChime();
@@ -776,20 +778,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         };
 
         const handleIncomingAudioCall = (callData: any) => {
+          // If this client is already in this call or is the caller, do NOT ring self!
+          if (audioCallRef.current && audioCallRef.current.callId === callData.callId) return;
+          if (callData.callerId && user?.id && callData.callerId === user.id) return;
+
           const isAdmin = user?.role === 'admin';
 
-          // STRICT CALL RECIPIENT VALIDATION:
-          if (isAdmin) {
-            // Admin only receives incoming calls from customers
-            if (callData.callerRole === 'admin') return;
-          } else {
-            // Customer must be logged in and must be the exact target of the call
-            if (!user?.id || callData.targetUserId !== user.id) return;
-            if (callData.callerRole !== 'admin') return;
+          // Target check:
+          // 1. Customer calls -> ONLY Admin receives
+          // 2. Admin calls -> ONLY matching customer receives
+          let isIntendedRecipient = false;
+          if (callData.callerRole === 'customer') {
+            isIntendedRecipient = isAdmin;
+          } else if (callData.callerRole === 'admin') {
+            isIntendedRecipient = !isAdmin && (!callData.targetUserId || user?.id === callData.targetUserId);
           }
 
+          if (!isIntendedRecipient) return;
+
           startRingtoneLoop();
-          setAudioCall({
+          const incomingState: AudioCallState = {
             callId: callData.callId,
             callerId: callData.callerId,
             callerName: callData.callerName,
@@ -798,7 +806,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             status: 'incoming',
             durationSeconds: 0,
             isMuted: false,
-          });
+          };
+          audioCallRef.current = incomingState;
+          setAudioCall(incomingState);
           showToast(`📞 Incoming Audio Call from ${callData.callerName}!`);
           showBrowserNotification(`📞 Incoming Audio Call`, {
             body: `${callData.callerName} is calling you on FreeProducts.online`,
@@ -836,6 +846,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const handleAudioCallRejected = (data?: any) => {
           stopRingtoneLoop();
           if (callTimerRef.current) clearInterval(callTimerRef.current);
+          audioCallRef.current = null;
           setAudioCall(null);
           showToast(data?.reason || 'Call was declined.');
         };
@@ -843,6 +854,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const handleAudioCallEnded = (data?: any) => {
           stopRingtoneLoop();
           if (callTimerRef.current) clearInterval(callTimerRef.current);
+          audioCallRef.current = null;
           setAudioCall(null);
           showToast('📞 Call ended.');
         };
@@ -973,6 +985,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               });
 
               const merged = dedupeMessages([...alreadyLoadedOlder, ...isolatedData, ...pendingOptimistic]);
+
+              // Prevent unnecessary state update and re-render if messages haven't changed!
+              if (
+                prev.length === merged.length &&
+                (prev.length === 0 || (prev[prev.length - 1]?.id === merged[merged.length - 1]?.id && prev[0]?.id === merged[0]?.id))
+              ) {
+                return prev;
+              }
+
               if (storageKey) {
                 try {
                   localStorage.setItem(storageKey, JSON.stringify(merged));
@@ -1346,9 +1367,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const unreadIds: string[] = [];
     setMessages((prev) => {
       let changed = false;
+      const isAdmin = user?.role === 'admin';
+      const targetSender = isAdmin ? 'customer' : 'admin';
+
       const next = prev.map((m) => {
-        const matchConv = convUserId === 'guest' || !convUserId ? !m.userId : m.userId === convUserId;
-        if (matchConv && m.sender === 'customer' && !m.read) {
+        const matchConv = isAdmin
+          ? (convUserId === 'guest' || !convUserId ? !m.userId : m.userId === convUserId)
+          : true;
+
+        if (matchConv && m.sender === targetSender && !m.read) {
           unreadIds.push(m.id);
           changed = true;
           return { ...m, read: true };
@@ -1360,7 +1387,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     if (unreadIds.length > 0) {
       const socket = getSocket();
-      if (socket && socket.connected) {
+      if (socket) {
         socket.emit('markAsRead', { ids: unreadIds });
       }
       fetch(`${API_BASE_URL}/chat/messages/read`, {
@@ -1375,12 +1402,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const startAudioCall = (targetUserId?: string, partnerName?: string) => {
     const socket = getSocket();
     const token = typeof window !== 'undefined' ? localStorage.getItem('bytedesk_token_v2') : null;
-    const callerName = user?.name || 'Reviewer';
+    const callerName = user?.name || (user?.role === 'admin' ? 'FreeProducts Support' : 'Reviewer');
     const callerRole = user?.role === 'admin' ? ('admin' as const) : ('customer' as const);
 
-    startRingtoneLoop();
-    setAudioCall({
-      callId: `call_${Date.now()}`,
+    const callId = `call_${Date.now()}`;
+    const newCallState: AudioCallState = {
+      callId,
       callerId: user?.id || 'guest',
       callerName: partnerName || (callerRole === 'admin' ? 'Customer' : 'FreeProducts Support Desk'),
       callerRole,
@@ -1388,10 +1415,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       status: 'calling',
       durationSeconds: 0,
       isMuted: false,
-    });
+    };
 
-    if (socket && socket.connected) {
+    audioCallRef.current = newCallState;
+    startRingtoneLoop();
+    setAudioCall(newCallState);
+
+    if (socket) {
       socket.emit('startAudioCall', {
+        callId,
         targetUserId,
         callerName,
         callerRole,
@@ -1403,34 +1435,39 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const acceptAudioCall = () => {
     stopRingtoneLoop();
-    if (!audioCall) return;
+    if (!audioCallRef.current) return;
+    const current = audioCallRef.current;
     const socket = getSocket();
     const token = typeof window !== 'undefined' ? localStorage.getItem('bytedesk_token_v2') : null;
-    if (socket && socket.connected) {
+    if (socket) {
       socket.emit('acceptAudioCall', {
-        callId: audioCall.callId,
-        targetUserId: audioCall.targetUserId,
+        callId: current.callId,
+        targetUserId: current.targetUserId,
         token: token || undefined,
       });
     }
-    setAudioCall((prev) => (prev ? { ...prev, status: 'connected' } : null));
+    const updatedState: AudioCallState = { ...current, status: 'connected' };
+    audioCallRef.current = updatedState;
+    setAudioCall(updatedState);
   };
 
   const rejectAudioCall = () => {
     stopRingtoneLoop();
     if (callTimerRef.current) clearInterval(callTimerRef.current);
-    if (!audioCall) return;
+    if (!audioCallRef.current) return;
+    const current = audioCallRef.current;
     const socket = getSocket();
     const token = typeof window !== 'undefined' ? localStorage.getItem('bytedesk_token_v2') : null;
-    if (socket && socket.connected) {
+    if (socket) {
       socket.emit('rejectAudioCall', {
-        callId: audioCall.callId,
-        targetUserId: audioCall.targetUserId,
-        callerId: audioCall.callerId,
+        callId: current.callId,
+        targetUserId: current.targetUserId,
+        callerId: current.callerId,
         reason: 'Call declined',
         token: token || undefined,
       });
     }
+    audioCallRef.current = null;
     setAudioCall(null);
     showToast('Call declined.');
   };
@@ -1438,16 +1475,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const endAudioCall = () => {
     stopRingtoneLoop();
     if (callTimerRef.current) clearInterval(callTimerRef.current);
-    if (!audioCall) return;
+    if (!audioCallRef.current) return;
+    const current = audioCallRef.current;
     const socket = getSocket();
-    if (socket && socket.connected) {
+    if (socket) {
       socket.emit('endAudioCall', {
-        callId: audioCall.callId,
-        targetUserId: audioCall.targetUserId,
-        callerId: audioCall.callerId,
-        durationSeconds: audioCall.durationSeconds,
+        callId: current.callId,
+        targetUserId: current.targetUserId,
+        callerId: current.callerId,
+        durationSeconds: current.durationSeconds,
       });
     }
+    audioCallRef.current = null;
     setAudioCall(null);
     showToast('Call ended.');
   };
