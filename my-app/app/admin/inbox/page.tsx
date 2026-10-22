@@ -61,7 +61,7 @@ interface ConversationItem {
 }
 
 export default function AdminInboxPage() {
-  const { messages, sendAdminReply, clearMessages, showToast, isTyping, typingSender, emitTyping } = useApp();
+  const { messages, sendAdminReply, clearMessages, showToast, isTyping, typingSender, emitTyping, markConversationAsRead } = useApp();
   const { users } = useAuth();
 
   const [selectedConversationId, setSelectedConversationId] = useState<string>('');
@@ -192,6 +192,13 @@ export default function AdminInboxPage() {
       return true;
     });
   }, [messages, activeConversation, activeTab]);
+
+  // Auto mark conversation messages as read when active
+  useEffect(() => {
+    if (activeConversation) {
+      markConversationAsRead(activeConversation.id);
+    }
+  }, [activeConversation?.id, messages.length]);
 
   // Auto scroll chat feed internally when messages change
   useEffect(() => {
@@ -325,6 +332,7 @@ export default function AdminInboxPage() {
                     onClick={() => {
                       setSelectedConversationId(conv.id);
                       setMobileShowChat(true);
+                      markConversationAsRead(conv.id);
                     }}
                     className={`w-full text-left p-3.5 transition-all flex items-start gap-3 cursor-pointer ${
                       isSelected
@@ -488,6 +496,28 @@ export default function AdminInboxPage() {
             ) : (
               activeMessages.map((msg) => {
                 const isAdmin = msg.sender === 'admin';
+
+                {/* Check for Audio Call or Missed Call Event */}
+                if (msg.text?.startsWith('📞')) {
+                  const isMissed = msg.text.includes('Missed') || msg.text.includes('declined');
+                  return (
+                    <div key={msg.id} className="flex justify-center my-3 w-full animate-in fade-in">
+                      <div className={`inline-flex items-center gap-2.5 px-4 py-2 rounded-2xl text-xs font-bold shadow-xs border ${
+                        isMissed
+                          ? 'bg-rose-50 text-rose-700 border-rose-200'
+                          : 'bg-emerald-50 text-emerald-900 border-emerald-200'
+                      }`}>
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white shrink-0 ${
+                          isMissed ? 'bg-rose-500' : 'bg-emerald-600'
+                        }`}>
+                          <FaPhone className="w-3 h-3" />
+                        </div>
+                        <span>{msg.text}</span>
+                        <span className="text-[10px] opacity-60 font-mono ml-1">{msg.timestamp}</span>
+                      </div>
+                    </div>
+                  );
+                }
 
                 return (
                   <div

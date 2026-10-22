@@ -25,15 +25,24 @@ let ChatController = class ChatController {
         this.chatService = chatService;
         this.chatGateway = chatGateway;
     }
-    async getMessages(currentUser, queryUserId) {
+    async getMessages(currentUser, queryUserId, page, limit) {
         const isAdmin = currentUser?.role?.toUpperCase() === 'ADMIN';
+        const parsedPage = page ? parseInt(page, 10) : undefined;
+        const parsedLimit = limit ? parseInt(limit, 10) : undefined;
         if (isAdmin) {
-            return this.chatService.getMessages(queryUserId, true);
+            return this.chatService.getMessages(queryUserId, true, parsedPage, parsedLimit);
         }
         if (currentUser) {
-            return this.chatService.getMessages(currentUser.id, false);
+            return this.chatService.getMessages(currentUser.id, false, parsedPage, parsedLimit);
         }
-        return [];
+        return {
+            messages: [],
+            total: 0,
+            page: 1,
+            limit: parsedLimit || 50,
+            totalPages: 0,
+            hasMore: false,
+        };
     }
     async createMessage(dto, currentUser) {
         const isSenderAdmin = currentUser?.role?.toUpperCase() === 'ADMIN';
@@ -87,7 +96,11 @@ let ChatController = class ChatController {
         return { success: false, message: 'Authentication required' };
     }
     async markAsRead(ids) {
-        return this.chatService.markAsRead(ids);
+        const res = await this.chatService.markAsRead(ids);
+        if (this.chatGateway.server) {
+            this.chatGateway.server.emit('messagesRead', { ids });
+        }
+        return res;
     }
 };
 __decorate([
@@ -95,8 +108,10 @@ __decorate([
     Public(),
     __param(0, CurrentUser()),
     __param(1, Query('userId')),
+    __param(2, Query('page')),
+    __param(3, Query('limit')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:paramtypes", [Object, String, String, String]),
     __metadata("design:returntype", Promise)
 ], ChatController.prototype, "getMessages", null);
 __decorate([
@@ -119,6 +134,7 @@ __decorate([
 ], ChatController.prototype, "clearMessages", null);
 __decorate([
     Patch('messages/read'),
+    Public(),
     __param(0, Body('ids')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Array]),

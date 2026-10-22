@@ -55,6 +55,7 @@ interface AppContextType {
   markNotificationAsRead: (id: string) => void;
   markAllNotificationsAsRead: () => void;
   clearNotifications: () => void;
+  markConversationAsRead: (userId?: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -628,14 +629,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
         const handleAudioCallRejected = (data?: any) => {
           stopRingtoneLoop();
+          if (callTimerRef.current) clearInterval(callTimerRef.current);
           setAudioCall(null);
           showToast(data?.reason || 'Call was declined.');
         };
 
         const handleAudioCallEnded = (data?: any) => {
           stopRingtoneLoop();
+          if (callTimerRef.current) clearInterval(callTimerRef.current);
           setAudioCall(null);
           showToast('📞 Call ended.');
+        };
+
+        const handleMessagesRead = (data?: { ids?: string[] }) => {
+          if (data?.ids && data.ids.length > 0) {
+            const idSet = new Set(data.ids);
+            setMessages((prev) =>
+              prev.map((m) => (idSet.has(m.id) ? { ...m, read: true } : m))
+            );
+          }
         };
 
         socket.on('newMessage', handleNewMessage);
@@ -645,6 +657,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         socket.on('audioCallAccepted', handleAudioCallAccepted);
         socket.on('audioCallRejected', handleAudioCallRejected);
         socket.on('audioCallEnded', handleAudioCallEnded);
+        socket.on('messagesRead', handleMessagesRead);
 
         return () => {
           socket.off('newMessage', handleNewMessage);
@@ -654,6 +667,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           socket.off('audioCallAccepted', handleAudioCallAccepted);
           socket.off('audioCallRejected', handleAudioCallRejected);
           socket.off('audioCallEnded', handleAudioCallEnded);
+          socket.off('messagesRead', handleMessagesRead);
         };
       }
     } catch (e) {
@@ -978,7 +992,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return products.find((p) => p.id === id);
   };
 
-  const unreadCount = messages.filter((m) => m.sender === 'admin' && !m.read).length;
+  const unreadCount = useMemo(() => {
+    if (user?.role === 'admin') {
+      return messages.filter((m) => m.sender === 'customer' && !m.read).length;
+    }
+    return messages.filter((m) => m.sender === 'admin' && !m.read).length;
+  }, [messages, user?.role]);
+
+  const markConversationAsRead = (convUserId?: string) => {
+    const unreadIds: string[] = [];
+    setMessages((prev) => {
+      let changed = false;
+      const next = prev.map((m) => {
+        const matchConv = convUserId === 'guest' || !convUserId ? !m.userId : m.userId === convUserId;
+        if (matchConv && m.sender === 'customer' && !m.read) {
+          unreadIds.push(m.id);
+          changed = true;
+          return { ...m, read: true };
+        }
+        return m;
+      });
+      return changed ? next : prev;
+    });
+
+    if (unreadIds.length > 0) {
+      const socket = getSocket();
+      if (socket && socket.connected) {
+        socket.emit('markAsRead', { ids: unreadIds });
+      }
+      fetch(`${API_BASE_URL}/chat/messages/read`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ ids: unreadIds }),
+      }).catch(() => {});
+    }
+  };
 
   // Audio Call Actions
   const startAudioCall = (targetUserId?: string, partnerName?: string) => {
@@ -1027,6 +1075,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const rejectAudioCall = () => {
     stopRingtoneLoop();
+    if (callTimerRef.current) clearInterval(callTimerRef.current);
     if (!audioCall) return;
     const socket = getSocket();
     const token = typeof window !== 'undefined' ? localStorage.getItem('bytedesk_token_v2') : null;
@@ -1034,11 +1083,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       socket.emit('rejectAudioCall', {
         callId: audioCall.callId,
         targetUserId: audioCall.targetUserId,
+        callerId: audioCall.callerId,
         reason: 'Call declined',
         token: token || undefined,
       });
     }
     setAudioCall(null);
+    showToast('Call declined.');
   };
 
   const endAudioCall = () => {
@@ -1050,6 +1101,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       socket.emit('endAudioCall', {
         callId: audioCall.callId,
         targetUserId: audioCall.targetUserId,
+        callerId: audioCall.callerId,
         durationSeconds: audioCall.durationSeconds,
       });
     }
@@ -1163,6 +1215,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         markNotificationAsRead,
         markAllNotificationsAsRead,
         clearNotifications,
+        markConversationAsRead,
       }}
     >
       {children}

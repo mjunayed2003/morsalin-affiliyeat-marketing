@@ -9,6 +9,7 @@ export declare class ChatGateway implements OnGatewayConnection, OnGatewayDiscon
     server: Server;
     private readonly logger;
     private readonly lastCustomerMessageTimes;
+    private readonly activeAudioCalls;
     constructor(chatService: ChatService, jwtService: JwtService);
     handleConnection(client: Socket): void;
     handleDisconnect(client: Socket): void;
@@ -64,9 +65,10 @@ export declare class ChatGateway implements OnGatewayConnection, OnGatewayDiscon
             callId: string;
             callerId: string;
             callerName: string;
-            callerRole: string;
+            callerRole: "customer" | "admin";
             targetUserId: string | undefined;
             timestamp: string;
+            status: "calling";
         };
     }>;
     handleAcceptAudioCall(client: Socket, payload: {
@@ -79,6 +81,7 @@ export declare class ChatGateway implements OnGatewayConnection, OnGatewayDiscon
     handleRejectAudioCall(client: Socket, payload: {
         callId: string;
         targetUserId?: string;
+        callerId?: string;
         reason?: string;
         token?: string;
     }): Promise<{
@@ -87,6 +90,7 @@ export declare class ChatGateway implements OnGatewayConnection, OnGatewayDiscon
     handleEndAudioCall(client: Socket, payload: {
         callId: string;
         targetUserId?: string;
+        callerId?: string;
         durationSeconds?: number;
     }): Promise<{
         success: boolean;

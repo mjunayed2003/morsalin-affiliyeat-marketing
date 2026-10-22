@@ -6,25 +6,32 @@ export declare class ChatController {
     private readonly chatService;
     private readonly chatGateway;
     constructor(chatService: ChatService, chatGateway: ChatGateway);
-    getMessages(currentUser?: AuthenticatedUser, queryUserId?: string): Promise<{
-        id: any;
-        sender: any;
-        senderName: any;
-        userPhone: any;
-        userEmail: any;
-        text: any;
-        image: any;
-        productInfo: {
+    getMessages(currentUser?: AuthenticatedUser, queryUserId?: string, page?: string, limit?: string): Promise<{
+        messages: {
             id: any;
-            title: any;
-            price: any;
+            sender: any;
+            senderName: any;
+            userPhone: any;
+            userEmail: any;
+            text: any;
             image: any;
-        } | undefined;
-        timestamp: string;
-        read: any;
-        userId: any;
-        createdAt: any;
-    }[]>;
+            productInfo: {
+                id: any;
+                title: any;
+                price: any;
+                image: any;
+            } | undefined;
+            timestamp: string;
+            read: any;
+            userId: any;
+            createdAt: any;
+        }[];
+        total: number;
+        page: number;
+        limit: number;
+        totalPages: number;
+        hasMore: boolean;
+    }>;
     createMessage(dto: SendMessageDto, currentUser?: AuthenticatedUser): Promise<{
         localId: string | undefined;
         id: any;

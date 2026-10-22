@@ -6,14 +6,16 @@ export declare class InquiriesService {
     create(dto: CreateInquiryDto): Promise<{
         user: {
             id: string;
-            name: string;
             phone: string;
+            name: string;
         };
         product: {
-            category: string;
-            description: string;
-            title: string;
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            title: string;
+            description: string;
+            category: string;
             subCategory: string | null;
             price: number;
             originalPrice: number;
@@ -29,8 +31,6 @@ export declare class InquiriesService {
             inStock: boolean;
             store: string | null;
             amazonUrl: string | null;
-            createdAt: Date;
-            updatedAt: Date;
         };
     } & {
         id: string;
@@ -46,14 +46,16 @@ export declare class InquiriesService {
     findAll(userId?: string): Promise<({
         user: {
             id: string;
-            name: string;
             phone: string;
+            name: string;
         };
         product: {
-            category: string;
-            description: string;
-            title: string;
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            title: string;
+            description: string;
+            category: string;
             subCategory: string | null;
             price: number;
             originalPrice: number;
@@ -69,8 +71,6 @@ export declare class InquiriesService {
             inStock: boolean;
             store: string | null;
             amazonUrl: string | null;
-            createdAt: Date;
-            updatedAt: Date;
         };
     } & {
         id: string;
@@ -85,10 +85,12 @@ export declare class InquiriesService {
     })[]>;
     updateStatus(id: string, status: any): Promise<{
         product: {
-            category: string;
-            description: string;
-            title: string;
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            title: string;
+            description: string;
+            category: string;
             subCategory: string | null;
             price: number;
             originalPrice: number;
@@ -104,8 +106,6 @@ export declare class InquiriesService {
             inStock: boolean;
             store: string | null;
             amazonUrl: string | null;
-            createdAt: Date;
-            updatedAt: Date;
         };
     } & {
         id: string;

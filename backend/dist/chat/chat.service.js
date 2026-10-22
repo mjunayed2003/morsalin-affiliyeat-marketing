@@ -41,32 +41,58 @@ let ChatService = class ChatService {
             createdAt: msg.createdAt,
         };
     }
-    async getMessages(userId, isAdmin = false) {
+    async getMessages(userId, isAdmin = false, page, limit) {
+        const emptyResult = {
+            messages: [],
+            total: 0,
+            page: 1,
+            limit: limit || 50,
+            totalPages: 0,
+            hasMore: false,
+        };
         if (!isAdmin && !userId) {
-            return [];
+            return emptyResult;
         }
         const where = {};
         if (userId) {
             where.userId = userId;
         }
         else if (!isAdmin) {
-            return [];
+            return emptyResult;
         }
-        const messages = await this.prisma.chatMessage.findMany({
-            where,
-            include: {
-                user: {
-                    select: {
-                        id: true,
-                        name: true,
-                        phone: true,
-                        email: true,
+        const pageNum = Math.max(1, page || 1);
+        const take = limit ? Math.min(100, Math.max(1, limit)) : 50;
+        const skip = (pageNum - 1) * take;
+        const [rawMessages, total] = await Promise.all([
+            this.prisma.chatMessage.findMany({
+                where,
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            name: true,
+                            phone: true,
+                            email: true,
+                        },
                     },
                 },
-            },
-            orderBy: { createdAt: 'asc' },
-        });
-        return messages.map((m) => this.formatMessage(m));
+                orderBy: { createdAt: 'desc' },
+                skip,
+                take,
+            }),
+            this.prisma.chatMessage.count({ where }),
+        ]);
+        const messages = rawMessages.reverse().map((m) => this.formatMessage(m));
+        const totalPages = Math.ceil(total / take);
+        const hasMore = skip + rawMessages.length < total;
+        return {
+            messages,
+            total,
+            page: pageNum,
+            limit: take,
+            totalPages,
+            hasMore,
+        };
     }
     async createMessage(dto) {
         let validUserId = null;

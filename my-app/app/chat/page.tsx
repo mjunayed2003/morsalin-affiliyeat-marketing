@@ -55,14 +55,29 @@ export default function ChatPage() {
   const typingTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const chatFeedRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showScrollBottom, setShowScrollBottom] = useState(false);
 
-  // Auto scroll messages container internally without scrolling the entire window
-  useEffect(() => {
-    if (chatFeedRef.current) {
+  const handleScroll = () => {
+    if (!chatFeedRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = chatFeedRef.current;
+    const isNearBottom = scrollHeight - scrollTop - clientHeight < 120;
+    setShowScrollBottom(!isNearBottom);
+  };
+
+  const scrollToBottom = (smooth = true) => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto' });
+    } else if (chatFeedRef.current) {
       chatFeedRef.current.scrollTop = chatFeedRef.current.scrollHeight;
     }
-  }, [messages, isTyping, selectedImage]);
+  };
+
+  // Auto scroll to bottom internally when new messages arrive without scrolling the window
+  useEffect(() => {
+    scrollToBottom(true);
+  }, [messages.length, isTyping, selectedImage, inquiryProduct]);
 
   // Handle Image Selection
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -320,25 +335,27 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-stone-50/50 text-slate-900 selection:bg-[#1b3b2b] selection:text-white font-sans pb-16 md:pb-6">
+    <div className="h-screen max-h-screen flex flex-col bg-stone-50/50 text-slate-900 selection:bg-[#1b3b2b] selection:text-white font-sans overflow-hidden">
       {/* Top Navigation */}
       <Navbar />
 
-      {/* Main Chat Hub Container */}
-      <main className="flex-1 max-w-5xl w-full mx-auto px-2 sm:px-6 lg:px-8 py-4 sm:py-6 flex flex-col">
+      {/* Main Chat Hub Container - strictly viewport-contained */}
+      <main className="flex-1 max-w-5xl w-full mx-auto px-2 sm:px-6 lg:px-8 py-2 sm:py-3.5 flex flex-col min-h-0 overflow-hidden">
         
-        {/* Chat Header Card */}
-        <div className="bg-[#1b3b2b] text-white rounded-t-3xl p-4 sm:p-5 shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shrink-0">
+        {/* Unified Chat Box Container: Everything in ONE box */}
+        <div className="flex-1 w-full bg-white rounded-3xl border border-stone-200/90 shadow-xl overflow-hidden flex flex-col min-h-0 relative">
           
-          <div className="flex items-center">
-            <div className="bg-white px-3.5 py-1.5 rounded-2xl shadow-xs flex items-center">
-              <img
-                src="/logo.jpeg"
-                alt="FreeProducts.online"
-                className="h-8 sm:h-9 w-auto object-contain"
-              />
+          {/* Chat Header Card (Fixed at top of box) */}
+          <div className="bg-[#1b3b2b] text-white p-3.5 sm:p-4 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shrink-0">
+            <div className="flex items-center">
+              <div className="bg-white px-3.5 py-1.5 rounded-2xl shadow-xs flex items-center">
+                <img
+                  src="/logo.jpeg"
+                  alt="FreeProducts.online"
+                  className="h-8 sm:h-9 w-auto object-contain"
+                />
+              </div>
             </div>
-          </div>
 
           {/* Quick Action Controls */}
           <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 border-white/10 pt-2 sm:pt-0">
@@ -384,17 +401,16 @@ export default function ChatPage() {
               <span className="hidden sm:inline">Clear</span>
             </button>
           </div>
-
         </div>
 
-        {/* Chat Window Body */}
-        <div className="flex-1 bg-white border-x border-stone-200/90 flex flex-col justify-between overflow-hidden min-h-[440px] h-[60vh] sm:h-[65vh] shadow-sm">
-          
-          {/* Messages Scroll Area */}
-          <div ref={chatFeedRef} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-stone-50/40">
-            
+        {/* Messages Scroll Area - ONLY THIS SCROLLS */}
+        <div 
+          ref={chatFeedRef} 
+          onScroll={handleScroll}
+          className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-4 bg-stone-50/40 min-h-0 relative"
+        >
             {/* Welcome Banner */}
-            <div className="text-center my-2">
+            <div className="text-center my-1">
               <span className="inline-flex items-center gap-1.5 bg-white text-slate-600 text-[11px] font-medium px-3.5 py-1 rounded-full border border-stone-200 shadow-2xs">
                 <FaShieldHalved className="w-3 h-3 text-[#1b3b2b]" />
                 Official FreeProducts.online Review Club Chat • Verified Admin
@@ -404,6 +420,28 @@ export default function ChatPage() {
             {/* Messages List */}
             {messages.map((msg) => {
               const isCustomer = msg.sender === 'customer';
+
+              {/* Messenger-like Call Bubble */}
+              if (msg.text?.startsWith('📞')) {
+                const isMissed = msg.text.includes('Missed') || msg.text.includes('declined');
+                return (
+                  <div key={msg.id} className="flex justify-center my-2.5 w-full animate-in fade-in">
+                    <div className={`inline-flex items-center gap-2.5 px-4 py-2 rounded-2xl text-xs font-bold shadow-xs border ${
+                      isMissed
+                        ? 'bg-rose-50 text-rose-700 border-rose-200'
+                        : 'bg-emerald-50 text-emerald-900 border-emerald-200'
+                    }`}>
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white shrink-0 ${
+                        isMissed ? 'bg-rose-500' : 'bg-emerald-600'
+                      }`}>
+                        <FaPhone className="w-3 h-3" />
+                      </div>
+                      <span>{msg.text}</span>
+                      <span className="text-[10px] opacity-60 font-mono ml-1">{msg.timestamp}</span>
+                    </div>
+                  </div>
+                );
+              }
 
               return (
                 <div
@@ -512,160 +550,172 @@ export default function ChatPage() {
                 </div>
               </div>
             )}
-          </div>
+              <div ref={messagesEndRef} />
+            </div>
 
-          {/* Quick FAQ Suggestion Chips */}
-          <div className="px-3 py-1.5 bg-white border-t border-stone-100 flex items-center gap-1.5 overflow-x-auto text-[11px] shrink-0 no-scrollbar">
-            <span className="text-[11px] font-semibold text-slate-400 shrink-0">Quick Ask:</span>
-            <button
-              onClick={() => handleQuickQuestion('How does the Amazon review testing program work?')}
-              className="shrink-0 bg-stone-100 hover:bg-[#1b3b2b] hover:text-white text-slate-700 px-3 py-1 rounded-full border border-stone-200/80 transition-colors cursor-pointer"
-            >
-              How It Works?
-            </button>
-            <button
-              onClick={() => handleQuickQuestion('Are these Amazon products really 100% free?')}
-              className="shrink-0 bg-stone-100 hover:bg-[#1b3b2b] hover:text-white text-slate-700 px-3 py-1 rounded-full border border-stone-200/80 transition-colors cursor-pointer"
-            >
-              100% Free Items?
-            </button>
-            <button
-              onClick={() => handleQuickQuestion('Can you send the Amazon order link and instructions?')}
-              className="shrink-0 bg-stone-100 hover:bg-[#1b3b2b] hover:text-white text-slate-700 px-3 py-1 rounded-full border border-stone-200/80 transition-colors cursor-pointer"
-            >
-              Get Amazon Link
-            </button>
-            <button
-              onClick={() => handleQuickQuestion('Which Amazon sellers are verified for reviews?')}
-              className="shrink-0 bg-stone-100 hover:bg-[#1b3b2b] hover:text-white text-slate-700 px-3 py-1 rounded-full border border-stone-200/80 transition-colors cursor-pointer"
-            >
-              Verified Sellers?
-            </button>
-          </div>
-
-          {/* Attached Inquiry Product Preview */}
-          {inquiryProduct && (
-            <div className="px-4 py-2 bg-stone-50 border-t border-stone-200 flex items-center justify-between gap-3 shrink-0">
-              <div className="flex items-center gap-3">
-                <img
-                  src={inquiryProduct.image}
-                  alt={inquiryProduct.title}
-                  className="w-10 h-10 object-cover rounded-lg border border-stone-300"
-                />
-                <div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#1b3b2b]">
-                    Product Context Attached:
-                  </span>
-                  <p className="text-xs font-semibold text-slate-900 truncate max-w-xs sm:max-w-md">
-                    {inquiryProduct.title} ({inquiryProduct.price === 0 ? 'FREE' : `$${inquiryProduct.price}`})
-                  </p>
-                </div>
-              </div>
+            {/* Floating Jump to Latest Button */}
+            {showScrollBottom && (
               <button
-                type="button"
-                onClick={clearInquiryProduct}
-                className="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-stone-200/60 transition-colors cursor-pointer"
-                title="Remove attached product"
+                onClick={() => scrollToBottom(true)}
+                className="absolute bottom-24 right-5 z-20 bg-[#1b3b2b] hover:bg-[#142e20] text-white text-xs font-bold px-3.5 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 cursor-pointer animate-in fade-in transition-all"
               >
-                <FiX className="w-4 h-4" />
+                <span>Latest Messages</span>
+                <span className="text-emerald-300 font-bold">↓</span>
+              </button>
+            )}
+
+            {/* Quick FAQ Suggestion Chips */}
+            <div className="px-3 py-1.5 bg-white border-t border-stone-100 flex items-center gap-1.5 overflow-x-auto text-[11px] shrink-0 no-scrollbar">
+              <span className="text-[11px] font-semibold text-slate-400 shrink-0">Quick Ask:</span>
+              <button
+                onClick={() => handleQuickQuestion('How does the Amazon review testing program work?')}
+                className="shrink-0 bg-stone-100 hover:bg-[#1b3b2b] hover:text-white text-slate-700 px-3 py-1 rounded-full border border-stone-200/80 transition-colors cursor-pointer"
+              >
+                How It Works?
+              </button>
+              <button
+                onClick={() => handleQuickQuestion('Are these Amazon products really 100% free?')}
+                className="shrink-0 bg-stone-100 hover:bg-[#1b3b2b] hover:text-white text-slate-700 px-3 py-1 rounded-full border border-stone-200/80 transition-colors cursor-pointer"
+              >
+                100% Free Items?
+              </button>
+              <button
+                onClick={() => handleQuickQuestion('Can you send the Amazon order link and instructions?')}
+                className="shrink-0 bg-stone-100 hover:bg-[#1b3b2b] hover:text-white text-slate-700 px-3 py-1 rounded-full border border-stone-200/80 transition-colors cursor-pointer"
+              >
+                Get Amazon Link
+              </button>
+              <button
+                onClick={() => handleQuickQuestion('Which Amazon sellers are verified for reviews?')}
+                className="shrink-0 bg-stone-100 hover:bg-[#1b3b2b] hover:text-white text-slate-700 px-3 py-1 rounded-full border border-stone-200/80 transition-colors cursor-pointer"
+              >
+                Verified Sellers?
               </button>
             </div>
-          )}
 
-          {/* Attached Image Preview */}
-          {selectedImage && (
-            <div className="px-4 py-2 bg-emerald-50 border-t border-emerald-200 flex items-center gap-3 shrink-0">
-              <div className="relative">
-                <img
-                  src={selectedImage}
-                  alt="Selected upload"
-                  className="w-12 h-12 object-cover rounded-xl border border-emerald-300"
-                />
+            {/* Attached Inquiry Product Preview */}
+            {inquiryProduct && (
+              <div className="px-4 py-2 bg-stone-50 border-t border-stone-200 flex items-center justify-between gap-3 shrink-0">
+                <div className="flex items-center gap-3">
+                  <img
+                    src={inquiryProduct.image}
+                    alt={inquiryProduct.title}
+                    className="w-10 h-10 object-cover rounded-lg border border-stone-300"
+                  />
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#1b3b2b]">
+                      Product Context Attached:
+                    </span>
+                    <p className="text-xs font-semibold text-slate-900 truncate max-w-xs sm:max-w-md">
+                      {inquiryProduct.title} ({inquiryProduct.price === 0 ? 'FREE' : `$${inquiryProduct.price}`})
+                    </p>
+                  </div>
+                </div>
                 <button
                   type="button"
-                  onClick={() => setSelectedImage(null)}
-                  className="absolute -top-1.5 -right-1.5 bg-rose-500 text-white rounded-full p-0.5 hover:bg-rose-600 cursor-pointer"
+                  onClick={clearInquiryProduct}
+                  className="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-stone-200/60 transition-colors cursor-pointer"
+                  title="Remove attached product"
                 >
-                  <FiX className="w-3 h-3" />
+                  <FiX className="w-4 h-4" />
                 </button>
               </div>
-              <span className="text-xs text-emerald-900 font-medium">
-                Photo ready to send with message.
-              </span>
+            )}
+
+            {/* Attached Image Preview */}
+            {selectedImage && (
+              <div className="px-4 py-2 bg-emerald-50 border-t border-emerald-200 flex items-center gap-3 shrink-0">
+                <div className="relative">
+                  <img
+                    src={selectedImage}
+                    alt="Selected upload"
+                    className="w-12 h-12 object-cover rounded-xl border border-emerald-300"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setSelectedImage(null)}
+                    className="absolute -top-1.5 -right-1.5 bg-rose-500 text-white rounded-full p-0.5 hover:bg-rose-600 cursor-pointer"
+                  >
+                    <FiX className="w-3 h-3" />
+                  </button>
+                </div>
+                <span className="text-xs text-emerald-900 font-medium">
+                  Photo ready to send with message.
+                </span>
+              </div>
+            )}
+
+            {/* Message Input Bar (Fixed at bottom inside the box) */}
+            <form onSubmit={handleSend} className="p-3 sm:p-4 bg-white border-t border-stone-200 flex items-center gap-2 shrink-0">
+              
+              {/* Attach Image button */}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="p-2.5 text-slate-500 hover:text-[#1b3b2b] hover:bg-stone-100 rounded-xl transition-colors cursor-pointer shrink-0"
+                title="Attach screenshot or photo"
+              >
+                <FaImage className="w-5 h-5" />
+              </button>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleImageSelect}
+              />
+
+              {/* Attach Product from Catalog button */}
+              <button
+                type="button"
+                onClick={() => setShowProductPicker(true)}
+                className="p-2.5 text-slate-500 hover:text-[#1b3b2b] hover:bg-stone-100 rounded-xl transition-colors cursor-pointer shrink-0 hidden sm:block"
+                title="Attach Amazon product"
+              >
+                <FaBagShopping className="w-5 h-5" />
+              </button>
+
+              {/* Input field */}
+              <input
+                type="text"
+                placeholder={inquiryProduct ? `Ask about "${inquiryProduct.title}"...` : "Write message to FreeProducts.online Support..."}
+                value={inputText}
+                onChange={handleInputChange}
+                className="flex-1 bg-stone-50 text-slate-900 text-xs sm:text-sm px-4 py-2.5 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-[#1b3b2b]/15 focus:border-[#1b3b2b] font-medium transition-all"
+              />
+
+              {/* Send button in Forest Green */}
+              <button
+                type="submit"
+                disabled={!inputText.trim() && !selectedImage && !inquiryProduct}
+                className="p-2.5 sm:px-5 sm:py-2.5 bg-[#1b3b2b] hover:bg-[#142e20] active:scale-95 disabled:opacity-40 disabled:pointer-events-none text-white rounded-xl shadow-xs transition-all cursor-pointer font-bold text-xs sm:text-sm flex items-center gap-2 shrink-0"
+              >
+                <span className="hidden sm:inline">Send</span>
+                <FaPaperPlane className="w-3.5 h-3.5" />
+              </button>
+            </form>
+
+          </div>
+
+          {/* Small Clean Bottom Bar */}
+          <div className="shrink-0 pt-1.5 px-3 text-[11px] text-slate-500 flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+              <span>FreeProducts.online Review Desk</span>
             </div>
-          )}
 
-          {/* Message Input Bar */}
-          <form onSubmit={handleSend} className="p-3 sm:p-4 bg-white border-t border-stone-200 flex items-center gap-2 shrink-0">
-            
-            {/* Attach Image button */}
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="p-2.5 text-slate-500 hover:text-[#1b3b2b] hover:bg-stone-100 rounded-xl transition-colors cursor-pointer shrink-0"
-              title="Attach screenshot or photo"
-            >
-              <FaImage className="w-5 h-5" />
-            </button>
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleImageSelect}
-            />
-
-            {/* Attach Product from Catalog button */}
-            <button
-              type="button"
-              onClick={() => setShowProductPicker(true)}
-              className="p-2.5 text-slate-500 hover:text-[#1b3b2b] hover:bg-stone-100 rounded-xl transition-colors cursor-pointer shrink-0 hidden sm:block"
-              title="Attach Amazon product"
-            >
-              <FaBagShopping className="w-5 h-5" />
-            </button>
-
-            {/* Input field */}
-            <input
-              type="text"
-              placeholder={inquiryProduct ? `Ask about "${inquiryProduct.title}"...` : "Write message to FreeProducts.online Support..."}
-              value={inputText}
-              onChange={handleInputChange}
-              className="flex-1 bg-stone-50 text-slate-900 text-xs sm:text-sm px-4 py-2.5 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-[#1b3b2b]/15 focus:border-[#1b3b2b] font-medium transition-all"
-            />
-
-            {/* Send button in Forest Green */}
-            <button
-              type="submit"
-              disabled={!inputText.trim() && !selectedImage && !inquiryProduct}
-              className="p-2.5 sm:px-5 sm:py-2.5 bg-[#1b3b2b] hover:bg-[#142e20] active:scale-95 disabled:opacity-40 disabled:pointer-events-none text-white rounded-xl shadow-xs transition-all cursor-pointer font-bold text-xs sm:text-sm flex items-center gap-2 shrink-0"
-            >
-              <span className="hidden sm:inline">Send</span>
-              <FaPaperPlane className="w-3.5 h-3.5" />
-            </button>
-          </form>
-
-        </div>
-
-        {/* Footer info bar */}
-        <div className="bg-stone-100 text-slate-600 border border-stone-200 rounded-b-3xl px-5 py-3 text-xs flex flex-col sm:flex-row items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-            <span>FreeProducts.online Review Desk • Amazon Review Club</span>
+            <div className="flex items-center gap-3">
+              <Link href="/" className="hover:text-[#1b3b2b] transition-colors">
+                ← Catalog
+              </Link>
+              <Link href="/profile" className="hover:text-[#1b3b2b] transition-colors">
+                My Profile →
+              </Link>
+            </div>
           </div>
 
-          <div className="flex items-center gap-4 text-slate-500 font-medium">
-            <Link href="/" className="hover:text-[#1b3b2b] transition-colors">
-              ← Back to Catalog
-            </Link>
-            <Link href="/profile" className="hover:text-[#1b3b2b] transition-colors">
-              My Profile →
-            </Link>
-          </div>
-        </div>
-
-      </main>
+        </main>
 
       {/* Lightbox Modal for Zooming Photos */}
       {previewModalImage && (

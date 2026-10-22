@@ -41,29 +41,34 @@ let ProductsService = class ProductsService {
         return product;
     }
     async create(dto) {
-        const productId = dto.id || `prod-${Date.now()}`;
-        return this.prisma.product.create({
-            data: {
+        const productId = dto.id && dto.id.trim() ? dto.id.trim() : `prod-${Date.now()}`;
+        const productData = {
+            title: dto.title.trim(),
+            description: dto.description?.trim() || 'Verified quality Amazon perk product for testers.',
+            category: dto.category.trim(),
+            subCategory: dto.subCategory?.trim() || null,
+            price: typeof dto.price === 'number' ? dto.price : parseFloat(String(dto.price || '0')) || 0,
+            originalPrice: typeof dto.originalPrice === 'number' ? dto.originalPrice : parseFloat(String(dto.originalPrice || '29')) || 29,
+            commission: dto.commission || undefined,
+            commissionAmount: typeof dto.commissionAmount === 'number' ? dto.commissionAmount : parseFloat(String(dto.commissionAmount || '0')) || 0,
+            image: dto.image.trim(),
+            gallery: Array.isArray(dto.gallery) && dto.gallery.length > 0 ? dto.gallery : [dto.image.trim()],
+            affiliateCode: dto.affiliateCode || `AFF-${Date.now().toString().slice(-4)}`,
+            features: Array.isArray(dto.features) ? dto.features : ['100% Free Testing Perk'],
+            rating: typeof dto.rating === 'number' ? dto.rating : 5.0,
+            reviewsCount: typeof dto.reviewsCount === 'number' ? dto.reviewsCount : 0,
+            badge: dto.badge || null,
+            inStock: dto.inStock !== undefined ? Boolean(dto.inStock) : true,
+            store: dto.store?.trim() || 'Amazon Partner Store',
+            amazonUrl: dto.amazonUrl?.trim() || null,
+        };
+        return this.prisma.product.upsert({
+            where: { id: productId },
+            create: {
                 id: productId,
-                title: dto.title,
-                description: dto.description,
-                category: dto.category,
-                subCategory: dto.subCategory,
-                price: dto.price ?? 0,
-                originalPrice: dto.originalPrice,
-                commission: dto.commission,
-                commissionAmount: dto.commissionAmount ?? 0,
-                image: dto.image,
-                gallery: dto.gallery ?? [dto.image],
-                affiliateCode: dto.affiliateCode,
-                features: dto.features ?? [],
-                rating: dto.rating ?? 5.0,
-                reviewsCount: dto.reviewsCount ?? 0,
-                badge: dto.badge,
-                inStock: dto.inStock ?? true,
-                store: dto.store,
-                amazonUrl: dto.amazonUrl,
+                ...productData,
             },
+            update: productData,
         });
     }
     async update(id, dto) {

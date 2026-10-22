@@ -36,20 +36,31 @@ export class ChatController {
   async getMessages(
     @CurrentUser() currentUser?: AuthenticatedUser,
     @Query('userId') queryUserId?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
   ) {
     const isAdmin = currentUser?.role?.toUpperCase() === 'ADMIN';
+    const parsedPage = page ? parseInt(page, 10) : undefined;
+    const parsedLimit = limit ? parseInt(limit, 10) : undefined;
 
     if (isAdmin) {
-      return this.chatService.getMessages(queryUserId, true);
+      return this.chatService.getMessages(queryUserId, true, parsedPage, parsedLimit);
     }
 
     if (currentUser) {
       // Non-admin client is strictly locked to their own user ID (ignores query tampering)
-      return this.chatService.getMessages(currentUser.id, false);
+      return this.chatService.getMessages(currentUser.id, false, parsedPage, parsedLimit);
     }
 
     // Unauthenticated visitors have no access to private chat threads
-    return [];
+    return {
+      messages: [],
+      total: 0,
+      page: 1,
+      limit: parsedLimit || 50,
+      totalPages: 0,
+      hasMore: false,
+    };
   }
 
   // Authenticated user or admin sends message
@@ -123,9 +134,14 @@ export class ChatController {
     return { success: false, message: 'Authentication required' };
   }
 
-  // Authenticated user marks messages as read
+  // Mark messages as read
   @Patch('messages/read')
+  @Public()
   async markAsRead(@Body('ids') ids?: string[]) {
-    return this.chatService.markAsRead(ids);
+    const res = await this.chatService.markAsRead(ids);
+    if (this.chatGateway.server) {
+      this.chatGateway.server.emit('messagesRead', { ids });
+    }
+    return res;
   }
 }

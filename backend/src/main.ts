@@ -4,10 +4,16 @@ import { AppModule } from './app.module.js';
 import type { Express } from 'express';
 import type { INestApplication } from '@nestjs/common';
 
+import express from 'express';
+
 let cachedServer: Express | null = null;
 
 export async function createNestApp(): Promise<INestApplication> {
   const app = await NestFactory.create(AppModule);
+
+  // Allow up to 50MB for rich media & base64 product images
+  app.use(express.json({ limit: '50mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
   // Enable CORS for frontend integration
   app.enableCors({

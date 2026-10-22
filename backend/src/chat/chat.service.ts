@@ -41,34 +41,69 @@ export class ChatService {
    * - Admins can see a specific user's thread (if userId passed) or all messages (for admin inbox)
    * - Unauthenticated guests without a userId get []
    */
-  async getMessages(userId?: string, isAdmin: boolean = false) {
+  async getMessages(
+    userId?: string, 
+    isAdmin: boolean = false, 
+    page?: number, 
+    limit?: number
+  ) {
+    const emptyResult = {
+      messages: [],
+      total: 0,
+      page: 1,
+      limit: limit || 50,
+      totalPages: 0,
+      hasMore: false,
+    };
+
     if (!isAdmin && !userId) {
-      return [];
+      return emptyResult;
     }
 
     const where: any = {};
     if (userId) {
       where.userId = userId;
     } else if (!isAdmin) {
-      return [];
+      return emptyResult;
     }
 
-    const messages = await this.prisma.chatMessage.findMany({
-      where,
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            phone: true,
-            email: true,
+    const pageNum = Math.max(1, page || 1);
+    const take = limit ? Math.min(100, Math.max(1, limit)) : 50;
+    const skip = (pageNum - 1) * take;
+
+    const [rawMessages, total] = await Promise.all([
+      this.prisma.chatMessage.findMany({
+        where,
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              phone: true,
+              email: true,
+            },
           },
         },
-      },
-      orderBy: { createdAt: 'asc' },
-    });
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take,
+      }),
+      this.prisma.chatMessage.count({ where }),
+    ]);
 
-    return messages.map((m) => this.formatMessage(m));
+    // Reverse descending slice into ascending chronological order for chat view
+    const messages = rawMessages.reverse().map((m) => this.formatMessage(m));
+    const totalPages = Math.ceil(total / take);
+    const hasMore = skip + rawMessages.length < total;
+
+    return {
+      messages,
+      total,
+      page: pageNum,
+      limit: take,
+      totalPages,
+      hasMore,
+    };
   }
 
   async createMessage(dto: SendMessageDto) {
