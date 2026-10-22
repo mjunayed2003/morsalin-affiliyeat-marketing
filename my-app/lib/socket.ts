@@ -2,14 +2,29 @@ import { io, Socket } from 'socket.io-client';
 
 const isBrowser = typeof window !== 'undefined';
 
-export const BACKEND_URL = 
-  process.env.NEXT_PUBLIC_SOCKET_URL?.replace(/\/+$/, '') ||
-  process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/+$/, '') ||
-  (process.env.NEXT_PUBLIC_API_URL ? process.env.NEXT_PUBLIC_API_URL.replace(/\/api\/?$/, '') : 'http://localhost:3001');
+const resolveBackendUrl = (): string => {
+  let url = 
+    process.env.NEXT_PUBLIC_SOCKET_URL?.replace(/\/+$/, '') ||
+    process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/+$/, '') ||
+    (process.env.NEXT_PUBLIC_API_URL ? process.env.NEXT_PUBLIC_API_URL.replace(/\/api\/?$/, '') : '');
 
-export const API_BASE_URL = 
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, '') || 
-  `${BACKEND_URL}/api`;
+  if (url.includes('30011')) {
+    url = url.replace('30011', '3001');
+  }
+
+  return url || 'http://localhost:3001';
+};
+
+const resolveApiBaseUrl = (): string => {
+  let apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, '') || '';
+  if (apiUrl.includes('30011')) {
+    apiUrl = apiUrl.replace('30011', '3001');
+  }
+  return apiUrl || `${resolveBackendUrl()}/api`;
+};
+
+export const BACKEND_URL = resolveBackendUrl();
+export const API_BASE_URL = resolveApiBaseUrl();
 
 let socket: Socket | null = null;
 
