@@ -7,10 +7,12 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 import { Module } from '@nestjs/common';
 import { ProductsService } from './products.service.js';
 import { ProductsController } from './products.controller.js';
+import { ChatModule } from '../chat/chat.module.js';
 let ProductsModule = class ProductsModule {
 };
 ProductsModule = __decorate([
     Module({
+        imports: [ChatModule],
         controllers: [ProductsController],
         providers: [ProductsService],
         exports: [ProductsService],

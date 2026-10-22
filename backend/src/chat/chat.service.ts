@@ -84,7 +84,7 @@ export class ChatService {
             },
           },
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
         skip,
         take,
       }),
@@ -92,7 +92,7 @@ export class ChatService {
     ]);
 
     // Reverse descending slice into ascending chronological order for chat view
-    const messages = rawMessages.reverse().map((m) => this.formatMessage(m));
+    const messages = [...rawMessages].reverse().map((m) => this.formatMessage(m));
     const totalPages = Math.ceil(total / take);
     const hasMore = skip + rawMessages.length < total;
 

@@ -32,7 +32,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
-  const { unreadCount } = useApp();
+  const { unreadCount, settings } = useApp();
 
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
@@ -101,7 +101,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
             href="/admin" 
             className="font-bold text-slate-900 hover:text-emerald-700 transition-colors shrink-0"
           >
-            FreeProducts.online Admin
+            {settings.platformName || 'FreeProducts.online'} Admin
           </Link>
           {breadcrumbs.slice(1).map((crumb, idx) => (
             <React.Fragment key={crumb.url}>
@@ -136,8 +136,8 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
           />
         </form>
 
-        {/* Date Range Selector */}
-        <div className="flex items-center bg-slate-100/90 border border-slate-200/90 rounded-xl p-0.5 text-xs">
+        {/* Date Range Selector (Hidden on Mobile to keep navbar clean) */}
+        <div className="hidden md:flex items-center bg-slate-100/90 border border-slate-200/90 rounded-xl p-0.5 text-xs">
           {['today', '7d', '30d'].map((range) => (
             <button
               key={range}
@@ -177,7 +177,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
               </div>
               <div className="space-y-2 text-xs">
                 <div className="p-2 rounded-xl bg-slate-50 border border-slate-100">
-                  <p className="font-semibold text-slate-900">FreeProducts.online Store</p>
+                  <p className="font-semibold text-slate-900">{settings.platformName || 'FreeProducts.online'} Store</p>
                   <p className="text-[11px] text-slate-500 mt-0.5">Verified Amazon sellers actively tracking review campaigns.</p>
                 </div>
                 <div className="p-2 rounded-xl bg-slate-50 border border-slate-100">

@@ -1,14 +1,27 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useRef, useMemo } from 'react';
-import { Product, ChatMessage, Review, AudioCallState, NotificationItem } from '../types';
+import { Product, ChatMessage, Review, AudioCallState, NotificationItem, PlatformSettings } from '../types';
 import { INITIAL_PRODUCTS, INITIAL_CHAT_MESSAGES, INITIAL_REVIEWS } from '../data/initialProducts';
 import { getSocket, API_BASE_URL } from '@/lib/socket';
 import { showBrowserNotification, requestNotificationPermission, initFirebaseForegroundListener } from '@/lib/firebase';
 import { AudioCallModal } from '@/components/AudioCallModal';
 import { useAuth } from './AuthContext';
 
+export const DEFAULT_PLATFORM_SETTINGS: PlatformSettings = {
+  amazonTag: 'bwbh00-20',
+  currency: 'USD ($)',
+  platformName: 'FreeProducts.online',
+  supportEmail: 'support@freeproducts.online',
+  enableSoundAlerts: true,
+  maintenanceMode: false,
+};
+
 interface AppContextType {
+  settings: PlatformSettings;
+  updateSettings: (newSettings: Partial<PlatformSettings>) => Promise<{ success: boolean; message?: string }>;
+  currencySymbol: string;
+  formatAmazonUrl: (rawUrl?: string) => string;
   products: Product[];
   messages: ChatMessage[];
   unreadCount: number;
@@ -36,8 +49,8 @@ interface AppContextType {
   resetProducts: () => void;
   sendCustomerMessage: (text: string, image?: string, productInfo?: { title: string; price: number; image: string }) => void;
   sendAdminReply: (text: string, image?: string, targetUserId?: string) => void;
-  emitTyping: (isTyping: boolean) => void;
-  clearMessages: () => void;
+  emitTyping: (isTyping: boolean, targetUserId?: string) => void;
+  clearMessages: (targetUserId?: string) => void;
   getProductById: (id: string) => Product | undefined;
   reviews: Review[];
   addReview: (reviewData: { productId: string; rating: number; title?: string; comment: string }) => { success: boolean; message: string };
@@ -79,15 +92,65 @@ const getAuthHeaders = (): Record<string, string> => {
   return headers;
 };
 
-// Helper to guarantee clean deduplicated messages
+// Helper to extract numeric epoch time for strict chronological sorting
+const getMessageTime = (m: ChatMessage): number => {
+  if (m.createdAt) {
+    const t = new Date(m.createdAt).getTime();
+    if (!isNaN(t) && t > 0) return t;
+  }
+  if (m.id && m.id.startsWith('msg-')) {
+    const parsed = parseInt(m.id.replace('msg-', ''), 10);
+    if (!isNaN(parsed) && parsed > 1000000000000) return parsed;
+  }
+  if (m.localId && m.localId.startsWith('msg-')) {
+    const parsed = parseInt(m.localId.replace('msg-', ''), 10);
+    if (!isNaN(parsed) && parsed > 1000000000000) return parsed;
+  }
+  return 0;
+};
+
+// Helper to guarantee clean, strictly chronological deduplicated messages (oldest at top, newest at bottom)
 const dedupeMessages = (list: ChatMessage[]): ChatMessage[] => {
+  // 1. Sort all messages in ascending chronological order (older at top, newer at bottom)
+  const sorted = [...list].sort((a, b) => {
+    const timeA = getMessageTime(a);
+    const timeB = getMessageTime(b);
+    if (timeA !== timeB) return timeA - timeB;
+    // Tie-breaker: server IDs come before optimistic local IDs
+    const aIsOptimistic = a.id.startsWith('msg-');
+    const bIsOptimistic = b.id.startsWith('msg-');
+    if (aIsOptimistic && !bIsOptimistic) return 1;
+    if (!aIsOptimistic && bIsOptimistic) return -1;
+    return a.id.localeCompare(b.id);
+  });
+
   const seenIds = new Set<string>();
+  const seenContent = new Set<string>();
   const result: ChatMessage[] = [];
-  for (let i = 0; i < list.length; i++) {
-    const m = list[i];
+
+  for (let i = 0; i < sorted.length; i++) {
+    const m = sorted[i];
     if (!m) continue;
+
+    // Check ID duplicates
     if (seenIds.has(m.id)) continue;
+    if (m.localId && seenIds.has(m.localId)) continue;
+
+    // Check content duplicates:
+    // If a server-confirmed message with same sender, text, and userId was already processed,
+    // skip any pending optimistic copy of that message!
+    const contentKey = `${m.sender}_${m.userId || ''}_${m.text?.trim() || ''}`;
+    const isOptimistic = m.id.startsWith('msg-') || (m.localId && m.localId.startsWith('msg-'));
+    
+    if (isOptimistic && seenContent.has(contentKey)) {
+      continue;
+    }
+
     seenIds.add(m.id);
+    if (m.localId) seenIds.add(m.localId);
+    if (!isOptimistic && m.text) {
+      seenContent.add(contentKey);
+    }
 
     // Suppress consecutive identical duplicate bubbles with same text & sender
     const prev = result[result.length - 1];
@@ -95,12 +158,14 @@ const dedupeMessages = (list: ChatMessage[]): ChatMessage[] => {
       prev &&
       prev.sender === m.sender &&
       prev.text === m.text &&
-      prev.timestamp === m.timestamp
+      Math.abs(getMessageTime(prev) - getMessageTime(m)) < 5000
     ) {
       continue;
     }
+
     result.push(m);
   }
+
   return result;
 };
 
@@ -155,6 +220,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const callTimerRef = useRef<NodeJS.Timeout | null>(null);
   const ringtoneIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const userRef = useRef(user);
+
+  // Platform Global Settings state
+  const [settings, setSettings] = useState<PlatformSettings>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('platform_settings_v1');
+        if (stored) return { ...DEFAULT_PLATFORM_SETTINGS, ...JSON.parse(stored) };
+      } catch {}
+    }
+    return DEFAULT_PLATFORM_SETTINGS;
+  });
+
+  // Sync settings from backend API
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/settings`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && typeof data === 'object') {
+          setSettings((prev) => {
+            const next = { ...prev, ...data };
+            try {
+              localStorage.setItem('platform_settings_v1', JSON.stringify(next));
+            } catch {}
+            return next;
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Sync products from backend API, fallback to localStorage / INITIAL_PRODUCTS
   useEffect(() => {
@@ -412,6 +506,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Audio synthesizer chime
   const playChime = () => {
+    if (!settings.enableSoundAlerts) return;
     try {
       const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
       const osc = ctx.createOscillator();
@@ -512,12 +607,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       // Connect Socket.IO for real-time instant chat events
       const socket = getSocket();
       if (socket) {
-        const token = typeof window !== 'undefined' ? localStorage.getItem('bytedesk_token_v2') : null;
-        if (user?.role === 'admin') {
-          socket.emit('joinRoom', { roomId: 'admin_room', token: token || undefined });
-        } else if (user?.id) {
-          socket.emit('joinRoom', { userId: user.id, token: token || undefined });
-        }
+        const joinRooms = () => {
+          const token = typeof window !== 'undefined' ? localStorage.getItem('bytedesk_token_v2') : null;
+          if (user?.role === 'admin') {
+            socket.emit('joinRoom', { roomId: 'admin_room', token: token || undefined });
+          } else if (user?.id) {
+            socket.emit('joinRoom', { userId: user.id, token: token || undefined });
+          }
+        };
+
+        // Join room immediately and re-join whenever socket connects or reconnects
+        joinRooms();
+        socket.on('connect', joinRooms);
 
         const handleNewMessage = (newMsg: ChatMessage) => {
           // STRICT ISOLATION: A client MUST NEVER accept or display messages belonging to another user
@@ -558,52 +659,101 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           if (newMsg.sender === 'admin' || (user?.role === 'admin' && newMsg.sender === 'customer')) {
             playChime();
           }
+
+          // When a message arrives, immediately clear typing bubble
+          if (newMsg.sender === 'admin' && user?.role !== 'admin') {
+            if (typingSafetyTimer) clearTimeout(typingSafetyTimer);
+            setIsTyping(false);
+            setTypingSender(null);
+          }
+          if (newMsg.sender === 'customer' && user?.role === 'admin') {
+            if (typingSafetyTimer) clearTimeout(typingSafetyTimer);
+            setIsTyping(false);
+            setTypingSender(null);
+          }
         };
+
+        let typingSafetyTimer: NodeJS.Timeout | null = null;
 
         const handleTypingEvent = (data: { isTyping: boolean; sender: string; userId?: string }) => {
           const isAdmin = user?.role === 'admin';
-          if (!isAdmin && user?.id && data.userId && data.userId !== user.id) {
-            return;
+
+          // STRICT FILTERING: Customer NEVER receives or processes self/customer typing
+          if (!isAdmin) {
+            // Customer view: only care about ADMIN typing directed to this customer
+            if (data.sender !== 'admin') return;
+            if (user?.id && data.userId && data.userId !== user.id) return;
+          } else {
+            // Admin view: only care about CUSTOMER typing
+            if (data.sender !== 'customer') return;
           }
-          setIsTyping(Boolean(data?.isTyping));
-          setTypingSender(data?.sender || null);
+
+          if (typingSafetyTimer) clearTimeout(typingSafetyTimer);
+
+          const typingActive = Boolean(data?.isTyping);
+          setIsTyping(typingActive);
+          setTypingSender(typingActive ? (data?.sender || null) : null);
+
+          if (typingActive) {
+            // Auto reset after 4 seconds of inactivity as a safeguard
+            typingSafetyTimer = setTimeout(() => {
+              setIsTyping(false);
+              setTypingSender(null);
+            }, 4000);
+          }
         };
 
-        const handleNotification = (notif: { title: string; body: string; sender: string; userId?: string }) => {
+        const handleNotification = (notif: { 
+          id?: string;
+          title: string; 
+          body: string; 
+          sender?: string; 
+          userId?: string; 
+          type?: string; 
+          link?: string; 
+          isBroadcast?: boolean;
+          productId?: string;
+          image?: string;
+        }) => {
           const isAdmin = user?.role === 'admin';
+          const isBroadcast = Boolean(notif.isBroadcast || notif.type === 'product');
 
-          // STRICT USER ISOLATION: A user must NEVER see anyone else's notification or notifications for their own actions
-          if (isAdmin) {
-            // Admin only receives notifications when customers send messages
-            if (notif.sender !== 'customer') return;
-          } else {
-            // Customer must be logged in and the notification MUST be targeted to their exact user ID
-            if (!user?.id) return;
-            if (!notif.userId || notif.userId !== user.id) return;
-            // Customer only receives notifications when admin replies
-            if (notif.sender !== 'admin') return;
+          // If NOT a broadcast, enforce strict user isolation:
+          if (!isBroadcast) {
+            if (isAdmin) {
+              // Admin only receives notifications when customers send messages
+              if (notif.sender !== 'customer') return;
+            } else {
+              // Customer must be logged in and the notification MUST be targeted to their exact user ID
+              if (!user?.id) return;
+              if (!notif.userId || notif.userId !== user.id) return;
+              // Customer only receives notifications when admin replies
+              if (notif.sender !== 'admin') return;
+            }
           }
 
           playChime();
-          showToast(`🔔 ${notif.title}: ${notif.body}`);
+          const toastIcon = notif.type === 'product' ? '🎁' : '🔔';
+          showToast(`${toastIcon} ${notif.title}: ${notif.body}`);
           showBrowserNotification(notif.title, {
             body: notif.body,
-            url: '/chat',
+            url: notif.link || (notif.type === 'product' ? '/products' : '/chat'),
           });
 
-          // Append to THIS user's private Notification Center
+          // Append to Notification Center for THIS user/guest
           const newNotifItem: NotificationItem = {
-            id: `notif-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+            id: notif.id || `notif-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
             title: notif.title || 'New Notification',
             body: notif.body || 'You have received an update.',
-            type: notif.title.toLowerCase().includes('call') ? 'call' : 'message',
+            type: (notif.type as any) || (notif.title.toLowerCase().includes('call') ? 'call' : 'order'),
             timestamp: 'Just now',
             read: false,
-            link: '/chat',
-            sender: notif.sender,
+            link: notif.link || (notif.type === 'product' ? '/products' : '/chat'),
+            sender: notif.sender || 'system',
           };
 
           setNotifications((prev) => {
+            if (prev.some((n) => n.id === newNotifItem.id)) return prev;
             const nextList = [newNotifItem, ...prev.slice(0, 49)];
             const key = getNotificationsStorageKey(user);
             if (typeof window !== 'undefined') {
@@ -612,6 +762,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               } catch (e) {}
             }
             return nextList;
+          });
+        };
+
+        const handleNewProductAdded = (newProd: Product) => {
+          if (!newProd || !newProd.id) return;
+          setProducts((prev) => {
+            if (prev.some((p) => p.id === newProd.id)) {
+              return prev.map((p) => (p.id === newProd.id ? newProd : p));
+            }
+            return [newProd, ...prev];
           });
         };
 
@@ -696,9 +856,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           }
         };
 
+        const handleSettingsUpdated = (newSettings: PlatformSettings) => {
+          if (newSettings && typeof newSettings === 'object') {
+            setSettings((prev) => {
+              const merged = { ...prev, ...newSettings };
+              try {
+                localStorage.setItem('platform_settings_v1', JSON.stringify(merged));
+              } catch {}
+              return merged;
+            });
+          }
+        };
+
         socket.on('newMessage', handleNewMessage);
         socket.on('typing', handleTypingEvent);
         socket.on('notification', handleNotification);
+        socket.on('newProductAdded', handleNewProductAdded);
+        socket.on('settingsUpdated', handleSettingsUpdated);
         socket.on('incomingAudioCall', handleIncomingAudioCall);
         socket.on('audioCallAccepted', handleAudioCallAccepted);
         socket.on('audioCallRejected', handleAudioCallRejected);
@@ -706,9 +880,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         socket.on('messagesRead', handleMessagesRead);
 
         return () => {
+          if (typingSafetyTimer) clearTimeout(typingSafetyTimer);
+          socket.off('connect', joinRooms);
           socket.off('newMessage', handleNewMessage);
           socket.off('typing', handleTypingEvent);
           socket.off('notification', handleNotification);
+          socket.off('newProductAdded', handleNewProductAdded);
+          socket.off('settingsUpdated', handleSettingsUpdated);
           socket.off('incomingAudioCall', handleIncomingAudioCall);
           socket.off('audioCallAccepted', handleAudioCallAccepted);
           socket.off('audioCallRejected', handleAudioCallRejected);
@@ -776,13 +954,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                   !m.id.startsWith('msg-') &&
                   (!m.localId || !m.localId.startsWith('msg-'))
               );
-              // Preserve pending optimistic messages for this user
-              const pendingOptimistic = prev.filter(
-                (m) =>
-                  (m.id.startsWith('msg-') || (m.localId && m.localId.startsWith('msg-'))) &&
-                  !serverIds.has(m.id) &&
-                  (isAdmin || m.userId === user.id)
-              );
+              // Preserve ONLY genuinely pending optimistic messages that haven't reached server yet
+              const pendingOptimistic = prev.filter((m) => {
+                const isOptimistic = m.id.startsWith('msg-') || (m.localId && m.localId.startsWith('msg-'));
+                if (!isOptimistic) return false;
+                if (serverIds.has(m.id) || (m.localId && serverIds.has(m.localId))) return false;
+
+                // If server data already has a message with same text & sender, it's not pending anymore
+                const alreadyOnServer = isolatedData.some(
+                  (s: any) =>
+                    s.sender === m.sender &&
+                    s.text === m.text &&
+                    (s.userId === m.userId || (!s.userId && !m.userId))
+                );
+                if (alreadyOnServer) return false;
+
+                return isAdmin || m.userId === user.id;
+              });
+
               const merged = dedupeMessages([...alreadyLoadedOlder, ...isolatedData, ...pendingOptimistic]);
               if (storageKey) {
                 try {
@@ -889,6 +1078,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       const saved = data && data.id ? data : newProd;
       setProducts((prev) => [saved, ...prev.filter((p) => p.id !== saved.id)]);
+
+      // Broadcast over socket for instant real-time synchronization to all clients
+      const socket = getSocket();
+      if (socket && socket.connected) {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('bytedesk_token_v2') : null;
+        socket.emit('broadcastProduct', { product: saved, token: token || undefined });
+      }
+
       return { success: true };
     } catch (err: any) {
       setProducts((prev) => [newProd, ...prev]);
@@ -977,14 +1174,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showToast('Catalog restored to official Amazon products.');
   };
 
-  const emitTyping = (typingState: boolean) => {
+  const emitTyping = (typingState: boolean, targetUserId?: string) => {
     const socket = getSocket();
     if (socket && socket.connected) {
       const token = typeof window !== 'undefined' ? localStorage.getItem('bytedesk_token_v2') : null;
       socket.emit('typing', {
         isTyping: typingState,
         sender: user?.role === 'admin' ? 'admin' : 'customer',
-        userId: user?.id,
+        userId: user?.role === 'admin' ? targetUserId : user?.id,
         token: token || undefined,
       });
     }
@@ -995,8 +1192,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     image?: string, 
     productInfo?: { title: string; price: number; image: string }
   ) => {
-    const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const localId = `msg-${Date.now()}`;
+    const now = new Date();
+    const timeNow = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const createdAt = now.toISOString();
+    const localId = `msg-${now.getTime()}`;
     const senderName = user?.name || (isAuthenticated ? 'Registered Reviewer' : 'Reviewer');
     const token = typeof window !== 'undefined' ? localStorage.getItem('bytedesk_token_v2') : null;
 
@@ -1009,10 +1208,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       image,
       productInfo,
       timestamp: timeNow,
+      createdAt,
       read: true,
       userId: user?.id,
     };
-    setMessages((prev) => [...prev, newMsg]);
+    setMessages((prev) => dedupeMessages([...prev, newMsg]));
 
     const payload = {
       sender: 'customer' as const,
@@ -1055,8 +1255,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const sendAdminReply = (text: string, image?: string, targetUserId?: string) => {
-    const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const localId = `msg-${Date.now()}`;
+    const now = new Date();
+    const timeNow = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const createdAt = now.toISOString();
+    const localId = `msg-${now.getTime()}`;
     const senderName = user?.name || 'FreeProducts.online Admin';
     const token = typeof window !== 'undefined' ? localStorage.getItem('bytedesk_token_v2') : null;
 
@@ -1072,6 +1274,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       text,
       image,
       timestamp: timeNow,
+      createdAt,
       read: true,
       userId: resolvedUserId || undefined,
     };
@@ -1114,9 +1317,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const clearMessages = () => {
-    setMessages(INITIAL_CHAT_MESSAGES);
-    fetch(`${API_BASE_URL}/chat/messages`, {
+  const clearMessages = (targetUserId?: string) => {
+    if (targetUserId) {
+      setMessages((prev) => prev.filter((m) => m.userId !== targetUserId));
+    } else {
+      setMessages(INITIAL_CHAT_MESSAGES);
+    }
+    const query = targetUserId ? `?userId=${encodeURIComponent(targetUserId)}` : '';
+    fetch(`${API_BASE_URL}/chat/messages${query}`, {
       method: 'DELETE',
       headers: getAuthHeaders(),
     }).catch(() => {});
@@ -1190,7 +1398,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         token: token || undefined,
       });
     }
-    showToast('Calling support desk...');
+    showToast(callerRole === 'admin' ? `📞 Calling ${partnerName || 'customer'}...` : '📞 Calling Support Desk...');
   };
 
   const acceptAudioCall = () => {
@@ -1301,9 +1509,74 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const currencySymbol = useMemo(() => {
+    const cur = settings.currency || 'USD ($)';
+    if (cur.includes('GBP') || cur.includes('£')) return '£';
+    if (cur.includes('EUR') || cur.includes('€')) return '€';
+    if (cur.includes('CAD')) return 'C$';
+    return '$';
+  }, [settings.currency]);
+
+  const formatAmazonUrl = (rawUrl?: string): string => {
+    if (!rawUrl) return '';
+    const tag = settings.amazonTag?.trim();
+    if (!tag) return rawUrl;
+    try {
+      const url = new URL(rawUrl);
+      url.searchParams.set('tag', tag);
+      return url.toString();
+    } catch {
+      if (rawUrl.includes('tag=')) {
+        return rawUrl.replace(/tag=[^&]+/, `tag=${encodeURIComponent(tag)}`);
+      }
+      return rawUrl.includes('?') ? `${rawUrl}&tag=${encodeURIComponent(tag)}` : `${rawUrl}?tag=${encodeURIComponent(tag)}`;
+    }
+  };
+
+  const updateSettings = async (newSettings: Partial<PlatformSettings>): Promise<{ success: boolean; message?: string }> => {
+    try {
+      setSettings((prev) => {
+        const merged = { ...prev, ...newSettings };
+        try {
+          localStorage.setItem('platform_settings_v1', JSON.stringify(merged));
+        } catch {}
+        return merged;
+      });
+
+      const res = await fetch(`${API_BASE_URL}/settings`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(newSettings),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        return { success: false, message: data?.message || 'Failed to save settings to server.' };
+      }
+
+      if (data && typeof data === 'object') {
+        setSettings((prev) => {
+          const merged = { ...prev, ...data };
+          try {
+            localStorage.setItem('platform_settings_v1', JSON.stringify(merged));
+          } catch {}
+          return merged;
+        });
+      }
+
+      return { success: true };
+    } catch (e: any) {
+      return { success: true, message: 'Settings saved locally.' };
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
+        settings,
+        updateSettings,
+        currencySymbol,
+        formatAmazonUrl,
         products,
         messages,
         unreadCount,

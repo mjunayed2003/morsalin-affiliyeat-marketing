@@ -56,7 +56,18 @@ const CATEGORY_STYLES: Record<string, { bg: string; text: string }> = {
 };
 
 export const ClientProductView: React.FC<ClientProductViewProps> = ({ productId }) => {
-  const { getProductById, messages, sendCustomerMessage, showToast, openShareModal, addReview, deleteReview, getProductReviews } = useApp();
+  const { 
+    getProductById, 
+    messages, 
+    sendCustomerMessage, 
+    showToast, 
+    openShareModal, 
+    addReview, 
+    deleteReview, 
+    getProductReviews,
+    currencySymbol,
+    formatAmazonUrl
+  } = useApp();
   const { isAuthModalOpen, closeAuthModal, isAuthenticated, user, openAuthModal } = useAuth();
   const product = getProductById(productId);
 
@@ -470,12 +481,12 @@ export const ClientProductView: React.FC<ClientProductViewProps> = ({ productId 
                       </span>
                     ) : (
                       <span className="text-3xl sm:text-4xl font-extrabold text-slate-950">
-                        ${product.price.toLocaleString()}
+                        {currencySymbol}{product.price.toLocaleString()}
                       </span>
                     )}
                     {product.originalPrice > 0 && (
                       <span className="text-base text-slate-400 line-through font-semibold">
-                        Est. Amazon Retail: ${product.originalPrice.toLocaleString()}
+                        Est. Amazon Retail: {currencySymbol}{product.originalPrice.toLocaleString()}
                       </span>
                     )}
                     <span className="ml-auto text-xs bg-emerald-100 text-emerald-800 font-bold px-3 py-1 rounded-full flex items-center gap-1">
@@ -492,7 +503,7 @@ export const ClientProductView: React.FC<ClientProductViewProps> = ({ productId 
                   <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 flex-wrap">
                     {product.amazonUrl && (
                       <a
-                        href={product.amazonUrl}
+                        href={formatAmazonUrl(product.amazonUrl)}
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={handleAmazonLinkClick}

@@ -12,6 +12,7 @@ import {
 } from 'react-icons/fa6';
 import { FaFacebookMessenger } from 'react-icons/fa';
 import { Product } from '../app/types';
+import { useApp } from '../app/context/AppContext';
 
 interface ProductCardProps {
   product: Product;
@@ -32,6 +33,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onOpenClientView,
   copiedId
 }) => {
+  const { currencySymbol } = useApp();
   const discountPercent = Math.round(
     ((product.originalPrice - product.price) / product.originalPrice) * 100
   );
@@ -108,11 +110,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           {/* Pricing Row */}
           <div className="flex items-baseline gap-2 mb-4">
             <span className="text-xl sm:text-2xl font-black text-slate-950">
-              ${product.price.toLocaleString()}
+              {currencySymbol}{product.price.toLocaleString()}
             </span>
             {product.originalPrice > product.price && (
               <span className="text-xs sm:text-sm text-slate-400 line-through">
-                ${product.originalPrice.toLocaleString()}
+                {currencySymbol}{product.originalPrice.toLocaleString()}
               </span>
             )}
             <span className="ml-auto text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md font-semibold">

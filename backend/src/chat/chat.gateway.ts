@@ -219,14 +219,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (shouldAutoReply && payload.sender === 'customer') {
       this.logger.log(`🤖 5-hour inactivity threshold met: Triggering auto-reply for customer ${clientKey}`);
 
-      setTimeout(() => {
-        if (payload.userId) {
-          this.server.to(`room_${payload.userId}`).to('admin_room').emit('typing', { isTyping: true, sender: 'admin', userId: payload.userId });
-        } else {
-          this.server.to('admin_room').emit('typing', { isTyping: true, sender: 'admin' });
-        }
-      }, 500);
-
       setTimeout(async () => {
         let replyText = 'Thank you for reaching out! Our team is reviewing your inquiry. We will get back to you shortly.';
         const lower = (payload.text || '').toLowerCase();
@@ -247,7 +239,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         });
 
         if (payload.userId) {
-          this.server.to(`room_${payload.userId}`).to('admin_room').emit('typing', { isTyping: false, sender: 'admin', userId: payload.userId });
           this.server.to(`room_${payload.userId}`).to('admin_room').emit('newMessage', autoAdminMessage);
           // Notify ONLY this specific customer in their private room
           this.server.to(`room_${payload.userId}`).emit('notification', {
@@ -260,10 +251,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           });
         } else {
-          this.server.to('admin_room').emit('typing', { isTyping: false, sender: 'admin' });
           this.server.to('admin_room').emit('newMessage', autoAdminMessage);
         }
-      }, 1600);
+      }, 1000);
     }
 
     return savedMessage;
@@ -277,17 +267,23 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const user = await this.resolveSocketUser(client, payload?.token);
     const isAdmin = user?.role?.toUpperCase() === 'ADMIN';
     const targetUserId = isAdmin ? payload.userId : (user?.id || payload.userId);
+    const isTyping = Boolean(payload?.isTyping);
 
-    if (targetUserId) {
-      this.server.to(`room_${targetUserId}`).to('admin_room').emit('typing', {
-        isTyping: payload.isTyping,
-        sender: isAdmin ? 'admin' : 'customer',
-        userId: targetUserId,
-      });
+    if (isAdmin) {
+      // Admin is typing: notify only the target customer's room
+      if (targetUserId) {
+        this.server.to(`room_${targetUserId}`).emit('typing', {
+          isTyping,
+          sender: 'admin',
+          userId: targetUserId,
+        });
+      }
     } else {
+      // Customer is typing: notify ONLY admin_room (never echo back to customer's own room)
       this.server.to('admin_room').emit('typing', {
-        isTyping: payload.isTyping,
+        isTyping,
         sender: 'customer',
+        userId: targetUserId,
       });
     }
   }
@@ -298,6 +294,33 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     await this.chatService.markAsRead(payload.ids);
     this.server.emit('messagesRead', { ids: payload.ids });
+    return { success: true };
+  }
+
+  @SubscribeMessage('broadcastProduct')
+  async handleBroadcastProduct(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: { product: any; token?: string },
+  ) {
+    const user = await this.resolveSocketUser(client, payload?.token);
+    const isAdmin = user?.role?.toUpperCase() === 'ADMIN';
+    if (!isAdmin || !payload?.product) return { success: false };
+
+    const notifPayload = {
+      id: `notif-prod-${payload.product.id}-${Date.now()}`,
+      title: 'New Product Added! 🎁',
+      body: `"${payload.product.title}" is now available to test & review for free!`,
+      sender: 'system',
+      type: 'product',
+      link: `/p/${payload.product.id}`,
+      productId: payload.product.id,
+      isBroadcast: true,
+      image: payload.product.image,
+      timestamp: 'Just now',
+    };
+
+    this.server.emit('notification', notifPayload);
+    this.server.emit('newProductAdded', payload.product);
     return { success: true };
   }
 

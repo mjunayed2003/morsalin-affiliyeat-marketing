@@ -17,10 +17,13 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../auth/guards/roles.guard.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import { ChatGateway } from '../chat/chat.gateway.js';
 let ProductsController = class ProductsController {
     productsService;
-    constructor(productsService) {
+    chatGateway;
+    constructor(productsService, chatGateway) {
         this.productsService = productsService;
+        this.chatGateway = chatGateway;
     }
     async findAll(category, search) {
         return this.productsService.findAll(category, search);
@@ -41,7 +44,24 @@ let ProductsController = class ProductsController {
         return this.productsService.findOne(id);
     }
     async create(createProductDto) {
-        return this.productsService.create(createProductDto);
+        const product = await this.productsService.create(createProductDto);
+        if (this.chatGateway.server) {
+            const notifPayload = {
+                id: `notif-prod-${product.id}-${Date.now()}`,
+                title: 'New Product Added! 🎁',
+                body: `"${product.title}" is now available to test & review for free!`,
+                sender: 'system',
+                type: 'product',
+                link: `/p/${product.id}`,
+                productId: product.id,
+                isBroadcast: true,
+                image: product.image,
+                timestamp: 'Just now',
+            };
+            this.chatGateway.server.emit('notification', notifPayload);
+            this.chatGateway.server.emit('newProductAdded', product);
+        }
+        return product;
     }
     async update(id, updateProductDto) {
         return this.productsService.update(id, updateProductDto);
@@ -121,7 +141,8 @@ __decorate([
 ], ProductsController.prototype, "remove", null);
 ProductsController = __decorate([
     Controller('products'),
-    __metadata("design:paramtypes", [ProductsService])
+    __metadata("design:paramtypes", [ProductsService,
+        ChatGateway])
 ], ProductsController);
 export { ProductsController };
 //# sourceMappingURL=products.controller.js.map

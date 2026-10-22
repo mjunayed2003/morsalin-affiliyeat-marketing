@@ -1,9 +1,11 @@
 import { ProductsService } from './products.service.js';
 import { CreateProductDto, UpdateProductDto } from './dto/create-product.dto.js';
 import { type AuthenticatedUser } from '../auth/decorators/current-user.decorator.js';
+import { ChatGateway } from '../chat/chat.gateway.js';
 export declare class ProductsController {
     private readonly productsService;
-    constructor(productsService: ProductsService);
+    private readonly chatGateway;
+    constructor(productsService: ProductsService, chatGateway: ChatGateway);
     findAll(category?: string, search?: string): Promise<{
         category: string;
         description: string;

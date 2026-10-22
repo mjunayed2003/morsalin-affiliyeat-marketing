@@ -1,29 +1,55 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   FaGear, 
   FaAmazon, 
   FaShieldHalved, 
   FaBell, 
   FaFloppyDisk,
-  FaCheck
+  FaCheck,
+  FaTriangleExclamation
 } from 'react-icons/fa6';
 import { useApp } from '@/app/context/AppContext';
 
 export default function AdminSettingsPage() {
-  const { showToast } = useApp();
+  const { settings, updateSettings, showToast } = useApp();
 
-  const [amazonTag, setAmazonTag] = useState('bwbh00-20');
-  const [platformName, setPlatformName] = useState('FreeProducts.online');
-  const [supportEmail, setSupportEmail] = useState('support@freeproducts.online');
-  const [currency, setCurrency] = useState('USD ($)');
-  const [enableSoundAlerts, setEnableSoundAlerts] = useState(true);
-  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [amazonTag, setAmazonTag] = useState(settings.amazonTag || 'bwbh00-20');
+  const [platformName, setPlatformName] = useState(settings.platformName || 'FreeProducts.online');
+  const [supportEmail, setSupportEmail] = useState(settings.supportEmail || 'support@freeproducts.online');
+  const [currency, setCurrency] = useState(settings.currency || 'USD ($)');
+  const [enableSoundAlerts, setEnableSoundAlerts] = useState(settings.enableSoundAlerts ?? true);
+  const [maintenanceMode, setMaintenanceMode] = useState(settings.maintenanceMode ?? false);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleSave = (e: React.FormEvent) => {
+  // Sync inputs whenever global settings change
+  useEffect(() => {
+    setAmazonTag(settings.amazonTag || 'bwbh00-20');
+    setPlatformName(settings.platformName || 'FreeProducts.online');
+    setSupportEmail(settings.supportEmail || 'support@freeproducts.online');
+    setCurrency(settings.currency || 'USD ($)');
+    setEnableSoundAlerts(settings.enableSoundAlerts ?? true);
+    setMaintenanceMode(settings.maintenanceMode ?? false);
+  }, [settings]);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    showToast('Platform settings saved successfully.');
+    setIsSaving(true);
+    const res = await updateSettings({
+      amazonTag: amazonTag.trim(),
+      platformName: platformName.trim(),
+      supportEmail: supportEmail.trim(),
+      currency,
+      enableSoundAlerts,
+      maintenanceMode,
+    });
+    setIsSaving(false);
+    if (res.success) {
+      showToast('✅ Platform settings saved and synced across store!');
+    } else {
+      showToast(`⚠️ ${res.message || 'Failed to save settings'}`);
+    }
   };
 
   return (
@@ -40,6 +66,16 @@ export default function AdminSettingsPage() {
           </p>
         </div>
       </div>
+
+      {settings.maintenanceMode && (
+        <div className="bg-amber-500/10 border border-amber-500/30 text-amber-900 rounded-2xl p-4 flex items-center gap-3 shadow-2xs">
+          <FaTriangleExclamation className="w-5 h-5 text-amber-600 shrink-0" />
+          <div className="text-xs">
+            <span className="font-bold">Public Maintenance Mode is currently active:</span>
+            <span className="ml-1">Regular visitors are restricted from browsing the public catalog. Administrators can still access the admin dashboard.</span>
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleSave} className="space-y-6">
         
@@ -155,10 +191,20 @@ export default function AdminSettingsPage() {
         <div className="flex justify-end">
           <button
             type="submit"
-            className="inline-flex items-center gap-2 bg-[#1b3b2b] hover:bg-[#142e20] text-white px-5 py-2.5 rounded-xl text-xs font-semibold shadow-2xs transition-all active:scale-95 cursor-pointer"
+            disabled={isSaving}
+            className="inline-flex items-center gap-2 bg-[#1b3b2b] hover:bg-[#142e20] disabled:opacity-60 text-white px-5 py-2.5 rounded-xl text-xs font-semibold shadow-2xs transition-all active:scale-95 cursor-pointer"
           >
-            <FaFloppyDisk className="w-3.5 h-3.5" />
-            <span>Save Settings</span>
+            {isSaving ? (
+              <>
+                <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Saving Platform Settings...</span>
+              </>
+            ) : (
+              <>
+                <FaFloppyDisk className="w-3.5 h-3.5" />
+                <span>Save Settings</span>
+              </>
+            )}
           </button>
         </div>
 

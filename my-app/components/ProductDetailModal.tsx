@@ -39,7 +39,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   onOpenShare
 }) => {
   const { isAuthenticated, user, openAuthModal } = useAuth();
-  const { getProductReviews, deleteReview, showToast } = useApp();
+  const { getProductReviews, deleteReview, showToast, currencySymbol, formatAmazonUrl } = useApp();
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isCopied, setIsCopied] = useState(false);
 
@@ -179,12 +179,12 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                     </span>
                   ) : (
                     <span className="text-2xl font-black text-slate-950">
-                      ${product.price.toLocaleString()}
+                      {currencySymbol}{product.price.toLocaleString()}
                     </span>
                   )}
                   {product.originalPrice > 0 && (
                     <span className="text-xs text-slate-400 line-through">
-                      Est. Retail: ${product.originalPrice.toLocaleString()}
+                      Est. Retail: {currencySymbol}{product.originalPrice.toLocaleString()}
                     </span>
                   )}
                   <span className="ml-auto text-xs bg-emerald-100 text-emerald-800 font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">
@@ -199,7 +199,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 {product.amazonUrl && (
                   <div className="pt-2 border-t border-stone-200/80 space-y-2">
                     <a
-                      href={product.amazonUrl}
+                      href={formatAmazonUrl(product.amazonUrl)}
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={handleAmazonClick}

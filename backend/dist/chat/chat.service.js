@@ -76,13 +76,13 @@ let ChatService = class ChatService {
                         },
                     },
                 },
-                orderBy: { createdAt: 'desc' },
+                orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
                 skip,
                 take,
             }),
             this.prisma.chatMessage.count({ where }),
         ]);
-        const messages = rawMessages.reverse().map((m) => this.formatMessage(m));
+        const messages = [...rawMessages].reverse().map((m) => this.formatMessage(m));
         const totalPages = Math.ceil(total / take);
         const hasMore = skip + rawMessages.length < total;
         return {

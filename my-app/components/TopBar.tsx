@@ -19,16 +19,16 @@ import { useApp } from '@/app/context/AppContext';
 
 export const TopBar: React.FC = () => {
   const router = useRouter();
-  const { openChat } = useApp();
+  const { openChat, settings } = useApp();
   const [searchValue, setSearchValue] = useState('');
 
   const phoneNumber = '+880 1340-376081';
   const cleanPhoneForLink = '8801340376081';
   const telegramNumber = '01603383215';
-  const whatsappUrl = `https://wa.me/${cleanPhoneForLink}?text=${encodeURIComponent('Hello FreeProducts.online Support, I would like to inquire about Amazon review products.')}`;
+  const whatsappUrl = `https://wa.me/${cleanPhoneForLink}?text=${encodeURIComponent(`Hello ${settings.platformName || 'FreeProducts.online'} Support, I would like to inquire about Amazon review products.`)}`;
   const telegramUrl = `https://t.me/+8801603383215`;
   const facebookUrl = 'https://www.facebook.com/share/1dAcJt9QhV/';
-  const emailUrl = 'mailto:freeproductsonline1@gmail.com';
+  const emailUrl = `mailto:${settings.supportEmail || 'support@freeproducts.online'}`;
   const telUrl = `tel:+${cleanPhoneForLink}`;
 
   const handleSearchSubmit = (e: React.FormEvent) => {

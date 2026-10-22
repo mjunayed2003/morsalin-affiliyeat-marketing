@@ -58,7 +58,8 @@ export default function Home() {
     closeShareModal, 
     openChatWithProduct, 
     openShareModal,
-    showToast
+    showToast,
+    settings
   } = useApp();
   
   const { isAuthenticated, openAuthModal } = useAuth();
@@ -743,9 +744,9 @@ export default function Home() {
                 <FaInstagram className="w-3.5 h-3.5" />
               </a>
               <a 
-                href="mailto:freeproductsonline1@gmail.com" 
+                href={`mailto:${settings.supportEmail || 'support@freeproducts.online'}`} 
                 className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:text-[#EA4335] hover:bg-slate-200 transition-colors shadow-2xs"
-                title="Email: freeproductsonline1@gmail.com"
+                title={`Email: ${settings.supportEmail || 'support@freeproducts.online'}`}
               >
                 <FaEnvelope className="w-3.5 h-3.5" />
               </a>
@@ -756,10 +757,10 @@ export default function Home() {
           {/* Bottom Copyright & Contact Info */}
           <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-slate-400">
             <div className="flex flex-wrap items-center gap-3">
-              <p>© 2026 FreeProducts.online. All rights reserved.</p>
+              <p>© 2026 {settings.platformName || 'FreeProducts.online'}. All rights reserved.</p>
               <span className="hidden sm:inline text-slate-300">•</span>
-              <a href="mailto:freeproductsonline1@gmail.com" className="hover:text-slate-600 transition-colors">
-                freeproductsonline1@gmail.com
+              <a href={`mailto:${settings.supportEmail || 'support@freeproducts.online'}`} className="hover:text-slate-600 transition-colors">
+                {settings.supportEmail || 'support@freeproducts.online'}
               </a>
               <span className="hidden sm:inline text-slate-300">•</span>
               <span>Telegram: 01603383215</span>

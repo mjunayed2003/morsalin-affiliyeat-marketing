@@ -54,6 +54,12 @@ export declare class ChatGateway implements OnGatewayConnection, OnGatewayDiscon
     }): Promise<{
         success: boolean;
     }>;
+    handleBroadcastProduct(client: Socket, payload: {
+        product: any;
+        token?: string;
+    }): Promise<{
+        success: boolean;
+    }>;
     handleStartAudioCall(client: Socket, payload: {
         targetUserId?: string;
         callerName?: string;

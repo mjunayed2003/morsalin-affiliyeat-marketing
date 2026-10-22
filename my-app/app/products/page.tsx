@@ -51,7 +51,8 @@ export default function ProductsPage() {
     closeShareModal, 
     openChatWithProduct, 
     openShareModal,
-    showToast
+    showToast,
+    settings
   } = useApp();
   const { isAuthenticated, openAuthModal } = useAuth();
 
@@ -346,7 +347,7 @@ export default function ProductsPage() {
           </div>
         </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-slate-400">
-          <p>© 2026 FreeProducts.online. All rights reserved.</p>
+          <p>© 2026 {settings.platformName || 'FreeProducts.online'}. All rights reserved.</p>
         </div>
       </footer>
 

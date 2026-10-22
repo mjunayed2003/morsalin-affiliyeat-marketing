@@ -163,14 +163,6 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
         }
         if (shouldAutoReply && payload.sender === 'customer') {
             this.logger.log(`🤖 5-hour inactivity threshold met: Triggering auto-reply for customer ${clientKey}`);
-            setTimeout(() => {
-                if (payload.userId) {
-                    this.server.to(`room_${payload.userId}`).to('admin_room').emit('typing', { isTyping: true, sender: 'admin', userId: payload.userId });
-                }
-                else {
-                    this.server.to('admin_room').emit('typing', { isTyping: true, sender: 'admin' });
-                }
-            }, 500);
             setTimeout(async () => {
                 let replyText = 'Thank you for reaching out! Our team is reviewing your inquiry. We will get back to you shortly.';
                 const lower = (payload.text || '').toLowerCase();
@@ -190,7 +182,6 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
                     userId: payload.userId,
                 });
                 if (payload.userId) {
-                    this.server.to(`room_${payload.userId}`).to('admin_room').emit('typing', { isTyping: false, sender: 'admin', userId: payload.userId });
                     this.server.to(`room_${payload.userId}`).to('admin_room').emit('newMessage', autoAdminMessage);
                     this.server.to(`room_${payload.userId}`).emit('notification', {
                         id: `notif-${Date.now()}`,
@@ -203,10 +194,9 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
                     });
                 }
                 else {
-                    this.server.to('admin_room').emit('typing', { isTyping: false, sender: 'admin' });
                     this.server.to('admin_room').emit('newMessage', autoAdminMessage);
                 }
-            }, 1600);
+            }, 1000);
         }
         return savedMessage;
     }
@@ -214,23 +204,48 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
         const user = await this.resolveSocketUser(client, payload?.token);
         const isAdmin = user?.role?.toUpperCase() === 'ADMIN';
         const targetUserId = isAdmin ? payload.userId : (user?.id || payload.userId);
-        if (targetUserId) {
-            this.server.to(`room_${targetUserId}`).to('admin_room').emit('typing', {
-                isTyping: payload.isTyping,
-                sender: isAdmin ? 'admin' : 'customer',
-                userId: targetUserId,
-            });
+        const isTyping = Boolean(payload?.isTyping);
+        if (isAdmin) {
+            if (targetUserId) {
+                this.server.to(`room_${targetUserId}`).emit('typing', {
+                    isTyping,
+                    sender: 'admin',
+                    userId: targetUserId,
+                });
+            }
         }
         else {
             this.server.to('admin_room').emit('typing', {
-                isTyping: payload.isTyping,
+                isTyping,
                 sender: 'customer',
+                userId: targetUserId,
             });
         }
     }
     async handleMarkAsRead(payload) {
         await this.chatService.markAsRead(payload.ids);
         this.server.emit('messagesRead', { ids: payload.ids });
+        return { success: true };
+    }
+    async handleBroadcastProduct(client, payload) {
+        const user = await this.resolveSocketUser(client, payload?.token);
+        const isAdmin = user?.role?.toUpperCase() === 'ADMIN';
+        if (!isAdmin || !payload?.product)
+            return { success: false };
+        const notifPayload = {
+            id: `notif-prod-${payload.product.id}-${Date.now()}`,
+            title: 'New Product Added! 🎁',
+            body: `"${payload.product.title}" is now available to test & review for free!`,
+            sender: 'system',
+            type: 'product',
+            link: `/p/${payload.product.id}`,
+            productId: payload.product.id,
+            isBroadcast: true,
+            image: payload.product.image,
+            timestamp: 'Just now',
+        };
+        this.server.emit('notification', notifPayload);
+        this.server.emit('newProductAdded', payload.product);
         return { success: true };
     }
     async handleStartAudioCall(client, payload) {
@@ -389,6 +404,14 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], ChatGateway.prototype, "handleMarkAsRead", null);
+__decorate([
+    SubscribeMessage('broadcastProduct'),
+    __param(0, ConnectedSocket()),
+    __param(1, MessageBody()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Socket, Object]),
+    __metadata("design:returntype", Promise)
+], ChatGateway.prototype, "handleBroadcastProduct", null);
 __decorate([
     SubscribeMessage('startAudioCall'),
     __param(0, ConnectedSocket()),

@@ -102,15 +102,36 @@ export class ChatController {
 
     const saved = await this.chatService.createMessage(enrichedDto);
 
-    // Broadcast ONLY to the specific user's private room and the admin room
+    // Broadcast to target user private room and admin room with real-time notification
     if (this.chatGateway.server) {
+      const notificationPayload = {
+        id: `notif-${Date.now()}`,
+        title: enrichedDto.sender === 'customer'
+          ? `New Message from ${enrichedDto.senderName || 'Reviewer'}`
+          : `Support Reply from ${enrichedDto.senderName || 'Admin'}`,
+        body: enrichedDto.text?.slice(0, 100) || 'Sent an attachment',
+        sender: enrichedDto.sender,
+        senderName: enrichedDto.senderName,
+        userId: saved.userId,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      };
+
       if (saved.userId) {
         this.chatGateway.server
           .to(`room_${saved.userId}`)
           .to('admin_room')
           .emit('newMessage', saved);
+
+        if (enrichedDto.sender === 'customer') {
+          this.chatGateway.server.to('admin_room').emit('notification', notificationPayload);
+        } else {
+          this.chatGateway.server.to(`room_${saved.userId}`).emit('notification', notificationPayload);
+        }
       } else {
         this.chatGateway.server.to('admin_room').emit('newMessage', saved);
+        if (enrichedDto.sender === 'customer') {
+          this.chatGateway.server.to('admin_room').emit('notification', notificationPayload);
+        }
       }
     }
 

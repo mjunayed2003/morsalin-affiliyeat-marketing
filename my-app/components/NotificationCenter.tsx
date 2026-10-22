@@ -70,6 +70,8 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
         return <FaPhone className="w-3.5 h-3.5 text-indigo-600 animate-pulse" />;
       case 'order':
         return <FaBagShopping className="w-3.5 h-3.5 text-amber-600" />;
+      case 'product':
+        return <FaGift className="w-3.5 h-3.5 text-emerald-600" />;
       case 'review':
         return <FaStar className="w-3.5 h-3.5 text-amber-500" />;
       default:

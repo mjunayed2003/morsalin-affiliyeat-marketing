@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module.js';
 import { ChatModule } from './chat/chat.module.js';
 import { InquiriesModule } from './inquiries/inquiries.module.js';
 import { MailModule } from './mail/mail.module.js';
+import { SettingsModule } from './settings/settings.module.js';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { MailModule } from './mail/mail.module.js';
     ChatModule,
     InquiriesModule,
     MailModule,
+    SettingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

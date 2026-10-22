@@ -13,7 +13,8 @@ import {
   FaShieldHalved,
   FaEnvelope,
   FaCircleCheck,
-  FaArrowLeft
+  FaArrowLeft,
+  FaWhatsapp
 } from 'react-icons/fa6';
 import { FiX } from 'react-icons/fi';
 import { useApp } from '@/app/context/AppContext';
@@ -74,6 +75,8 @@ export default function AdminInboxPage() {
     isLoadingOlderMessages,
     loadOlderMessages,
     chatTotal,
+    audioCall,
+    startAudioCall,
   } = useApp();
   const { users } = useAuth();
 
@@ -222,11 +225,12 @@ export default function AdminInboxPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setReplyText(e.target.value);
+    const targetUserId = activeConversation && !activeConversation.isGuest ? activeConversation.id : undefined;
     if (emitTyping) {
-      emitTyping(true);
+      emitTyping(true, targetUserId);
       if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
       typingTimerRef.current = setTimeout(() => {
-        emitTyping(false);
+        emitTyping(false, targetUserId);
       }, 2000);
     }
   };
@@ -235,12 +239,12 @@ export default function AdminInboxPage() {
     e.preventDefault();
     if (!replyText.trim() && !selectedImage) return;
 
+    const targetUserId = activeConversation && !activeConversation.isGuest ? activeConversation.id : undefined;
+
     if (emitTyping) {
       if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
-      emitTyping(false);
+      emitTyping(false, targetUserId);
     }
-
-    const targetUserId = activeConversation && !activeConversation.isGuest ? activeConversation.id : undefined;
 
     sendAdminReply(replyText.trim(), selectedImage || undefined, targetUserId);
     setReplyText('');
@@ -261,47 +265,18 @@ export default function AdminInboxPage() {
   };
 
   return (
-    <div className="space-y-4 max-w-7xl mx-auto font-sans">
+    <div className="w-full max-w-7xl mx-auto font-sans h-[calc(100dvh-6rem)] sm:h-[calc(100dvh-7rem)] flex flex-col min-h-0">
       
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-              Support & Reviewer Inbox
-            </h1>
-            <span className="bg-emerald-100 text-emerald-800 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-200">
-              Live Real-Time
-            </span>
-          </div>
-          <p className="text-xs text-slate-500 mt-1">
-            Real-time chat inquiries from reviewers. User with the newest message automatically appears at the top.
-          </p>
-        </div>
-
-        <button
-          onClick={() => {
-            if (confirm('Are you sure you want to clear this conversation history?')) {
-              clearMessages();
-            }
-          }}
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 px-3.5 py-2 rounded-xl border border-rose-200 transition-colors cursor-pointer w-fit"
-        >
-          <FaTrashCan className="w-3.5 h-3.5" />
-          <span>Clear Chat History</span>
-        </button>
-      </div>
-
       {/* Main Two-Pane Chat Container */}
-      <div className="bg-white rounded-3xl border border-stone-200 shadow-sm overflow-hidden flex flex-col md:flex-row h-[720px]">
+      <div className="bg-white rounded-2xl sm:rounded-3xl border border-stone-200 shadow-sm overflow-hidden flex flex-col md:flex-row flex-1 min-h-0 h-full">
         
         {/* ========================================================= */}
         {/* LEFT PANE: USER LIST WITH PHONE NUMBERS                   */}
         {/* ========================================================= */}
-        <div className={`w-full md:w-[360px] lg:w-[400px] border-r border-stone-200 flex flex-col shrink-0 bg-stone-50/50 ${mobileShowChat ? 'hidden md:flex' : 'flex'}`}>
+        <div className={`w-full md:w-[360px] lg:w-[400px] border-r border-stone-200 flex flex-col shrink-0 bg-stone-50/50 h-full min-h-0 overflow-hidden ${mobileShowChat ? 'hidden md:flex' : 'flex'}`}>
           
           {/* Search Header */}
-          <div className="p-3.5 border-b border-stone-200 bg-white space-y-2.5">
+          <div className="p-3.5 border-b border-stone-200 bg-white space-y-2.5 shrink-0">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
                 <FaComments className="w-3.5 h-3.5 text-[#1b3b2b]" />
@@ -326,7 +301,7 @@ export default function AdminInboxPage() {
           </div>
 
           {/* User Conversations List */}
-          <div className="flex-1 overflow-y-auto divide-y divide-stone-100">
+          <div className="flex-1 overflow-y-auto min-h-0 divide-y divide-stone-100">
             {filteredConversations.length === 0 ? (
               <div className="p-8 text-center text-slate-400 text-xs">
                 <FaUser className="w-8 h-8 mx-auto mb-2 opacity-30" />
@@ -428,7 +403,7 @@ export default function AdminInboxPage() {
         {/* ========================================================= */}
         {/* RIGHT PANE: ACTIVE CONVERSATION THREAD                    */}
         {/* ========================================================= */}
-        <div className={`flex-1 flex flex-col bg-white min-w-0 ${!mobileShowChat ? 'hidden md:flex' : 'flex'}`}>
+        <div className={`flex-1 flex flex-col bg-white min-w-0 min-h-0 h-full overflow-hidden ${!mobileShowChat ? 'hidden md:flex' : 'flex'}`}>
           
           {/* Active Conversation Top Bar */}
           <div className="p-3.5 sm:p-4 border-b border-stone-200 bg-white flex items-center justify-between gap-3 shrink-0">
@@ -451,25 +426,24 @@ export default function AdminInboxPage() {
               </div>
 
               <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-sm sm:text-base font-bold text-slate-900 truncate">
-                    {activeConversation?.name || 'Reviewer'}
-                  </h2>
-                  <span className="text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-200/80 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider shrink-0">
-                    {activeConversation?.isGuest ? 'Guest' : 'Verified Reviewer'}
-                  </span>
-                </div>
+                <h2 className="text-sm sm:text-base font-bold text-slate-900 truncate leading-snug">
+                  {activeConversation?.name || 'Reviewer'}
+                </h2>
 
-                {/* Prominent Phone & Email Bar */}
-                <div className="flex items-center gap-3 text-xs text-slate-600 mt-0.5 flex-wrap">
-                  <span className="flex items-center gap-1 font-semibold text-emerald-800">
-                    <FaPhone className="w-3 h-3 text-emerald-600" />
+                {/* Status & Phone Bar */}
+                <div className="flex items-center gap-2 text-xs text-slate-600 mt-0.5 flex-wrap">
+                  <span className="text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-200/80 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider shrink-0">
+                    {activeConversation?.isGuest ? 'Guest' : 'Verified'}
+                  </span>
+
+                  <span className="flex items-center gap-1 font-semibold text-emerald-800 text-xs shrink-0">
+                    <FaPhone className="w-2.5 h-2.5 text-emerald-600 shrink-0" />
                     <span>{formatPhone(activeConversation?.phone)}</span>
                   </span>
 
                   {activeConversation?.email && (
-                    <span className="flex items-center gap-1 text-slate-500 text-[11px] truncate">
-                      <FaEnvelope className="w-3 h-3 text-slate-400" />
+                    <span className="hidden sm:flex items-center gap-1 text-slate-500 text-[11px] truncate">
+                      <FaEnvelope className="w-2.5 h-2.5 text-slate-400 shrink-0" />
                       <span className="truncate">{activeConversation.email}</span>
                     </span>
                   )}
@@ -477,27 +451,57 @@ export default function AdminInboxPage() {
               </div>
             </div>
 
-            {/* Filter Toggle */}
-            <div className="hidden sm:flex items-center gap-1 bg-stone-100 p-1 rounded-xl text-[11px] shrink-0">
-              {(['all', 'customer', 'admin'] as const).map((tab) => (
-                <button
-                  key={tab}
-                  type="button"
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
-                    activeTab === tab
-                      ? 'bg-white text-slate-900 shadow-2xs font-bold'
-                      : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  {tab === 'all' ? 'All' : tab === 'customer' ? 'Customer' : 'Admin'}
-                </button>
-              ))}
+            {/* Right: Actions (Filter, Audio Call, Delete) */}
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              {/* Filter Toggle */}
+              <div className="hidden lg:flex items-center gap-1 bg-stone-100 p-1 rounded-xl text-[11px] shrink-0 mr-0.5">
+                {(['all', 'customer', 'admin'] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => setActiveTab(tab)}
+                    className={`px-2 py-0.5 rounded-lg font-semibold transition-all cursor-pointer ${
+                      activeTab === tab
+                        ? 'bg-white text-slate-900 shadow-2xs font-bold'
+                        : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    {tab === 'all' ? 'All' : tab === 'customer' ? 'Customer' : 'Admin'}
+                  </button>
+                ))}
+              </div>
+
+              {/* Call Option */}
+              <button
+                type="button"
+                onClick={() => startAudioCall(activeConversation?.id, activeConversation?.name)}
+                disabled={!activeConversation || !!audioCall}
+                className="bg-emerald-700 hover:bg-emerald-600 active:scale-95 text-white text-xs font-semibold px-2.5 sm:px-3 py-1.5 rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-40 shrink-0"
+                title={`Start Live Audio Call with ${activeConversation?.name || 'Reviewer'}`}
+              >
+                <FaPhone className="w-3 h-3 text-emerald-200 shrink-0" />
+                <span className="hidden sm:inline">Audio Call</span>
+              </button>
+
+              {/* Delete / Clear Conversation Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (confirm(`Are you sure you want to clear chat history for ${activeConversation?.name || 'this reviewer'}?`)) {
+                    clearMessages(activeConversation?.id);
+                  }
+                }}
+                disabled={!activeConversation}
+                className="w-8 h-8 rounded-xl bg-stone-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600 border border-stone-200 transition-all flex items-center justify-center cursor-pointer shadow-2xs shrink-0 disabled:opacity-40"
+                title={`Clear chat history for ${activeConversation?.name || 'this reviewer'}`}
+              >
+                <FaTrashCan className="w-3.5 h-3.5" />
+              </button>
             </div>
           </div>
 
           {/* Messages Feed */}
-          <div ref={chatFeedRef} className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5 bg-stone-50/40">
+          <div ref={chatFeedRef} className="flex-1 overflow-y-auto overscroll-contain min-h-0 p-4 sm:p-5 space-y-3.5 bg-stone-50/40">
             {hasMoreMessages && (
               <div className="flex justify-center my-1">
                 <button
@@ -641,20 +645,7 @@ export default function AdminInboxPage() {
           </div>
 
           {/* Replying Status & Form */}
-          <div className="border-t border-stone-200 bg-white">
-            
-            {/* Recipient Indicator */}
-            <div className="px-4 py-1.5 bg-stone-50/80 border-b border-stone-100 flex items-center justify-between text-[11px] text-slate-600">
-              <span className="flex items-center gap-1.5 font-medium truncate">
-                <span>Replying to:</span>
-                <strong className="text-slate-900">{activeConversation?.name}</strong>
-                <span className="text-emerald-700 font-mono font-semibold">({formatPhone(activeConversation?.phone)})</span>
-              </span>
-              <span className="text-slate-400 text-[10px]">
-                Target ID: {activeConversation?.id.slice(0, 10)}...
-              </span>
-            </div>
-
+          <div className="border-t border-stone-200 bg-white shrink-0 sticky bottom-0 z-10">
             {/* Attached Photo Preview */}
             {selectedImage && (
               <div className="px-4 py-2 bg-emerald-50 border-b border-emerald-100 flex items-center gap-3">
@@ -671,11 +662,11 @@ export default function AdminInboxPage() {
             )}
 
             {/* Input Form */}
-            <form onSubmit={handleSend} className="p-3 flex items-center gap-2">
+            <form onSubmit={handleSend} className="p-2.5 sm:p-3 flex items-center gap-2 bg-white">
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="p-2.5 rounded-xl border border-stone-200 text-slate-500 hover:bg-stone-50 hover:text-[#1b3b2b] transition-colors cursor-pointer shrink-0"
+                className="w-10 h-10 rounded-xl border border-stone-200 text-slate-500 hover:bg-stone-50 hover:text-[#1b3b2b] transition-colors cursor-pointer flex items-center justify-center shrink-0"
                 title="Attach photo"
               >
                 <FaImage className="w-4 h-4" />
@@ -693,17 +684,17 @@ export default function AdminInboxPage() {
                 value={replyText}
                 onChange={handleInputChange}
                 placeholder={`Type reply to ${activeConversation?.name || 'Reviewer'}...`}
-                className="flex-1 px-4 py-2.5 text-xs sm:text-sm bg-stone-50 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-[#1b3b2b]/15 focus:border-[#1b3b2b] transition-all font-medium"
+                className="flex-1 h-10 px-4 text-xs sm:text-sm bg-stone-50 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-[#1b3b2b]/20 focus:border-[#1b3b2b] focus:bg-white transition-all font-medium text-slate-900"
               />
 
               <button
                 type="submit"
                 disabled={!replyText.trim() && !selectedImage}
-                className="px-4 py-2.5 rounded-xl bg-[#1b3b2b] hover:bg-[#142e20] active:scale-95 disabled:opacity-40 disabled:pointer-events-none text-white shadow-xs transition-all cursor-pointer font-bold text-xs sm:text-sm flex items-center gap-1.5 shrink-0"
+                className="h-10 px-4 sm:px-5 rounded-xl bg-[#1b3b2b] hover:bg-emerald-800 active:scale-95 disabled:opacity-35 disabled:hover:bg-[#1b3b2b] disabled:pointer-events-none text-white shadow-xs transition-all cursor-pointer font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shrink-0"
                 title="Send reply"
               >
-                <span>Send</span>
-                <FaPaperPlane className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Send</span>
+                <FaPaperPlane className="w-3.5 h-3.5 text-emerald-200" />
               </button>
             </form>
           </div>

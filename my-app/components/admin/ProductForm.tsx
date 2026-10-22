@@ -26,7 +26,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   isEditMode = false 
 }) => {
   const router = useRouter();
-  const { addProduct, updateProduct, showToast } = useApp();
+  const { addProduct, updateProduct, showToast, formatAmazonUrl, settings } = useApp();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [title, setTitle] = useState(initialProduct?.title || '');
@@ -142,7 +142,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       category: category.trim(),
       subCategory: subCategory.trim() || undefined,
       store: store.trim() || 'Amazon Partner Store',
-      amazonUrl: amazonUrl.trim() || undefined,
+      amazonUrl: amazonUrl.trim() ? formatAmazonUrl(amazonUrl.trim()) : undefined,
       originalPrice: parseFloat(originalPrice) || 29,
       price: parseFloat(price) || 0,
       commission: `$${commissionAmount} (${Math.round((parseFloat(commissionAmount) / parseFloat(originalPrice)) * 100)}%)`,
@@ -301,9 +301,16 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 type="url"
                 value={amazonUrl}
                 onChange={(e) => setAmazonUrl(e.target.value)}
-                placeholder="https://www.amazon.com/dp/B0GXTXF8T4?tag=..."
+                placeholder="https://www.amazon.com/dp/B0GXTXF8T4"
                 className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#1b3b2b]"
               />
+              {settings.amazonTag && (
+                <p className="text-[11px] text-emerald-700 mt-1 flex items-center gap-1">
+                  <span>Default Tag:</span>
+                  <code className="font-mono font-bold bg-emerald-50 text-emerald-800 px-1.5 py-0.2 rounded border border-emerald-200">{settings.amazonTag}</code>
+                  <span className="text-slate-400">(auto-appended on customer clicks)</span>
+                </p>
+              )}
             </div>
           </div>
 

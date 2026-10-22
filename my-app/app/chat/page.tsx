@@ -33,6 +33,7 @@ export default function ChatPage() {
     clearMessages,
     openDetailModal,
     isTyping: realIsTyping,
+    typingSender,
     emitTyping,
     audioCall,
     startAudioCall,
@@ -49,13 +50,12 @@ export default function ChatPage() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [previewModalImage, setPreviewModalImage] = useState<string | null>(null);
   const [showProductPicker, setShowProductPicker] = useState(false);
-  const [localTyping, setLocalTyping] = useState(false);
   const [guestName, setGuestName] = useState('');
   const [guestPhone, setGuestPhone] = useState('');
   const [guestSubmitting, setGuestSubmitting] = useState(false);
   const [guestError, setGuestError] = useState<string | null>(null);
   const [authViewTab, setAuthViewTab] = useState<'guest' | 'login'>('guest');
-  const isTyping = realIsTyping || localTyping;
+  const isTyping = Boolean(realIsTyping && typingSender === 'admin');
   const typingTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const chatFeedRef = useRef<HTMLDivElement>(null);
@@ -131,20 +131,10 @@ export default function ChatPage() {
       if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
       emitTyping(false);
     }
-
-    // Brief local typing fallback while socket response is underway
-    setLocalTyping(true);
-    setTimeout(() => {
-      setLocalTyping(false);
-    }, 1800);
   };
 
   const handleQuickQuestion = (question: string) => {
     sendCustomerMessage(question);
-    setLocalTyping(true);
-    setTimeout(() => {
-      setLocalTyping(false);
-    }, 1800);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -349,63 +339,68 @@ export default function ChatPage() {
         {/* Unified Chat Box Container: Everything in ONE box */}
         <div className="flex-1 w-full bg-white rounded-3xl border border-stone-200/90 shadow-xl overflow-hidden flex flex-col min-h-0 relative">
           
-          {/* Chat Header Card (Fixed at top of box) */}
-          <div className="bg-[#1b3b2b] text-white p-3.5 sm:p-4 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shrink-0">
-            <div className="flex items-center">
-              <div className="bg-white px-3.5 py-1.5 rounded-2xl shadow-xs flex items-center">
-                <img
-                  src="/logo.jpeg"
-                  alt="FreeProducts.online"
-                  className="h-8 sm:h-9 w-auto object-contain"
-                />
+          {/* Clean Modern Chat Header */}
+          <div className="bg-[#1b3b2b] text-white px-3.5 py-2.5 sm:px-4 sm:py-3 shadow-sm flex items-center justify-between gap-2.5 shrink-0 border-b border-emerald-900/40">
+            {/* Left: Support Desk & User Info */}
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="min-w-0 flex flex-col justify-center">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-bold text-xs sm:text-sm text-white tracking-tight leading-none">
+                    Support Desk
+                  </span>
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" title="Online & Active" />
+                </div>
+                <div className="flex items-center gap-1 text-[11px] text-emerald-200/90 mt-1 leading-none">
+                  <span className="opacity-75">User:</span>
+                  <span className="font-semibold text-white truncate max-w-[150px] xs:max-w-[200px] sm:max-w-[260px]">
+                    {user?.name || 'Reviewer'}
+                  </span>
+                  <FaCheck className="w-2.5 h-2.5 text-emerald-400 shrink-0" />
+                </div>
               </div>
             </div>
 
-          {/* Quick Action Controls */}
-          <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 border-white/10 pt-2 sm:pt-0">
-            {/* Audio Call button */}
-            <button
-              onClick={() => startAudioCall()}
-              disabled={!!audioCall}
-              className="bg-emerald-700 hover:bg-emerald-600 active:scale-95 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-              title="Start Live Audio Call with Support Desk"
-            >
-              <FaPhone className="w-3 h-3 text-emerald-200" />
-              <span>Audio Call</span>
-            </button>
+            {/* Right: Quick Actions (Call, WhatsApp, Delete) */}
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              {/* Audio Call button */}
+              <button
+                type="button"
+                onClick={() => startAudioCall()}
+                disabled={!!audioCall}
+                className="bg-emerald-700/90 hover:bg-emerald-600 active:scale-95 text-white text-xs font-semibold px-2.5 sm:px-3 py-1.5 rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shrink-0"
+                title="Start Live Audio Call with Support Desk"
+              >
+                <FaPhone className="w-3 h-3 text-emerald-200 shrink-0" />
+                <span className="hidden sm:inline">Audio Call</span>
+              </button>
 
-            {/* Direct WhatsApp shortcut */}
-            <a
-              href={whatsappUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-[#25D366] hover:bg-[#20ba59] active:scale-95 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
-              title="Open WhatsApp chat"
-            >
-              <FaWhatsapp className="w-3.5 h-3.5" />
-              <span>WhatsApp</span>
-            </a>
+              {/* Direct WhatsApp shortcut */}
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-[#25D366] hover:bg-[#20ba59] active:scale-95 text-white text-xs font-semibold px-2.5 sm:px-3 py-1.5 rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
+                title="Open WhatsApp chat"
+              >
+                <FaWhatsapp className="w-3.5 h-3.5 shrink-0" />
+                <span className="hidden sm:inline">WhatsApp</span>
+              </a>
 
-            {/* Current Reviewer Status */}
-            <div className="flex items-center gap-1.5 bg-black/20 px-2.5 py-1.5 rounded-xl border border-white/10 text-xs">
-              <span className="text-emerald-200 text-[11px]">User:</span>
-              <span className="font-bold text-white flex items-center gap-1">
-                {user.name}
-                <FaCheck className="w-2.5 h-2.5 text-emerald-400" />
-              </span>
+              {/* Delete / Clear Chat History */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (window.confirm('Are you sure you want to clear your chat history?')) {
+                    clearMessages();
+                  }
+                }}
+                className="w-8 h-8 rounded-xl bg-white/10 hover:bg-rose-500/80 active:scale-95 text-stone-200 hover:text-white transition-all flex items-center justify-center cursor-pointer shadow-xs shrink-0"
+                title="Clear chat history"
+              >
+                <FaTrashCan className="w-3.5 h-3.5" />
+              </button>
             </div>
-
-            {/* Clear History */}
-            <button
-              onClick={clearMessages}
-              className="text-stone-300 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors text-xs flex items-center gap-1 cursor-pointer"
-              title="Clear chat history"
-            >
-              <FaTrashCan className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Clear</span>
-            </button>
           </div>
-        </div>
 
         {/* Messages Scroll Area - ONLY THIS SCROLLS */}
         <div 
@@ -739,24 +734,6 @@ export default function ChatPage() {
             </form>
 
           </div>
-
-          {/* Small Clean Bottom Bar */}
-          <div className="shrink-0 pt-1.5 px-3 text-[11px] text-slate-500 flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-              <span>FreeProducts.online Review Desk</span>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <Link href="/" className="hover:text-[#1b3b2b] transition-colors">
-                ← Catalog
-              </Link>
-              <Link href="/profile" className="hover:text-[#1b3b2b] transition-colors">
-                My Profile →
-              </Link>
-            </div>
-          </div>
-
         </main>
 
       {/* Lightbox Modal for Zooming Photos */}

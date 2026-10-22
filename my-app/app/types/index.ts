@@ -93,11 +93,20 @@ export interface NotificationItem {
   id: string;
   title: string;
   body: string;
-  type: 'message' | 'system' | 'call' | 'order' | 'review';
+  type: 'message' | 'system' | 'call' | 'order' | 'review' | 'product';
   timestamp: string;
   read: boolean;
   link?: string;
   sender?: string;
+}
+
+export interface PlatformSettings {
+  amazonTag: string;
+  currency: string;
+  platformName: string;
+  supportEmail: string;
+  enableSoundAlerts: boolean;
+  maintenanceMode: boolean;
 }
 
 export type ViewMode = 'store' | 'admin' | 'client';
