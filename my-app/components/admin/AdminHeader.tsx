@@ -75,24 +75,33 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
   return (
     <header className="sticky top-0 z-30 h-16 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-6 flex items-center justify-between gap-4">
       
-      {/* Left: Hamburger & Breadcrumbs */}
-      <div className="flex items-center gap-3 min-w-0">
+      {/* Left: Hamburger, Mobile Logo & Breadcrumbs */}
+      <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
         <button
           type="button"
           onClick={onToggleSidebar}
-          className="lg:hidden p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+          className="lg:hidden p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors shrink-0"
           aria-label="Toggle Navigation"
         >
           <FaBars className="w-4 h-4" />
         </button>
 
+        {/* Mobile Brand Logo */}
+        <Link href="/admin" className="lg:hidden flex items-center shrink-0">
+          <img
+            src="/logo.jpeg"
+            alt="FreeProducts.online"
+            className="h-7 w-auto object-contain max-w-[130px]"
+          />
+        </Link>
+
         {/* Breadcrumb Trail */}
-        <nav className="flex items-center gap-1.5 text-xs text-slate-500 overflow-hidden truncate">
+        <nav className="hidden sm:flex items-center gap-1.5 text-xs text-slate-500 overflow-hidden truncate">
           <Link 
             href="/admin" 
-            className="font-medium hover:text-slate-900 transition-colors shrink-0"
+            className="font-bold text-slate-900 hover:text-emerald-700 transition-colors shrink-0"
           >
-            Admin
+            FreeProducts.online Admin
           </Link>
           {breadcrumbs.slice(1).map((crumb, idx) => (
             <React.Fragment key={crumb.url}>
@@ -168,8 +177,8 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
               </div>
               <div className="space-y-2 text-xs">
                 <div className="p-2 rounded-xl bg-slate-50 border border-slate-100">
-                  <p className="font-semibold text-slate-900">Amazon Review Perks Online</p>
-                  <p className="text-[11px] text-slate-500 mt-0.5">3 verified sellers actively tracking clicks.</p>
+                  <p className="font-semibold text-slate-900">FreeProducts.online Store</p>
+                  <p className="text-[11px] text-slate-500 mt-0.5">Verified Amazon sellers actively tracking review campaigns.</p>
                 </div>
                 <div className="p-2 rounded-xl bg-slate-50 border border-slate-100">
                   <p className="font-semibold text-slate-900">Live Support Ready</p>

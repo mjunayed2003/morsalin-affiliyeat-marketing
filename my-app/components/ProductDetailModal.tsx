@@ -82,11 +82,11 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const discountAmount = product.originalPrice - product.price;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
-      <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
+      <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-4 sm:my-6">
         
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-200 bg-slate-50">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800">
               {product.category}
@@ -112,7 +112,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         </div>
 
         {/* Content */}
-        <div className="p-4 sm:p-6 max-h-[82vh] sm:max-h-[75vh] overflow-y-auto custom-scrollbar space-y-4 sm:space-y-6">
+        <div className="p-4 sm:p-6 max-h-[82dvh] sm:max-h-[75vh] overflow-y-auto custom-scrollbar overscroll-contain space-y-4 sm:space-y-6">
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
             

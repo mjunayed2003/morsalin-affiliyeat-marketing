@@ -18,16 +18,16 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
 }) => {
   const isDark = variant === 'dark';
 
-  // Size configurations for logo.jpeg (aspect ratio ~3:1) - enlarged for high visibility
+  // Size configurations for logo.jpeg (aspect ratio ~3:1) - optimized for mobile responsiveness
   const sizeMap = {
     sm: {
-      img: 'h-9 sm:h-10',
+      img: 'h-8 sm:h-9',
     },
     md: {
-      img: 'h-13 sm:h-15 lg:h-16',
+      img: 'h-10 sm:h-13 lg:h-15',
     },
     lg: {
-      img: 'h-16 sm:h-20',
+      img: 'h-13 sm:h-18',
     },
   }[size];
 
@@ -40,8 +40,9 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
       >
         <img
           src="/logo.jpeg"
-          alt="FreeProducts.online"
-          className={`${sizeMap.img} w-auto object-contain max-w-[220px] sm:max-w-[280px]`}
+          alt="FreeProducts.online - Amazon Product Reviews & Free Testing Club USA"
+          title="FreeProducts.online - Test Free Amazon Products"
+          className={`${sizeMap.img} w-auto object-contain max-w-[170px] sm:max-w-[240px] md:max-w-[280px]`}
           loading="eager"
         />
       </div>

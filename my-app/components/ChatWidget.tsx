@@ -193,7 +193,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
 
       {/* Floating Action Buttons (WhatsApp & Live Chat at Right Bottom) */}
       {!isOpen && (
-        <div className="fixed bottom-4 right-3 sm:bottom-6 sm:right-6 z-40 flex flex-col items-end gap-2.5 sm:gap-3 pointer-events-auto">
+        <div className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] right-3 sm:bottom-6 sm:right-6 z-40 flex flex-col items-end gap-2.5 sm:gap-3 pointer-events-auto">
           {/* WhatsApp Floating Action */}
           <div className="relative group flex items-center">
             {/* Tooltip on hover */}
@@ -254,7 +254,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
 
       {/* Main Chat Drawer / Window */}
       {isOpen && (
-        <div className="fixed bottom-18 sm:bottom-6 right-2 sm:right-6 z-50 w-[calc(100vw-1rem)] sm:w-96 h-[540px] max-h-[78vh] sm:max-h-[85vh] bg-white rounded-3xl shadow-2xl border border-stone-200/90 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-200">
+        <div className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] sm:bottom-6 right-2 sm:right-6 z-50 w-[calc(100vw-1rem)] sm:w-96 h-[540px] max-h-[78dvh] sm:max-h-[85vh] bg-white rounded-3xl shadow-2xl border border-stone-200/90 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-200">
           
           {/* Header */}
           <div className="bg-[#1b3b2b] text-white px-4 py-3 flex items-center justify-between shrink-0">

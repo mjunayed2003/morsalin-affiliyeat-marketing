@@ -5,12 +5,12 @@ importScripts('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js'
 importScripts('https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js');
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDummyKeyForInitializationPlaceholder",
-  authDomain: "freeproducts-online.firebaseapp.com",
-  projectId: "freeproducts-online",
-  storageBucket: "freeproducts-online.appspot.com",
-  messagingSenderId: "100000000000",
-  appId: "1:100000000000:web:dummyappid"
+  apiKey: "AIzaSyAk7qssIjEIGXgmXgWK98apGq5Xdee5bqg",
+  authDomain: "free-products-online.firebaseapp.com",
+  projectId: "free-products-online",
+  storageBucket: "free-products-online.firebasestorage.app",
+  messagingSenderId: "262920769539",
+  appId: "1:262920769539:web:e670fc89a3b1aac2bc7e36"
 };
 
 try {

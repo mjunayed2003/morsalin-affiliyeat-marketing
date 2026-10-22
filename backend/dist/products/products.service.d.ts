@@ -4,12 +4,10 @@ export declare class ProductsService {
     private readonly prisma;
     constructor(prisma: PrismaService);
     findAll(category?: string, search?: string): Promise<{
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        title: string;
-        description: string;
         category: string;
+        description: string;
+        title: string;
+        id: string;
         subCategory: string | null;
         price: number;
         originalPrice: number;
@@ -25,14 +23,14 @@ export declare class ProductsService {
         inStock: boolean;
         store: string | null;
         amazonUrl: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }[]>;
     findOne(id: string): Promise<{
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        title: string;
-        description: string;
         category: string;
+        description: string;
+        title: string;
+        id: string;
         subCategory: string | null;
         price: number;
         originalPrice: number;
@@ -48,14 +46,14 @@ export declare class ProductsService {
         inStock: boolean;
         store: string | null;
         amazonUrl: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     create(dto: CreateProductDto): Promise<{
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        title: string;
-        description: string;
         category: string;
+        description: string;
+        title: string;
+        id: string;
         subCategory: string | null;
         price: number;
         originalPrice: number;
@@ -71,14 +69,14 @@ export declare class ProductsService {
         inStock: boolean;
         store: string | null;
         amazonUrl: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     update(id: string, dto: UpdateProductDto): Promise<{
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        title: string;
-        description: string;
         category: string;
+        description: string;
+        title: string;
+        id: string;
         subCategory: string | null;
         price: number;
         originalPrice: number;
@@ -94,14 +92,14 @@ export declare class ProductsService {
         inStock: boolean;
         store: string | null;
         amazonUrl: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     remove(id: string): Promise<{
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        title: string;
-        description: string;
         category: string;
+        description: string;
+        title: string;
+        id: string;
         subCategory: string | null;
         price: number;
         originalPrice: number;
@@ -117,13 +115,15 @@ export declare class ProductsService {
         inStock: boolean;
         store: string | null;
         amazonUrl: string | null;
-    }>;
-    getReviews(productId: string): Promise<{
-        id: string;
         createdAt: Date;
         updatedAt: Date;
+    }>;
+    getReviews(productId: string): Promise<{
         title: string | null;
+        id: string;
         rating: number;
+        createdAt: Date;
+        updatedAt: Date;
         productId: string;
         userId: string;
         userName: string;
@@ -134,11 +134,11 @@ export declare class ProductsService {
         title?: string;
         comment: string;
     }): Promise<{
+        title: string | null;
         id: string;
+        rating: number;
         createdAt: Date;
         updatedAt: Date;
-        title: string | null;
-        rating: number;
         productId: string;
         userId: string;
         userName: string;

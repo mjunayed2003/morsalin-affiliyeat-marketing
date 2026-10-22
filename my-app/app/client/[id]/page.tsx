@@ -12,19 +12,19 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!product) {
     return {
-      title: 'Shared Item - ByteDesk',
-      description: 'Exclusive product shared directly with you.'
+      title: 'Shared Product | FreeProducts.online',
+      description: 'Verified Amazon review product shared directly with you.'
     };
   }
 
   return {
-    title: `${product.title} - $${product.price.toLocaleString()} | ByteDesk`,
-    description: `Price: $${product.price.toLocaleString()} (Regular: $${product.originalPrice.toLocaleString()}). Tap to view full product photo and order directly via chat.`,
+    title: `${product.title} - Free Amazon Review Perk | FreeProducts.online`,
+    description: `Test this ${product.title} for FREE! (Est. Retail: $${product.originalPrice.toLocaleString()}). Tap to view product details and request review instructions.`,
     openGraph: {
-      title: `${product.title} - $${product.price.toLocaleString()}`,
-      description: `Special Offer: $${product.price.toLocaleString()} • Cash on Delivery & Live Chat Available`,
-      url: `https://affilihub.com/p/${product.id}`,
-      siteName: 'ByteDesk Store',
+      title: `${product.title} - 100% Free Amazon Review Perk`,
+      description: `Test ${product.title} for free! 100% free with Prime shipping.`,
+      url: `https://freeproducts.online/p/${product.id}`,
+      siteName: 'FreeProducts.online',
       images: [
         {
           url: product.image,

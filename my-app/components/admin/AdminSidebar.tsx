@@ -109,24 +109,28 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) =
         ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         {/* Brand Header */}
-        <div className="h-16 px-5 border-b border-[#1b3b2b] flex items-center justify-between shrink-0 bg-[#0a1610]">
-          <Link href="/admin" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 rounded-lg bg-[#1b3b2b] text-emerald-400 border border-[#2b5942] flex items-center justify-center font-bold text-sm shadow-xs group-hover:scale-105 transition-transform">
-              <FaAmazon className="w-4 h-4 text-[#ff9900]" />
+        <div className="h-16 px-4 border-b border-[#1b3b2b] flex items-center justify-between shrink-0 bg-[#0a1610]">
+          <Link href="/admin" className="flex items-center gap-2.5 group min-w-0">
+            <div className="bg-white px-2 py-1 rounded-xl shadow-xs flex items-center shrink-0 border border-emerald-900/40 group-hover:scale-102 transition-transform">
+              <img
+                src="/logo.jpeg"
+                alt="FreeProducts.online Logo"
+                className="h-7 w-auto object-contain max-w-[125px]"
+              />
             </div>
-            <div className="flex flex-col">
-              <span className="font-bold text-sm text-white tracking-tight leading-none">
-                Product<span className="text-emerald-400">Perks</span>
-              </span>
-              <span className="text-[10px] font-semibold text-emerald-500/80 tracking-wider uppercase mt-0.5">
+            <div className="flex flex-col min-w-0">
+              <span className="font-bold text-xs text-white tracking-tight leading-tight truncate">
                 Admin Studio
+              </span>
+              <span className="text-[9px] font-semibold text-emerald-400 leading-tight tracking-wider uppercase mt-0.5">
+                Control Center
               </span>
             </div>
           </Link>
 
           <button 
             onClick={onClose} 
-            className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#1b3b2b] transition-colors"
+            className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#1b3b2b] transition-colors shrink-0"
           >
             <FaXmark className="w-4 h-4" />
           </button>

@@ -56,6 +56,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
           height: 630,
           alt: product.title,
         },
+        {
+          url: `${siteUrl}/og-image.jpg`,
+          width: 1200,
+          height: 630,
+          alt: 'FreeProducts.online Free Testing Club',
+        },
+        {
+          url: `${siteUrl}/logo.jpeg`,
+          width: 1085,
+          height: 362,
+          alt: 'FreeProducts.online Official Brand Logo',
+        },
       ],
       type: 'website',
     },

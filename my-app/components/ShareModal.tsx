@@ -142,20 +142,20 @@ export const ShareModal: React.FC<ShareModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
-      <div className="relative w-full max-w-xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden my-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
+      <div className="relative w-full max-w-xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden my-4 sm:my-6">
         
         {/* Modal Header (ByteSpace Cobalt Blue) */}
-        <div className="flex items-center justify-between px-6 py-4.5 border-b border-slate-200 bg-[#0d5bff] text-white">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-[#ccff00] text-slate-950 flex items-center justify-center font-bold shadow-xs">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4.5 border-b border-slate-200 bg-[#0d5bff] text-white">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="w-8 h-8 rounded-xl bg-[#ccff00] text-slate-950 flex items-center justify-center font-bold shadow-xs shrink-0">
               <FaFacebookMessenger className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-base font-black">
+              <h2 className="text-sm sm:text-base font-black">
                 Messenger & Social Share Preview
               </h2>
-              <p className="text-xs text-blue-100 font-medium">Preview image & link appearance before sharing to clients</p>
+              <p className="text-[11px] sm:text-xs text-blue-100 font-medium">Preview image & link appearance before sharing</p>
             </div>
           </div>
           <button
@@ -167,7 +167,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
         </div>
 
         {/* Modal Body */}
-        <div className="p-5 space-y-5 max-h-[75vh] overflow-y-auto custom-scrollbar">
+        <div className="p-4 sm:p-5 space-y-4 sm:space-y-5 max-h-[75dvh] sm:max-h-[75vh] overflow-y-auto custom-scrollbar overscroll-contain">
           
           {/* Messenger Live Card Preview (Simulated Messenger Chat Bubble) */}
           <div>

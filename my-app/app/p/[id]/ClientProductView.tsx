@@ -616,7 +616,7 @@ export const ClientProductView: React.FC<ClientProductViewProps> = ({ productId 
                     {/* Instant Share Channels */}
                     <div className="pt-2 border-t border-stone-100 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
                       <span className="text-[11px] font-medium">Quick Share:</span>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                         <a
                           href={whatsappUrl}
                           target="_blank"

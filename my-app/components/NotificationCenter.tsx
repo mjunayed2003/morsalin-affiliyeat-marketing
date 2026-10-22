@@ -113,10 +113,18 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
 
       {/* Notification Dropdown Popover */}
       {isOpen && (
-        <div className="absolute right-0 sm:right-0 mt-2 w-[calc(100vw-2rem)] sm:w-96 max-w-sm bg-white rounded-2xl shadow-2xl border border-slate-100 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-          
-          {/* Header */}
-          <div className="p-3.5 bg-gradient-to-r from-slate-900 to-[#1b3b2b] text-white flex items-center justify-between">
+        <>
+          {/* Mobile Backdrop Overlay for outside tap */}
+          <div 
+            className="fixed inset-0 z-40 bg-black/25 backdrop-blur-2xs sm:hidden"
+            onClick={() => setIsOpen(false)}
+            aria-hidden="true"
+          />
+
+          <div className="fixed left-3 right-3 top-18 sm:top-full sm:left-auto sm:right-0 sm:mt-2 w-auto sm:w-96 max-w-sm mx-auto sm:mx-0 bg-white rounded-2xl shadow-2xl border border-slate-100 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            
+            {/* Header */}
+            <div className="p-3.5 bg-gradient-to-r from-slate-900 to-[#1b3b2b] text-white flex items-center justify-between">
             <div className="flex items-center gap-2">
               <FaBell className="w-4 h-4 text-emerald-400" />
               <h3 className="font-bold text-sm">Notifications</h3>
@@ -252,9 +260,9 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
               <span>Chat Support</span>
             </Link>
           </div>
-
         </div>
-      )}
-    </div>
+      </>
+    )}
+  </div>
   );
 };

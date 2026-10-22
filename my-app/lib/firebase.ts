@@ -3,15 +3,17 @@
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getMessaging, getToken, onMessage, isSupported } from 'firebase/messaging';
+import { getAnalytics, isSupported as isAnalyticsSupported } from 'firebase/analytics';
 
 // Firebase Client Configuration (Loaded from environment variables with safe defaults)
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyDummyKeyForInitializationPlaceholder",
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "freeproducts-online.firebaseapp.com",
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "freeproducts-online",
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "freeproducts-online.appspot.com",
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "100000000000",
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:100000000000:web:dummyappid",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyAk7qssIjEIGXgmXgWK98apGq5Xdee5bqg",
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "free-products-online.firebaseapp.com",
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "free-products-online",
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "free-products-online.firebasestorage.app",
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "262920769539",
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:262920769539:web:e670fc89a3b1aac2bc7e36",
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || "G-6C6CX24JR9",
 };
 
 // Safe Firebase App Initialization (Browser Client Side Only)
@@ -26,6 +28,23 @@ export const getFirebaseApp = () => {
     console.warn('Firebase initialization warning:', err);
     return null;
   }
+};
+
+// Safe Firebase Analytics Initialization
+export const initFirebaseAnalytics = async () => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const supported = await isAnalyticsSupported();
+    if (supported) {
+      const app = getFirebaseApp();
+      if (app) {
+        return getAnalytics(app);
+      }
+    }
+  } catch (err) {
+    console.warn('Firebase Analytics not supported in current environment:', err);
+  }
+  return null;
 };
 
 export interface FirebaseNotificationPayload {

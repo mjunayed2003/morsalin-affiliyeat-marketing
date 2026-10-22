@@ -145,14 +145,14 @@ export default function Home() {
 
                 {/* Main Headline */}
                 <h1 className="font-headline text-2xl sm:text-4xl lg:text-[54px] text-slate-900 font-extrabold leading-[1.2] sm:leading-[1.14] tracking-tight">
-                  Test Top Amazon Products.<br className="hidden sm:inline" />{' '}
-                  Share Honest Reviews.<br className="hidden sm:inline" />{' '}
+                  Get Free Products Online.<br className="hidden sm:inline" />{' '}
+                  Test Top Amazon Items.<br className="hidden sm:inline" />{' '}
                   <span className="text-[#1b3b2b]">Keep Them 100% Free.</span>
                 </h1>
 
                 {/* Paragraph Description */}
                 <p className="text-xs sm:text-base text-slate-600 font-normal leading-relaxed max-w-xl">
-                  Join FreeProducts.online Review Club! Get brand-new items from verified Amazon sellers (LONG YUE, Lickoon, Imps Hair Creates & more). Test quality products, share your authentic Amazon feedback, and keep every item with zero hidden costs.
+                  Looking for free products? Join the FreeProducts.online review club! Test quality items from verified Amazon sellers (LONG YUE, Lickoon, Imps Hair & more). Share your authentic customer feedback and keep every product with zero fees.
                 </p>
 
                 {/* Action Buttons */}
@@ -828,7 +828,7 @@ export default function Home() {
                   setDirectError('');
                 }}
                 placeholder="e.g. prod-long-yue-doorbell or /p/prod-long-yue-doorbell"
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#1b3b2b]"
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-base sm:text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#1b3b2b]"
                 autoFocus
               />
               {directError && (

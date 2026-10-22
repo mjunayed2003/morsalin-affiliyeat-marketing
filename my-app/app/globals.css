@@ -18,13 +18,64 @@
   --bytespace-lime-hover: #b8e600;
   --bytespace-card: #ffffff;
   --bytespace-border: #e2e8f0;
+
+  /* iOS Safe Area Inset Helpers */
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+  padding-left: var(--sal);
+  padding-right: var(--sar);
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* Prevent iOS Safari auto-zoom on input focus by ensuring at least 16px font-size on mobile */
+@media screen and (max-width: 767px) {
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="password"],
+  input[type="search"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Smooth Touch Scrolling on iOS Devices */
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Safe Area Utility Classes */
+.pb-safe {
+  padding-bottom: calc(0.5rem + var(--sab));
+}
+
+.pt-safe {
+  padding-top: calc(0.5rem + var(--sat));
+}
+
+.safe-bottom-floating {
+  bottom: calc(1rem + var(--sab));
 }
 
 .font-headline {

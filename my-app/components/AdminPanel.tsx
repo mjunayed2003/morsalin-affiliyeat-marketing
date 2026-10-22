@@ -135,7 +135,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
   // Copy Direct Client Link
   const handleCopyClientLink = (prod: Product) => {
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://affilihub.com';
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://freeproducts.online';
     const link = `${origin}/p/${prod.id}`;
     navigator.clipboard.writeText(link);
     setCopiedId(prod.id);
@@ -263,17 +263,24 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         <div className="bg-[#0d5bff] text-white rounded-3xl p-6 sm:p-8 shadow-xl shadow-blue-600/15 flex flex-col md:flex-row md:items-center justify-between gap-5 relative overflow-hidden border border-blue-600">
           
           <div className="relative z-10 space-y-2">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap">
+              <div className="bg-white px-2.5 py-1 rounded-xl shadow-xs flex items-center">
+                <img
+                  src="/logo.jpeg"
+                  alt="FreeProducts.online"
+                  className="h-7 sm:h-8 w-auto object-contain"
+                />
+              </div>
               <span className="bg-[#ccff00] text-slate-950 font-black text-xs uppercase px-3 py-1 rounded-full shadow-xs">
                 Admin Control Room
               </span>
-              <span className="text-xs text-blue-100 font-medium">
+              <span className="text-xs text-blue-100 font-medium hidden sm:inline">
                 Add, Edit, Share with Clients & Live Chat Desk
               </span>
             </div>
             
             <h1 className="text-2xl sm:text-3xl font-black text-white">
-              Admin Product & Inquiry Studio
+              FreeProducts.online Admin Studio
             </h1>
             
             <p className="text-xs sm:text-sm text-blue-100 max-w-2xl font-medium">
@@ -784,7 +791,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     </div>
                     <div className="p-4">
                       <p className="text-[10px] text-slate-400 uppercase font-black tracking-wider">
-                        AFFILIHUB.COM
+                        FREEPRODUCTS.ONLINE
                       </p>
                       <h4 className="font-bold text-slate-900 text-sm mt-0.5 line-clamp-1">
                         {selectedLabProduct.title}
@@ -823,7 +830,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     &lt;meta property="og:image" content="{selectedLabProduct.image}" /&gt;
                   </p>
                   <p className="text-emerald-400">
-                    &lt;meta property="og:url" content="https://affilihub.com/p/{selectedLabProduct.id}" /&gt;
+                    &lt;meta property="og:url" content="https://freeproducts.online/p/{selectedLabProduct.id}" /&gt;
                   </p>
 
                   <div className="pt-2 border-t border-slate-800 font-sans text-[11px] text-slate-400 font-medium">

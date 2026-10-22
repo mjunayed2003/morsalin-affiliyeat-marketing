@@ -175,8 +175,14 @@ export const Navbar: React.FC<NavbarProps> = ({
 
                 {/* Dropdown Menu */}
                 {userDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50 animate-in fade-in slide-from-top-2 duration-150">
-                    <div className="px-4 py-2 border-b border-slate-100">
+                  <>
+                    <div 
+                      className="fixed inset-0 z-40 bg-black/25 backdrop-blur-2xs sm:hidden"
+                      onClick={() => setUserDropdownOpen(false)}
+                      aria-hidden="true"
+                    />
+                    <div className="fixed left-4 right-4 top-18 sm:top-full sm:left-auto sm:right-0 sm:mt-2 w-auto sm:w-56 max-w-xs mx-auto sm:mx-0 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50 animate-in fade-in slide-from-top-2 duration-150">
+                      <div className="px-4 py-2 border-b border-slate-100">
                       <p className="text-xs font-bold text-slate-900">{user.name}</p>
                       <p className="text-[11px] text-slate-500 font-mono flex items-center gap-1 mt-0.5">
                         <FaPhone className="w-2.5 h-2.5 text-emerald-600" />
@@ -239,8 +245,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                       </button>
                     </div>
                   </div>
-                )}
-              </div>
+                </>
+              )}
+            </div>
             ) : (
               <div className="hidden sm:flex items-center gap-2">
                 {/* Log In Link */}
@@ -285,7 +292,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-slate-100 bg-white/98 backdrop-blur-md px-4 pt-3 pb-6 space-y-4 animate-in fade-in duration-200 shadow-lg">
+        <div className="md:hidden border-t border-slate-100 bg-white/98 backdrop-blur-md px-4 pt-3 pb-8 pb-safe space-y-4 animate-in fade-in duration-200 shadow-lg">
           <div className="flex flex-col space-y-1">
             {navLinks.map((link) => (
               <button
