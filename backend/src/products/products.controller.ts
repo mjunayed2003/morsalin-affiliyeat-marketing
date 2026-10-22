@@ -17,12 +17,14 @@ import { RolesGuard } from '../auth/guards/roles.guard.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
 import { CurrentUser, type AuthenticatedUser } from '../auth/decorators/current-user.decorator.js';
 import { ChatGateway } from '../chat/chat.gateway.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 
 @Controller('products')
 export class ProductsController {
   constructor(
     private readonly productsService: ProductsService,
     private readonly chatGateway: ChatGateway,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   // Public: Browse catalog
@@ -75,24 +77,39 @@ export class ProductsController {
   async create(@Body() createProductDto: CreateProductDto) {
     const product = await this.productsService.create(createProductDto);
 
-    // Broadcast real-time notification to EVERYONE connected
-    if (this.chatGateway.server) {
-      const notifPayload = {
-        id: `notif-prod-${product.id}-${Date.now()}`,
+    // 1. Persist notification in database for all users
+    try {
+      const savedNotif = await this.notificationsService.createNotification({
         title: 'New Product Added! 🎁',
         body: `"${product.title}" is now available to test & review for free!`,
+        type: 'PRODUCT',
+        recipientId: undefined, // Broadcast to all
         sender: 'system',
-        type: 'product',
-        link: `/p/${product.id}`,
-        productId: product.id,
-        isBroadcast: true,
         image: product.image,
-        timestamp: 'Just now',
-      };
+        link: `/p/${product.id}`,
+      });
 
-      // Broadcast to every connected client
-      this.chatGateway.server.emit('notification', notifPayload);
-      this.chatGateway.server.emit('newProductAdded', product);
+      // 2. Dispatch FCM Push Notifications to all registered devices in background
+      const tokens = await this.notificationsService.getGroupDeviceTokens('ALL');
+      if (tokens.length > 0) {
+        this.notificationsService.sendPushNotification(tokens, {
+          title: 'New Product Added! 🎁',
+          body: `"${product.title}" is now available to test & review for free!`,
+          image: product.image,
+          link: `/p/${product.id}`,
+          data: { productId: product.id },
+        }).catch(() => {});
+      }
+
+      // 3. Broadcast real-time notifications via Socket.IO
+      if (this.chatGateway.server) {
+        this.chatGateway.server.emit('notification:new', savedNotif);
+        this.chatGateway.server.emit('notification:broadcast', savedNotif);
+        this.chatGateway.server.emit('notification', savedNotif);
+        this.chatGateway.server.emit('newProductAdded', product);
+      }
+    } catch (notifErr: any) {
+      console.warn('Product notification dispatch notice:', notifErr.message);
     }
 
     return product;

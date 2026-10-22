@@ -1,6 +1,8 @@
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { MailService } from '../mail/mail.service.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
+import { ChatGateway } from '../chat/chat.gateway.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { LoginDto } from './dto/login.dto.js';
 import { SendRegisterOtpDto, VerifyRegisterOtpDto, SendForgotPasswordOtpDto, ResetPasswordDto } from './dto/otp-auth.dto.js';
@@ -8,7 +10,9 @@ export declare class AuthService {
     private readonly prisma;
     private readonly jwtService;
     private readonly mailService;
-    constructor(prisma: PrismaService, jwtService: JwtService, mailService: MailService);
+    private readonly notificationsService;
+    private readonly chatGateway;
+    constructor(prisma: PrismaService, jwtService: JwtService, mailService: MailService, notificationsService: NotificationsService, chatGateway: ChatGateway);
     private normalizePhone;
     sendRegisterOtp(dto: SendRegisterOtpDto): Promise<{
         success: boolean;
@@ -18,6 +22,7 @@ export declare class AuthService {
     }>;
     verifyRegisterOtp(dto: VerifyRegisterOtpDto): Promise<{
         success: boolean;
+        status: string;
         message: string;
         user: {
             id: string;
@@ -32,9 +37,10 @@ export declare class AuthService {
             paypalEmail: string | null;
             verified: boolean;
             role: import("../generated/prisma/enums.js").Role;
+            status: string;
             createdAt: Date;
         };
-        token: string;
+        token: null;
     }>;
     sendForgotPasswordOtp(dto: SendForgotPasswordOtpDto): Promise<{
         success: boolean;
@@ -47,6 +53,7 @@ export declare class AuthService {
     }>;
     register(dto: RegisterDto): Promise<{
         success: boolean;
+        status: string;
         message: string;
         user: {
             id: string;
@@ -58,9 +65,10 @@ export declare class AuthService {
             avatar: string | null;
             verified: boolean;
             role: import("../generated/prisma/enums.js").Role;
+            status: string;
             createdAt: Date;
         };
-        token: string;
+        token: null;
     }>;
     login(dto: LoginDto): Promise<{
         success: boolean;
@@ -79,6 +87,10 @@ export declare class AuthService {
             canReview: boolean;
             verified: boolean;
             role: import("../generated/prisma/enums.js").Role;
+            status: string;
+            reviewedAt: Date | null;
+            reviewedBy: string | null;
+            rejectionReason: string | null;
             createdAt: Date;
         };
         token: string;
@@ -96,8 +108,22 @@ export declare class AuthService {
         paypalEmail: string | null;
         verified: boolean;
         role: import("../generated/prisma/enums.js").Role;
+        status: string;
+        reviewedAt: Date | null;
+        reviewedBy: string | null;
+        rejectionReason: string | null;
         canReview: boolean;
         createdAt: Date;
+    }>;
+    getRegistrationStatus(identifier: string): Promise<{
+        success: boolean;
+        status: string;
+        name: string;
+        email: string | null;
+        phone: string;
+        createdAt: Date;
+        reviewedAt: Date | null;
+        rejectionReason: string | null;
     }>;
     guestLogin(dto: {
         name: string;

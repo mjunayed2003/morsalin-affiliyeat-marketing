@@ -74,7 +74,10 @@ export interface User {
   verifiedAt?: string;
   createdAt: string;
   role: 'client' | 'admin';
-  status?: 'ACTIVE' | 'BLOCKED' | 'PENDING';
+  status?: 'ACTIVE' | 'BLOCKED' | 'PENDING' | 'REJECTED';
+  reviewedAt?: string;
+  reviewedBy?: string;
+  rejectionReason?: string;
   lastActivity?: string;
   clicksCount?: number;
   viewsCount?: number;
@@ -97,11 +100,13 @@ export interface NotificationItem {
   id: string;
   title: string;
   body: string;
-  type: 'message' | 'system' | 'call' | 'order' | 'review' | 'product';
+  type: 'message' | 'system' | 'call' | 'order' | 'review' | 'product' | 'MESSAGE' | 'PRODUCT' | 'ANNOUNCEMENT' | 'SYSTEM' | string;
   timestamp: string;
   read: boolean;
   link?: string;
   sender?: string;
+  image?: string;
+  createdAt?: string;
 }
 
 export interface PlatformSettings {

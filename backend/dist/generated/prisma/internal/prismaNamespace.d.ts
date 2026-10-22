@@ -166,6 +166,10 @@ export declare const ModelName: {
     readonly ChatMessage: "ChatMessage";
     readonly Inquiry: "Inquiry";
     readonly Review: "Review";
+    readonly Notification: "Notification";
+    readonly DeviceToken: "DeviceToken";
+    readonly UserNotificationRead: "UserNotificationRead";
+    readonly BroadcastAuditLog: "BroadcastAuditLog";
 };
 export type ModelName = (typeof ModelName)[keyof typeof ModelName];
 export interface TypeMapCb<GlobalOmitOptions = {}> extends runtime.Types.Utils.Fn<{
@@ -178,7 +182,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         omit: GlobalOmitOptions;
     };
     meta: {
-        modelProps: "user" | "emailOtp" | "product" | "chatMessage" | "inquiry" | "review";
+        modelProps: "user" | "emailOtp" | "product" | "chatMessage" | "inquiry" | "review" | "notification" | "deviceToken" | "userNotificationRead" | "broadcastAuditLog";
         txIsolationLevel: TransactionIsolationLevel;
     };
     model: {
@@ -626,6 +630,302 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
                 };
             };
         };
+        Notification: {
+            payload: Prisma.$NotificationPayload<ExtArgs>;
+            fields: Prisma.NotificationFieldRefs;
+            operations: {
+                findUnique: {
+                    args: Prisma.NotificationFindUniqueArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationPayload> | null;
+                };
+                findUniqueOrThrow: {
+                    args: Prisma.NotificationFindUniqueOrThrowArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationPayload>;
+                };
+                findFirst: {
+                    args: Prisma.NotificationFindFirstArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationPayload> | null;
+                };
+                findFirstOrThrow: {
+                    args: Prisma.NotificationFindFirstOrThrowArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationPayload>;
+                };
+                findMany: {
+                    args: Prisma.NotificationFindManyArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationPayload>[];
+                };
+                create: {
+                    args: Prisma.NotificationCreateArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationPayload>;
+                };
+                createMany: {
+                    args: Prisma.NotificationCreateManyArgs<ExtArgs>;
+                    result: BatchPayload;
+                };
+                createManyAndReturn: {
+                    args: Prisma.NotificationCreateManyAndReturnArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationPayload>[];
+                };
+                delete: {
+                    args: Prisma.NotificationDeleteArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationPayload>;
+                };
+                update: {
+                    args: Prisma.NotificationUpdateArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationPayload>;
+                };
+                deleteMany: {
+                    args: Prisma.NotificationDeleteManyArgs<ExtArgs>;
+                    result: BatchPayload;
+                };
+                updateMany: {
+                    args: Prisma.NotificationUpdateManyArgs<ExtArgs>;
+                    result: BatchPayload;
+                };
+                updateManyAndReturn: {
+                    args: Prisma.NotificationUpdateManyAndReturnArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationPayload>[];
+                };
+                upsert: {
+                    args: Prisma.NotificationUpsertArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationPayload>;
+                };
+                aggregate: {
+                    args: Prisma.NotificationAggregateArgs<ExtArgs>;
+                    result: runtime.Types.Utils.Optional<Prisma.AggregateNotification>;
+                };
+                groupBy: {
+                    args: Prisma.NotificationGroupByArgs<ExtArgs>;
+                    result: runtime.Types.Utils.Optional<Prisma.NotificationGroupByOutputType>[];
+                };
+                count: {
+                    args: Prisma.NotificationCountArgs<ExtArgs>;
+                    result: runtime.Types.Utils.Optional<Prisma.NotificationCountAggregateOutputType> | number;
+                };
+            };
+        };
+        DeviceToken: {
+            payload: Prisma.$DeviceTokenPayload<ExtArgs>;
+            fields: Prisma.DeviceTokenFieldRefs;
+            operations: {
+                findUnique: {
+                    args: Prisma.DeviceTokenFindUniqueArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceTokenPayload> | null;
+                };
+                findUniqueOrThrow: {
+                    args: Prisma.DeviceTokenFindUniqueOrThrowArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceTokenPayload>;
+                };
+                findFirst: {
+                    args: Prisma.DeviceTokenFindFirstArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceTokenPayload> | null;
+                };
+                findFirstOrThrow: {
+                    args: Prisma.DeviceTokenFindFirstOrThrowArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceTokenPayload>;
+                };
+                findMany: {
+                    args: Prisma.DeviceTokenFindManyArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceTokenPayload>[];
+                };
+                create: {
+                    args: Prisma.DeviceTokenCreateArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceTokenPayload>;
+                };
+                createMany: {
+                    args: Prisma.DeviceTokenCreateManyArgs<ExtArgs>;
+                    result: BatchPayload;
+                };
+                createManyAndReturn: {
+                    args: Prisma.DeviceTokenCreateManyAndReturnArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceTokenPayload>[];
+                };
+                delete: {
+                    args: Prisma.DeviceTokenDeleteArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceTokenPayload>;
+                };
+                update: {
+                    args: Prisma.DeviceTokenUpdateArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceTokenPayload>;
+                };
+                deleteMany: {
+                    args: Prisma.DeviceTokenDeleteManyArgs<ExtArgs>;
+                    result: BatchPayload;
+                };
+                updateMany: {
+                    args: Prisma.DeviceTokenUpdateManyArgs<ExtArgs>;
+                    result: BatchPayload;
+                };
+                updateManyAndReturn: {
+                    args: Prisma.DeviceTokenUpdateManyAndReturnArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceTokenPayload>[];
+                };
+                upsert: {
+                    args: Prisma.DeviceTokenUpsertArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceTokenPayload>;
+                };
+                aggregate: {
+                    args: Prisma.DeviceTokenAggregateArgs<ExtArgs>;
+                    result: runtime.Types.Utils.Optional<Prisma.AggregateDeviceToken>;
+                };
+                groupBy: {
+                    args: Prisma.DeviceTokenGroupByArgs<ExtArgs>;
+                    result: runtime.Types.Utils.Optional<Prisma.DeviceTokenGroupByOutputType>[];
+                };
+                count: {
+                    args: Prisma.DeviceTokenCountArgs<ExtArgs>;
+                    result: runtime.Types.Utils.Optional<Prisma.DeviceTokenCountAggregateOutputType> | number;
+                };
+            };
+        };
+        UserNotificationRead: {
+            payload: Prisma.$UserNotificationReadPayload<ExtArgs>;
+            fields: Prisma.UserNotificationReadFieldRefs;
+            operations: {
+                findUnique: {
+                    args: Prisma.UserNotificationReadFindUniqueArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$UserNotificationReadPayload> | null;
+                };
+                findUniqueOrThrow: {
+                    args: Prisma.UserNotificationReadFindUniqueOrThrowArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$UserNotificationReadPayload>;
+                };
+                findFirst: {
+                    args: Prisma.UserNotificationReadFindFirstArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$UserNotificationReadPayload> | null;
+                };
+                findFirstOrThrow: {
+                    args: Prisma.UserNotificationReadFindFirstOrThrowArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$UserNotificationReadPayload>;
+                };
+                findMany: {
+                    args: Prisma.UserNotificationReadFindManyArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$UserNotificationReadPayload>[];
+                };
+                create: {
+                    args: Prisma.UserNotificationReadCreateArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$UserNotificationReadPayload>;
+                };
+                createMany: {
+                    args: Prisma.UserNotificationReadCreateManyArgs<ExtArgs>;
+                    result: BatchPayload;
+                };
+                createManyAndReturn: {
+                    args: Prisma.UserNotificationReadCreateManyAndReturnArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$UserNotificationReadPayload>[];
+                };
+                delete: {
+                    args: Prisma.UserNotificationReadDeleteArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$UserNotificationReadPayload>;
+                };
+                update: {
+                    args: Prisma.UserNotificationReadUpdateArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$UserNotificationReadPayload>;
+                };
+                deleteMany: {
+                    args: Prisma.UserNotificationReadDeleteManyArgs<ExtArgs>;
+                    result: BatchPayload;
+                };
+                updateMany: {
+                    args: Prisma.UserNotificationReadUpdateManyArgs<ExtArgs>;
+                    result: BatchPayload;
+                };
+                updateManyAndReturn: {
+                    args: Prisma.UserNotificationReadUpdateManyAndReturnArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$UserNotificationReadPayload>[];
+                };
+                upsert: {
+                    args: Prisma.UserNotificationReadUpsertArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$UserNotificationReadPayload>;
+                };
+                aggregate: {
+                    args: Prisma.UserNotificationReadAggregateArgs<ExtArgs>;
+                    result: runtime.Types.Utils.Optional<Prisma.AggregateUserNotificationRead>;
+                };
+                groupBy: {
+                    args: Prisma.UserNotificationReadGroupByArgs<ExtArgs>;
+                    result: runtime.Types.Utils.Optional<Prisma.UserNotificationReadGroupByOutputType>[];
+                };
+                count: {
+                    args: Prisma.UserNotificationReadCountArgs<ExtArgs>;
+                    result: runtime.Types.Utils.Optional<Prisma.UserNotificationReadCountAggregateOutputType> | number;
+                };
+            };
+        };
+        BroadcastAuditLog: {
+            payload: Prisma.$BroadcastAuditLogPayload<ExtArgs>;
+            fields: Prisma.BroadcastAuditLogFieldRefs;
+            operations: {
+                findUnique: {
+                    args: Prisma.BroadcastAuditLogFindUniqueArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$BroadcastAuditLogPayload> | null;
+                };
+                findUniqueOrThrow: {
+                    args: Prisma.BroadcastAuditLogFindUniqueOrThrowArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$BroadcastAuditLogPayload>;
+                };
+                findFirst: {
+                    args: Prisma.BroadcastAuditLogFindFirstArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$BroadcastAuditLogPayload> | null;
+                };
+                findFirstOrThrow: {
+                    args: Prisma.BroadcastAuditLogFindFirstOrThrowArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$BroadcastAuditLogPayload>;
+                };
+                findMany: {
+                    args: Prisma.BroadcastAuditLogFindManyArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$BroadcastAuditLogPayload>[];
+                };
+                create: {
+                    args: Prisma.BroadcastAuditLogCreateArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$BroadcastAuditLogPayload>;
+                };
+                createMany: {
+                    args: Prisma.BroadcastAuditLogCreateManyArgs<ExtArgs>;
+                    result: BatchPayload;
+                };
+                createManyAndReturn: {
+                    args: Prisma.BroadcastAuditLogCreateManyAndReturnArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$BroadcastAuditLogPayload>[];
+                };
+                delete: {
+                    args: Prisma.BroadcastAuditLogDeleteArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$BroadcastAuditLogPayload>;
+                };
+                update: {
+                    args: Prisma.BroadcastAuditLogUpdateArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$BroadcastAuditLogPayload>;
+                };
+                deleteMany: {
+                    args: Prisma.BroadcastAuditLogDeleteManyArgs<ExtArgs>;
+                    result: BatchPayload;
+                };
+                updateMany: {
+                    args: Prisma.BroadcastAuditLogUpdateManyArgs<ExtArgs>;
+                    result: BatchPayload;
+                };
+                updateManyAndReturn: {
+                    args: Prisma.BroadcastAuditLogUpdateManyAndReturnArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$BroadcastAuditLogPayload>[];
+                };
+                upsert: {
+                    args: Prisma.BroadcastAuditLogUpsertArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$BroadcastAuditLogPayload>;
+                };
+                aggregate: {
+                    args: Prisma.BroadcastAuditLogAggregateArgs<ExtArgs>;
+                    result: runtime.Types.Utils.Optional<Prisma.AggregateBroadcastAuditLog>;
+                };
+                groupBy: {
+                    args: Prisma.BroadcastAuditLogGroupByArgs<ExtArgs>;
+                    result: runtime.Types.Utils.Optional<Prisma.BroadcastAuditLogGroupByOutputType>[];
+                };
+                count: {
+                    args: Prisma.BroadcastAuditLogCountArgs<ExtArgs>;
+                    result: runtime.Types.Utils.Optional<Prisma.BroadcastAuditLogCountAggregateOutputType> | number;
+                };
+            };
+        };
     };
 } & {
     other: {
@@ -673,6 +973,10 @@ export declare const UserScalarFieldEnum: {
     readonly verified: "verified";
     readonly verifiedAt: "verifiedAt";
     readonly role: "role";
+    readonly status: "status";
+    readonly reviewedAt: "reviewedAt";
+    readonly reviewedBy: "reviewedBy";
+    readonly rejectionReason: "rejectionReason";
     readonly canReview: "canReview";
     readonly createdAt: "createdAt";
     readonly updatedAt: "updatedAt";
@@ -751,6 +1055,49 @@ export declare const ReviewScalarFieldEnum: {
     readonly updatedAt: "updatedAt";
 };
 export type ReviewScalarFieldEnum = (typeof ReviewScalarFieldEnum)[keyof typeof ReviewScalarFieldEnum];
+export declare const NotificationScalarFieldEnum: {
+    readonly id: "id";
+    readonly title: "title";
+    readonly body: "body";
+    readonly type: "type";
+    readonly recipientId: "recipientId";
+    readonly sender: "sender";
+    readonly image: "image";
+    readonly link: "link";
+    readonly read: "read";
+    readonly createdAt: "createdAt";
+    readonly updatedAt: "updatedAt";
+};
+export type NotificationScalarFieldEnum = (typeof NotificationScalarFieldEnum)[keyof typeof NotificationScalarFieldEnum];
+export declare const DeviceTokenScalarFieldEnum: {
+    readonly id: "id";
+    readonly userId: "userId";
+    readonly token: "token";
+    readonly platform: "platform";
+    readonly createdAt: "createdAt";
+    readonly updatedAt: "updatedAt";
+};
+export type DeviceTokenScalarFieldEnum = (typeof DeviceTokenScalarFieldEnum)[keyof typeof DeviceTokenScalarFieldEnum];
+export declare const UserNotificationReadScalarFieldEnum: {
+    readonly id: "id";
+    readonly userId: "userId";
+    readonly notificationId: "notificationId";
+    readonly readAt: "readAt";
+};
+export type UserNotificationReadScalarFieldEnum = (typeof UserNotificationReadScalarFieldEnum)[keyof typeof UserNotificationReadScalarFieldEnum];
+export declare const BroadcastAuditLogScalarFieldEnum: {
+    readonly id: "id";
+    readonly adminId: "adminId";
+    readonly adminName: "adminName";
+    readonly title: "title";
+    readonly body: "body";
+    readonly targetGroup: "targetGroup";
+    readonly recipientsCount: "recipientsCount";
+    readonly fcmSuccessCount: "fcmSuccessCount";
+    readonly fcmFailureCount: "fcmFailureCount";
+    readonly createdAt: "createdAt";
+};
+export type BroadcastAuditLogScalarFieldEnum = (typeof BroadcastAuditLogScalarFieldEnum)[keyof typeof BroadcastAuditLogScalarFieldEnum];
 export declare const SortOrder: {
     readonly asc: "asc";
     readonly desc: "desc";
@@ -813,6 +1160,10 @@ export type GlobalOmitConfig = {
     chatMessage?: Prisma.ChatMessageOmit;
     inquiry?: Prisma.InquiryOmit;
     review?: Prisma.ReviewOmit;
+    notification?: Prisma.NotificationOmit;
+    deviceToken?: Prisma.DeviceTokenOmit;
+    userNotificationRead?: Prisma.UserNotificationReadOmit;
+    broadcastAuditLog?: Prisma.BroadcastAuditLogOmit;
 };
 export type LogLevel = 'info' | 'query' | 'warn' | 'error';
 export type LogDefinition = {

@@ -12,23 +12,39 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 var ChatGateway_1;
 import { WebSocketGateway, WebSocketServer, SubscribeMessage, MessageBody, ConnectedSocket, } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
-import { Logger } from '@nestjs/common';
+import { Logger, Inject, forwardRef } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ChatService } from './chat.service.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 let ChatGateway = ChatGateway_1 = class ChatGateway {
     chatService;
     jwtService;
+    notificationsService;
     server;
     logger = new Logger(ChatGateway_1.name);
     lastCustomerMessageTimes = new Map();
     activeAudioCalls = new Map();
-    constructor(chatService, jwtService) {
+    constructor(chatService, jwtService, notificationsService) {
         this.chatService = chatService;
         this.jwtService = jwtService;
+        this.notificationsService = notificationsService;
     }
-    handleConnection(client) {
+    async handleConnection(client) {
         this.logger.log(`⚡ Client connected via Socket.IO: ${client.id}`);
+        try {
+            const user = await this.resolveSocketUser(client);
+            if (user) {
+                if (user.role?.toUpperCase() === 'ADMIN') {
+                    client.join('admin_room');
+                    this.logger.log(`🛡️ Admin auto-joined admin_room: ${user.name || user.id}`);
+                }
+                client.join(`room_${user.id}`);
+                this.logger.log(`🔒 User auto-joined room_${user.id}`);
+                const unreadCount = await this.notificationsService.getUnreadCount(user.id);
+                client.emit('notification:unread-count', { count: unreadCount, unreadCount });
+            }
+        }
+        catch { }
     }
     handleDisconnect(client) {
         this.logger.log(`🔌 Client disconnected from Socket.IO: ${client.id}`);
@@ -167,39 +183,82 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
             this.lastCustomerMessageTimes.set(clientKey, now);
         }
         const savedMessage = await this.chatService.createMessage(payload);
-        const notificationPayload = {
-            id: `notif-${Date.now()}`,
-            title: payload.sender === 'customer'
-                ? `New Message from ${payload.senderName || 'Reviewer'}`
-                : `Support Reply from ${payload.senderName || 'Admin'}`,
-            body: payload.text?.slice(0, 100) || 'Sent an attachment',
+        const notifTitle = payload.sender === 'customer'
+            ? `New Message from ${payload.senderName || 'Reviewer'}`
+            : `Support Reply from ${payload.senderName || 'Admin'}`;
+        const notifBody = payload.text?.slice(0, 120) || 'Sent an attachment';
+        let createdNotif = null;
+        try {
+            if (payload.sender === 'customer') {
+                createdNotif = await this.notificationsService.createNotification({
+                    title: notifTitle,
+                    body: notifBody,
+                    type: 'MESSAGE',
+                    sender: payload.senderName || 'Reviewer',
+                    link: savedMessage.userId ? `/admin/inbox?user=${savedMessage.userId}` : '/admin/inbox',
+                });
+                const adminTokens = await this.notificationsService.getGroupDeviceTokens('ADMIN');
+                if (adminTokens.length > 0) {
+                    this.notificationsService.sendPushNotification(adminTokens, {
+                        title: notifTitle,
+                        body: notifBody,
+                        link: savedMessage.userId ? `/admin/inbox?user=${savedMessage.userId}` : '/admin/inbox',
+                        data: { type: 'MESSAGE', sender: 'customer', userId: savedMessage.userId || '' },
+                    }).catch(() => { });
+                }
+            }
+            else if (savedMessage.userId) {
+                createdNotif = await this.notificationsService.createNotification({
+                    title: notifTitle,
+                    body: notifBody,
+                    type: 'MESSAGE',
+                    recipientId: savedMessage.userId,
+                    sender: payload.senderName || 'Admin',
+                    link: '/chat',
+                });
+            }
+        }
+        catch (notifErr) {
+            this.logger.warn(`Failed to process message notification: ${notifErr.message}`);
+        }
+        const legacyNotificationPayload = {
+            id: createdNotif?.id || `notif-${Date.now()}`,
+            title: notifTitle,
+            body: notifBody,
             sender: payload.sender,
             senderName: payload.senderName,
             userId: savedMessage.userId,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            link: payload.sender === 'customer' ? '/admin/inbox' : '/chat',
+            link: payload.sender === 'customer' ? (savedMessage.userId ? `/admin/inbox?user=${savedMessage.userId}` : '/admin/inbox') : '/chat',
+            type: 'message',
         };
         if (savedMessage.userId) {
             this.server
                 .to(`room_${savedMessage.userId}`)
                 .to('admin_room')
                 .emit('newMessage', savedMessage);
-            client.broadcast.emit('newMessage', savedMessage);
             if (payload.sender === 'customer') {
-                this.server.to('admin_room').emit('notification', notificationPayload);
-                client.broadcast.emit('notification', notificationPayload);
+                if (createdNotif)
+                    this.server.to('admin_room').emit('notification:new', createdNotif);
+                this.server.to('admin_room').emit('notification', legacyNotificationPayload);
             }
             else {
-                this.server.to(`room_${savedMessage.userId}`).emit('notification', notificationPayload);
-                client.broadcast.emit('notification', notificationPayload);
+                if (createdNotif)
+                    this.server.to(`room_${savedMessage.userId}`).emit('notification:new', createdNotif);
+                this.server.to(`room_${savedMessage.userId}`).emit('notification', legacyNotificationPayload);
+                try {
+                    const unreadCount = await this.notificationsService.getUnreadCount(savedMessage.userId);
+                    this.server.to(`room_${savedMessage.userId}`).emit('notification:unread-count', { count: unreadCount, unreadCount });
+                }
+                catch { }
             }
         }
         else {
             this.server.to('admin_room').emit('newMessage', savedMessage);
-            client.broadcast.emit('newMessage', savedMessage);
             if (payload.sender === 'customer') {
-                this.server.to('admin_room').emit('notification', notificationPayload);
-                client.broadcast.emit('notification', notificationPayload);
+                if (createdNotif)
+                    this.server.to('admin_room').emit('notification:new', createdNotif);
+                this.server.to('admin_room').emit('notification', legacyNotificationPayload);
             }
         }
         if (shouldAutoReply && payload.sender === 'customer') {
@@ -224,15 +283,37 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
                 });
                 if (payload.userId) {
                     this.server.to(`room_${payload.userId}`).to('admin_room').emit('newMessage', autoAdminMessage);
-                    this.server.to(`room_${payload.userId}`).emit('notification', {
-                        id: `notif-${Date.now()}`,
+                    let autoNotif = null;
+                    try {
+                        autoNotif = await this.notificationsService.createNotification({
+                            title: 'Support Reply from FreeProducts Support',
+                            body: replyText.slice(0, 100),
+                            type: 'MESSAGE',
+                            recipientId: payload.userId,
+                            sender: 'FreeProducts Support',
+                            link: '/chat',
+                        });
+                    }
+                    catch { }
+                    const autoLegacy = {
+                        id: autoNotif?.id || `notif-${Date.now()}`,
                         title: 'Support Reply from FreeProducts Support',
                         body: replyText.slice(0, 100),
                         sender: 'admin',
                         senderName: 'FreeProducts Support',
                         userId: payload.userId,
                         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                    });
+                        link: '/chat',
+                        type: 'message',
+                    };
+                    if (autoNotif)
+                        this.server.to(`room_${payload.userId}`).emit('notification:new', autoNotif);
+                    this.server.to(`room_${payload.userId}`).emit('notification', autoLegacy);
+                    try {
+                        const count = await this.notificationsService.getUnreadCount(payload.userId);
+                        this.server.to(`room_${payload.userId}`).emit('notification:unread-count', { count, unreadCount: count });
+                    }
+                    catch { }
                 }
                 else {
                     this.server.to('admin_room').emit('newMessage', autoAdminMessage);
@@ -319,8 +400,20 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
         const isAdmin = user?.role?.toUpperCase() === 'ADMIN';
         if (!isAdmin || !payload?.product)
             return { success: false };
+        let createdNotif = null;
+        try {
+            createdNotif = await this.notificationsService.createNotification({
+                title: 'New Product Added! 🎁',
+                body: `"${payload.product.title}" is now available to test & review for free!`,
+                type: 'PRODUCT',
+                sender: 'system',
+                image: payload.product.image,
+                link: `/p/${payload.product.id}`,
+            });
+        }
+        catch { }
         const notifPayload = {
-            id: `notif-prod-${payload.product.id}-${Date.now()}`,
+            id: createdNotif?.id || `notif-prod-${payload.product.id}-${Date.now()}`,
             title: 'New Product Added! 🎁',
             body: `"${payload.product.title}" is now available to test & review for free!`,
             sender: 'system',
@@ -331,9 +424,74 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
             image: payload.product.image,
             timestamp: 'Just now',
         };
+        this.server.emit('notification:new', createdNotif || notifPayload);
+        this.server.emit('notification:broadcast', createdNotif || notifPayload);
         this.server.emit('notification', notifPayload);
         this.server.emit('newProductAdded', payload.product);
         return { success: true };
+    }
+    async handleNotificationRead(client, payload) {
+        const user = await this.resolveSocketUser(client, payload?.token);
+        const targetUserId = user?.id || payload?.userId;
+        const notifId = payload?.notificationId || payload?.id;
+        if (!targetUserId || !notifId)
+            return { success: false };
+        await this.notificationsService.markAsRead(notifId, targetUserId);
+        const unreadCount = await this.notificationsService.getUnreadCount(targetUserId);
+        this.server.to(`room_${targetUserId}`).emit('notification:read', {
+            id: notifId,
+            notificationId: notifId,
+            userId: targetUserId,
+        });
+        this.server.to(`room_${targetUserId}`).emit('notification:unread-count', {
+            count: unreadCount,
+            unreadCount,
+        });
+        return { success: true, id: notifId, unreadCount };
+    }
+    async handleNotificationReadAll(client, payload) {
+        const user = await this.resolveSocketUser(client, payload?.token);
+        const targetUserId = user?.id || payload?.userId;
+        if (!targetUserId)
+            return { success: false };
+        await this.notificationsService.markAllAsRead(targetUserId);
+        this.server.to(`room_${targetUserId}`).emit('notification:read-all', {
+            userId: targetUserId,
+        });
+        this.server.to(`room_${targetUserId}`).emit('notification:unread-count', {
+            count: 0,
+            unreadCount: 0,
+        });
+        return { success: true, unreadCount: 0 };
+    }
+    async handleNotificationUnreadCount(client, payload) {
+        const user = await this.resolveSocketUser(client, payload?.token);
+        const targetUserId = user?.id || payload?.userId;
+        if (!targetUserId)
+            return { count: 0, unreadCount: 0 };
+        const count = await this.notificationsService.getUnreadCount(targetUserId);
+        client.emit('notification:unread-count', { count, unreadCount: count });
+        return { count, unreadCount: count };
+    }
+    async handleNotificationBroadcast(client, payload) {
+        const user = await this.resolveSocketUser(client, payload?.token);
+        const isAdmin = user?.role?.toUpperCase() === 'ADMIN';
+        if (!isAdmin) {
+            return { success: false, error: 'Unauthorized: Admin access required.' };
+        }
+        const result = await this.notificationsService.broadcastNotification(user, {
+            title: payload.title,
+            body: payload.body,
+            image: payload.image,
+            link: payload.link,
+            targetGroup: payload.targetGroup || 'ALL',
+        });
+        if (result.notification) {
+            this.server.emit('notification:new', result.notification);
+            this.server.emit('notification:broadcast', result.notification);
+            this.server.emit('notification', result.notification);
+        }
+        return { ...result };
     }
     async handleStartAudioCall(client, payload) {
         const user = await this.resolveSocketUser(client, payload?.token);
@@ -634,14 +792,14 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
 };
 __decorate([
     WebSocketServer(),
-    __metadata("design:type", Server)
+    __metadata("design:type", Function)
 ], ChatGateway.prototype, "server", void 0);
 __decorate([
     SubscribeMessage('joinRoom'),
     __param(0, ConnectedSocket()),
     __param(1, MessageBody()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Socket, Object]),
+    __metadata("design:paramtypes", [Function, Object]),
     __metadata("design:returntype", Promise)
 ], ChatGateway.prototype, "handleJoinRoom", null);
 __decorate([
@@ -649,7 +807,7 @@ __decorate([
     __param(0, ConnectedSocket()),
     __param(1, MessageBody()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Socket, Object]),
+    __metadata("design:paramtypes", [Function, Object]),
     __metadata("design:returntype", Promise)
 ], ChatGateway.prototype, "handleSendMessage", null);
 __decorate([
@@ -657,7 +815,7 @@ __decorate([
     __param(0, ConnectedSocket()),
     __param(1, MessageBody()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Socket, Object]),
+    __metadata("design:paramtypes", [Function, Object]),
     __metadata("design:returntype", Promise)
 ], ChatGateway.prototype, "handleTyping", null);
 __decorate([
@@ -666,7 +824,7 @@ __decorate([
     __param(0, ConnectedSocket()),
     __param(1, MessageBody()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Socket, Object]),
+    __metadata("design:paramtypes", [Function, Object]),
     __metadata("design:returntype", Promise)
 ], ChatGateway.prototype, "handleMessageDelivered", null);
 __decorate([
@@ -676,7 +834,7 @@ __decorate([
     __param(0, ConnectedSocket()),
     __param(1, MessageBody()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Socket, Object]),
+    __metadata("design:paramtypes", [Function, Object]),
     __metadata("design:returntype", Promise)
 ], ChatGateway.prototype, "handleMarkAsSeen", null);
 __decorate([
@@ -684,15 +842,47 @@ __decorate([
     __param(0, ConnectedSocket()),
     __param(1, MessageBody()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Socket, Object]),
+    __metadata("design:paramtypes", [Function, Object]),
     __metadata("design:returntype", Promise)
 ], ChatGateway.prototype, "handleBroadcastProduct", null);
+__decorate([
+    SubscribeMessage('notification:read'),
+    __param(0, ConnectedSocket()),
+    __param(1, MessageBody()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Function, Object]),
+    __metadata("design:returntype", Promise)
+], ChatGateway.prototype, "handleNotificationRead", null);
+__decorate([
+    SubscribeMessage('notification:read-all'),
+    __param(0, ConnectedSocket()),
+    __param(1, MessageBody()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Function, Object]),
+    __metadata("design:returntype", Promise)
+], ChatGateway.prototype, "handleNotificationReadAll", null);
+__decorate([
+    SubscribeMessage('notification:unread-count'),
+    __param(0, ConnectedSocket()),
+    __param(1, MessageBody()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Function, Object]),
+    __metadata("design:returntype", Promise)
+], ChatGateway.prototype, "handleNotificationUnreadCount", null);
+__decorate([
+    SubscribeMessage('notification:broadcast'),
+    __param(0, ConnectedSocket()),
+    __param(1, MessageBody()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Function, Object]),
+    __metadata("design:returntype", Promise)
+], ChatGateway.prototype, "handleNotificationBroadcast", null);
 __decorate([
     SubscribeMessage('startAudioCall'),
     __param(0, ConnectedSocket()),
     __param(1, MessageBody()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Socket, Object]),
+    __metadata("design:paramtypes", [Function, Object]),
     __metadata("design:returntype", Promise)
 ], ChatGateway.prototype, "handleStartAudioCall", null);
 __decorate([
@@ -700,7 +890,7 @@ __decorate([
     __param(0, ConnectedSocket()),
     __param(1, MessageBody()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Socket, Object]),
+    __metadata("design:paramtypes", [Function, Object]),
     __metadata("design:returntype", Promise)
 ], ChatGateway.prototype, "handleWebrtcOffer", null);
 __decorate([
@@ -708,7 +898,7 @@ __decorate([
     __param(0, ConnectedSocket()),
     __param(1, MessageBody()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Socket, Object]),
+    __metadata("design:paramtypes", [Function, Object]),
     __metadata("design:returntype", Promise)
 ], ChatGateway.prototype, "handleAcceptAudioCall", null);
 __decorate([
@@ -716,7 +906,7 @@ __decorate([
     __param(0, ConnectedSocket()),
     __param(1, MessageBody()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Socket, Object]),
+    __metadata("design:paramtypes", [Function, Object]),
     __metadata("design:returntype", Promise)
 ], ChatGateway.prototype, "handleWebrtcAnswer", null);
 __decorate([
@@ -724,7 +914,7 @@ __decorate([
     __param(0, ConnectedSocket()),
     __param(1, MessageBody()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Socket, Object]),
+    __metadata("design:paramtypes", [Function, Object]),
     __metadata("design:returntype", Promise)
 ], ChatGateway.prototype, "handleWebrtcIceCandidate", null);
 __decorate([
@@ -732,7 +922,7 @@ __decorate([
     __param(0, ConnectedSocket()),
     __param(1, MessageBody()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Socket, Object]),
+    __metadata("design:paramtypes", [Function, Object]),
     __metadata("design:returntype", Promise)
 ], ChatGateway.prototype, "handleRejectAudioCall", null);
 __decorate([
@@ -740,7 +930,7 @@ __decorate([
     __param(0, ConnectedSocket()),
     __param(1, MessageBody()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Socket, Object]),
+    __metadata("design:paramtypes", [Function, Object]),
     __metadata("design:returntype", Promise)
 ], ChatGateway.prototype, "handleEndAudioCall", null);
 ChatGateway = ChatGateway_1 = __decorate([
@@ -750,8 +940,10 @@ ChatGateway = ChatGateway_1 = __decorate([
             credentials: true,
         },
     }),
+    __param(2, Inject(forwardRef(() => NotificationsService))),
     __metadata("design:paramtypes", [ChatService,
-        JwtService])
+        JwtService,
+        NotificationsService])
 ], ChatGateway);
 export { ChatGateway };
 //# sourceMappingURL=chat.gateway.js.map

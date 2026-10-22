@@ -12,3 +12,7 @@ export type Product = Prisma.ProductModel;
 export type ChatMessage = Prisma.ChatMessageModel;
 export type Inquiry = Prisma.InquiryModel;
 export type Review = Prisma.ReviewModel;
+export type Notification = Prisma.NotificationModel;
+export type DeviceToken = Prisma.DeviceTokenModel;
+export type UserNotificationRead = Prisma.UserNotificationReadModel;
+export type BroadcastAuditLog = Prisma.BroadcastAuditLogModel;

@@ -29,7 +29,11 @@ export const ModelName = {
     Product: 'Product',
     ChatMessage: 'ChatMessage',
     Inquiry: 'Inquiry',
-    Review: 'Review'
+    Review: 'Review',
+    Notification: 'Notification',
+    DeviceToken: 'DeviceToken',
+    UserNotificationRead: 'UserNotificationRead',
+    BroadcastAuditLog: 'BroadcastAuditLog'
 };
 export const TransactionIsolationLevel = runtime.makeStrictEnum({
     ReadUncommitted: 'ReadUncommitted',
@@ -53,6 +57,10 @@ export const UserScalarFieldEnum = {
     verified: 'verified',
     verifiedAt: 'verifiedAt',
     role: 'role',
+    status: 'status',
+    reviewedAt: 'reviewedAt',
+    reviewedBy: 'reviewedBy',
+    rejectionReason: 'rejectionReason',
     canReview: 'canReview',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
@@ -124,6 +132,45 @@ export const ReviewScalarFieldEnum = {
     comment: 'comment',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
+};
+export const NotificationScalarFieldEnum = {
+    id: 'id',
+    title: 'title',
+    body: 'body',
+    type: 'type',
+    recipientId: 'recipientId',
+    sender: 'sender',
+    image: 'image',
+    link: 'link',
+    read: 'read',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+};
+export const DeviceTokenScalarFieldEnum = {
+    id: 'id',
+    userId: 'userId',
+    token: 'token',
+    platform: 'platform',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+};
+export const UserNotificationReadScalarFieldEnum = {
+    id: 'id',
+    userId: 'userId',
+    notificationId: 'notificationId',
+    readAt: 'readAt'
+};
+export const BroadcastAuditLogScalarFieldEnum = {
+    id: 'id',
+    adminId: 'adminId',
+    adminName: 'adminName',
+    title: 'title',
+    body: 'body',
+    targetGroup: 'targetGroup',
+    recipientsCount: 'recipientsCount',
+    fcmSuccessCount: 'fcmSuccessCount',
+    fcmFailureCount: 'fcmFailureCount',
+    createdAt: 'createdAt'
 };
 export const SortOrder = {
     asc: 'asc',

@@ -180,16 +180,34 @@ export const showBrowserNotification = (
 export const registerFcmToken = async (userId: string, fcmToken: string, apiUrl: string) => {
   try {
     const token = typeof window !== 'undefined' ? localStorage.getItem('bytedesk_token_v2') : null;
-    await fetch(`${apiUrl}/users/${userId}/fcm-token`, {
-      method: 'PATCH',
+    await fetch(`${apiUrl}/notifications/devices`, {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      body: JSON.stringify({ fcmToken }),
+      body: JSON.stringify({ token: fcmToken, platform: 'web' }),
     });
-    console.log('✅ FCM Token synced with user account in backend.');
+    console.log('✅ FCM Device Token registered with user account in backend.');
   } catch (e) {
     console.warn('Could not sync FCM token with backend:', e);
+  }
+};
+
+// Unregister FCM Device Registration Token (e.g. on user logout)
+export const unregisterFcmToken = async (fcmToken: string, apiUrl: string) => {
+  try {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('bytedesk_token_v2') : null;
+    await fetch(`${apiUrl}/notifications/devices`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ token: fcmToken }),
+    });
+    console.log('🗑️ FCM Device Token unregistered from backend.');
+  } catch (e) {
+    console.warn('Could not unregister FCM token from backend:', e);
   }
 };

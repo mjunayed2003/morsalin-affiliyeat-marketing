@@ -40,6 +40,10 @@ model User {
   verified         Boolean       @default(false)
   verifiedAt       DateTime?
   role         Role          @default(CLIENT)
+  status       String        @default("ACTIVE")
+  reviewedAt   DateTime?
+  reviewedBy   String?
+  rejectionReason String?
   canReview    Boolean       @default(false)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
@@ -143,4 +147,61 @@ model Review {
   @@index([productId])
   @@index([userId])
   @@map("reviews")
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  title       String
+  body        String
+  type        String   @default("SYSTEM") // "MESSAGE" | "PRODUCT" | "ANNOUNCEMENT" | "SYSTEM" | "CALL"
+  recipientId String?
+  sender      String?
+  image       String?
+  link        String?
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([recipientId])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+model DeviceToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  platform  String   @default("web") // "web" | "android" | "ios"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("device_tokens")
+}
+
+model UserNotificationRead {
+  id             String   @id @default(cuid())
+  userId         String
+  notificationId String
+  readAt         DateTime @default(now())
+
+  @@unique([userId, notificationId])
+  @@index([userId])
+  @@map("user_notifications_read")
+}
+
+model BroadcastAuditLog {
+  id              String   @id @default(cuid())
+  adminId         String
+  adminName       String?
+  title           String
+  body            String
+  targetGroup     String   @default("ALL")
+  recipientsCount Int      @default(0)
+  fcmSuccessCount Int      @default(0)
+  fcmFailureCount Int      @default(0)
+  createdAt       DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("broadcast_audit_logs")
 }

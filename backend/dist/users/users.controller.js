@@ -24,6 +24,21 @@ let UsersController = class UsersController {
     async findAll(role) {
         return this.usersService.findAll(role);
     }
+    async getPendingCount() {
+        return this.usersService.getPendingCount();
+    }
+    async findPendingRegistrations(page, limit, search) {
+        return this.usersService.findPendingRegistrations(page ? parseInt(page, 10) : 1, limit ? parseInt(limit, 10) : 10, search);
+    }
+    async approveRegistration(id, adminUser) {
+        return this.usersService.approveRegistration(id, adminUser);
+    }
+    async rejectRegistration(id, reason, adminUser) {
+        return this.usersService.rejectRegistration(id, adminUser, reason);
+    }
+    async updateStatus(id, status, adminUser) {
+        return this.usersService.updateStatus(id, status, adminUser);
+    }
     async findOne(id, currentUser) {
         if (currentUser.role !== 'ADMIN' && currentUser.id !== id) {
             throw new ForbiddenException('Access Denied: You can only view your own user account.');
@@ -57,6 +72,52 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "findAll", null);
+__decorate([
+    Get('pending/count'),
+    Roles('ADMIN'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "getPendingCount", null);
+__decorate([
+    Get('pending'),
+    Roles('ADMIN'),
+    __param(0, Query('page')),
+    __param(1, Query('limit')),
+    __param(2, Query('search')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "findPendingRegistrations", null);
+__decorate([
+    Patch(':id/approve'),
+    Roles('ADMIN'),
+    __param(0, Param('id')),
+    __param(1, CurrentUser()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "approveRegistration", null);
+__decorate([
+    Patch(':id/reject'),
+    Roles('ADMIN'),
+    __param(0, Param('id')),
+    __param(1, Body('reason')),
+    __param(2, CurrentUser()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "rejectRegistration", null);
+__decorate([
+    Patch(':id/status'),
+    Roles('ADMIN'),
+    __param(0, Param('id')),
+    __param(1, Body('status')),
+    __param(2, CurrentUser()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "updateStatus", null);
 __decorate([
     Get(':id'),
     __param(0, Param('id')),

@@ -34,11 +34,11 @@ export declare class InquiriesService {
         };
     } & {
         id: string;
+        status: import("../generated/prisma/enums.js").InquiryStatus;
         createdAt: Date;
         updatedAt: Date;
         productId: string;
         userId: string;
-        status: import("../generated/prisma/enums.js").InquiryStatus;
         amazonOrderId: string | null;
         reviewUrl: string | null;
         notes: string | null;
@@ -74,11 +74,11 @@ export declare class InquiriesService {
         };
     } & {
         id: string;
+        status: import("../generated/prisma/enums.js").InquiryStatus;
         createdAt: Date;
         updatedAt: Date;
         productId: string;
         userId: string;
-        status: import("../generated/prisma/enums.js").InquiryStatus;
         amazonOrderId: string | null;
         reviewUrl: string | null;
         notes: string | null;
@@ -109,11 +109,11 @@ export declare class InquiriesService {
         };
     } & {
         id: string;
+        status: import("../generated/prisma/enums.js").InquiryStatus;
         createdAt: Date;
         updatedAt: Date;
         productId: string;
         userId: string;
-        status: import("../generated/prisma/enums.js").InquiryStatus;
         amazonOrderId: string | null;
         reviewUrl: string | null;
         notes: string | null;

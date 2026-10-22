@@ -34,7 +34,7 @@ interface AuthContextType {
     selfieImage?: string,
     amazonProfileUrl?: string,
     paypalEmail?: string
-  ) => Promise<{ success: boolean; message: string; user?: User }>;
+  ) => Promise<{ success: boolean; message: string; status?: string; user?: User }>;
   uploadUserSelfie: (selfieImage: string) => Promise<{ success: boolean; message: string }>;
   sendForgotPasswordOtp: (
     email: string
@@ -125,7 +125,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             verifiedAt: u.verifiedAt,
             createdAt: u.createdAt,
             role: u.role?.toLowerCase() === 'admin' ? 'admin' : 'client',
-            status: 'ACTIVE',
+            status: (u.status || 'ACTIVE') as any,
+            reviewedAt: u.reviewedAt,
+            reviewedBy: u.reviewedBy,
+            rejectionReason: u.rejectionReason,
             canReview: u.canReview ?? (u.role?.toLowerCase() === 'admin'),
           }));
           setUsers(mapped);
@@ -214,11 +217,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               paypalEmail: verifiedUser.paypalEmail || undefined,
               verified: verifiedUser.verified,
               verifiedAt: verifiedUser.verifiedAt,
-              createdAt: verifiedUser.createdAt,
+              createdAt: verifiedUser.createdAt || new Date().toISOString(),
               role: verifiedUser.role?.toLowerCase() === 'admin' ? 'admin' : 'client',
-              status: 'ACTIVE',
+              status: (verifiedUser.status || 'ACTIVE') as any,
+              reviewedAt: verifiedUser.reviewedAt,
+              reviewedBy: verifiedUser.reviewedBy,
+              rejectionReason: verifiedUser.rejectionReason,
               canReview: verifiedUser.canReview ?? (verifiedUser.role?.toLowerCase() === 'admin'),
             };
+
+            // Non-admin accounts must be ACTIVE
+            if (formattedUser.role !== 'admin' && formattedUser.status !== 'ACTIVE') {
+              localStorage.removeItem('bytedesk_token_v2');
+              localStorage.removeItem('bytedesk_current_user_v2');
+              clearAuthCookies();
+              setUser(null);
+              setToken(null);
+              return;
+            }
 
             setUser(formattedUser);
             localStorage.setItem('bytedesk_current_user_v2', JSON.stringify(formattedUser));
@@ -340,6 +356,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const data = await response.json();
       if (response.ok && data.success && data.user) {
+        const userStatus = data.user.status || data.status || 'PENDING';
         const backendUser: User = {
           id: data.user.id,
           phone: data.user.phone,
@@ -355,13 +372,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           verifiedAt: new Date().toISOString(),
           createdAt: data.user.createdAt || new Date().toISOString(),
           role: data.user.role?.toLowerCase() === 'admin' ? 'admin' : 'client',
+          status: userStatus,
         };
+
+        // Approval workflow: PENDING accounts are not issued session tokens
+        if (userStatus === 'PENDING') {
+          try {
+            sessionStorage.setItem(
+              'freeproducts_pending_registration',
+              JSON.stringify({
+                name: backendUser.name,
+                email: backendUser.email,
+                phone: backendUser.phone,
+                createdAt: backendUser.createdAt,
+              })
+            );
+          } catch {}
+
+          setIsAuthModalOpen(false);
+
+          return {
+            success: true,
+            status: 'PENDING',
+            message: data.message || 'Your registration has been submitted and is awaiting admin review.',
+            user: backendUser,
+          };
+        }
 
         setCurrentUser(backendUser, data.token);
         setIsAuthModalOpen(false);
 
         return {
           success: true,
+          status: 'ACTIVE',
           message: data.message || `Welcome to FreeProducts.online, ${backendUser.name}!`,
           user: backendUser,
         };

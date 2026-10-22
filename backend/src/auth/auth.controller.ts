@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Body, Query, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { LoginDto } from './dto/login.dto.js';
@@ -51,9 +51,15 @@ export class AuthController {
     return this.authService.guestLogin(dto);
   }
 
+  @Get('registration-status')
+  async getRegistrationStatus(@Query('identifier') identifier: string) {
+    return this.authService.getRegistrationStatus(identifier);
+  }
+
   @Get('me')
   @UseGuards(JwtAuthGuard)
   async getProfile(@CurrentUser() currentUser: AuthenticatedUser) {
     return this.authService.getProfile(currentUser.id);
   }
 }
+

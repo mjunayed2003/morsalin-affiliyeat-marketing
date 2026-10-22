@@ -4,4 +4,8 @@ export type * from './models/Product.js';
 export type * from './models/ChatMessage.js';
 export type * from './models/Inquiry.js';
 export type * from './models/Review.js';
+export type * from './models/Notification.js';
+export type * from './models/DeviceToken.js';
+export type * from './models/UserNotificationRead.js';
+export type * from './models/BroadcastAuditLog.js';
 export type * from './commonInputTypes.js';

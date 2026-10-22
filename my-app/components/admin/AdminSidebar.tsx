@@ -1,11 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
   FaChartPie, 
   FaUsers, 
+  FaUserCheck,
   FaBoxOpen, 
   FaTags, 
   FaLink, 
@@ -24,6 +25,7 @@ import {
 } from 'react-icons/fa6';
 import { useApp } from '@/app/context/AppContext';
 import { useAuth } from '@/app/context/AuthContext';
+import { getSocket, API_BASE_URL } from '@/lib/socket';
 
 interface AdminSidebarProps {
   isOpen: boolean;
@@ -44,6 +46,43 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) =
   const pathname = usePathname();
   const { unreadCount, products } = useApp();
   const { user } = useAuth();
+  const [pendingCount, setPendingCount] = useState<number>(0);
+
+  useEffect(() => {
+    const fetchPendingCount = async () => {
+      try {
+        const token = localStorage.getItem('bytedesk_token_v2');
+        if (!token) return;
+        const res = await fetch(`${API_BASE_URL}/users/pending/count`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setPendingCount(data.count || 0);
+        }
+      } catch {}
+    };
+
+    fetchPendingCount();
+
+    const socket = getSocket();
+    const handlePending = () => {
+      setPendingCount((c) => c + 1);
+    };
+    const handleResolved = () => {
+      setPendingCount((c) => Math.max(0, c - 1));
+    };
+
+    socket.on('registration:pending', handlePending);
+    socket.on('registration:approved', handleResolved);
+    socket.on('registration:rejected', handleResolved);
+
+    return () => {
+      socket.off('registration:pending', handlePending);
+      socket.off('registration:approved', handleResolved);
+      socket.off('registration:rejected', handleResolved);
+    };
+  }, []);
 
   const navSections: NavSection[] = [
     {
@@ -66,6 +105,12 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) =
     {
       title: 'Users & Relations',
       items: [
+        { 
+          label: 'Pending Registrations', 
+          href: '/admin/pending-registrations', 
+          icon: FaUserCheck,
+          badge: pendingCount > 0 ? pendingCount : undefined 
+        },
         { label: 'Users', href: '/admin/users', icon: FaUsers },
         { 
           label: 'Support Inbox', 
@@ -79,6 +124,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) =
     {
       title: 'Platform Management',
       items: [
+        { label: 'Broadcast Notifications', href: '/admin/notifications', icon: FaBullhorn },
         { label: 'Content & SEO', href: '/admin/content', icon: FaGlobe },
         { label: 'Audit Logs', href: '/admin/audit-logs', icon: FaShieldHalved },
         { label: 'Settings', href: '/admin/settings', icon: FaGear },

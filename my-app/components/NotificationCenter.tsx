@@ -29,7 +29,10 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
     markNotificationAsRead, 
     markAllNotificationsAsRead, 
     clearNotifications,
-    requestPushNotifications 
+    requestPushNotifications,
+    hasMoreNotifications,
+    isLoadingOlderNotifications,
+    loadOlderNotifications,
   } = useApp();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -62,16 +65,20 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
     return true;
   });
 
-  const getIcon = (type: NotificationItem['type']) => {
-    switch (type) {
+  const getIcon = (type: string) => {
+    const t = (type || '').toLowerCase();
+    switch (t) {
       case 'message':
-        return <FaComments className="w-3.5 h-3.5 text-emerald-600" />;
+        return <FaComments className="w-3.5 h-3.5 text-blue-600" />;
       case 'call':
         return <FaPhone className="w-3.5 h-3.5 text-indigo-600 animate-pulse" />;
       case 'order':
         return <FaBagShopping className="w-3.5 h-3.5 text-amber-600" />;
       case 'product':
         return <FaGift className="w-3.5 h-3.5 text-emerald-600" />;
+      case 'announcement':
+      case 'broadcast':
+        return <FaShieldHalved className="w-3.5 h-3.5 text-amber-500" />;
       case 'review':
         return <FaStar className="w-3.5 h-3.5 text-amber-500" />;
       default:
@@ -212,10 +219,18 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
                     !item.read ? 'bg-emerald-50/40 hover:bg-emerald-50/70' : 'hover:bg-slate-50'
                   }`}
                 >
-                  {/* Icon Avatar */}
-                  <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center shrink-0 mt-0.5 border border-slate-200/60 shadow-2xs">
-                    {getIcon(item.type)}
-                  </div>
+                  {/* Icon or Thumbnail Avatar */}
+                  {item.image ? (
+                    <img
+                      src={item.image}
+                      alt={item.title}
+                      className="w-8 h-8 rounded-xl object-cover shrink-0 mt-0.5 border border-slate-200/80 shadow-2xs"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center shrink-0 mt-0.5 border border-slate-200/60 shadow-2xs">
+                      {getIcon(item.type)}
+                    </div>
+                  )}
 
                   {/* Text Content */}
                   <div className="flex-1 min-w-0">
@@ -238,6 +253,23 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
                   )}
                 </div>
               ))
+            )}
+
+            {/* Load Older Notifications */}
+            {hasMoreNotifications && (
+              <div className="p-2 text-center bg-slate-50/80 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    loadOlderNotifications();
+                  }}
+                  disabled={isLoadingOlderNotifications}
+                  className="text-[11px] font-bold text-emerald-700 hover:text-emerald-950 disabled:opacity-50 py-1 px-3 rounded-lg hover:bg-emerald-100/50 transition-colors cursor-pointer"
+                >
+                  {isLoadingOlderNotifications ? 'Loading older...' : 'Load older notifications'}
+                </button>
+              </div>
             )}
           </div>
 

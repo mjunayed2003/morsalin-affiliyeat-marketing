@@ -17,6 +17,10 @@ export declare const ModelName: {
     readonly ChatMessage: "ChatMessage";
     readonly Inquiry: "Inquiry";
     readonly Review: "Review";
+    readonly Notification: "Notification";
+    readonly DeviceToken: "DeviceToken";
+    readonly UserNotificationRead: "UserNotificationRead";
+    readonly BroadcastAuditLog: "BroadcastAuditLog";
 };
 export type ModelName = (typeof ModelName)[keyof typeof ModelName];
 export declare const TransactionIsolationLevel: {
@@ -42,6 +46,10 @@ export declare const UserScalarFieldEnum: {
     readonly verified: "verified";
     readonly verifiedAt: "verifiedAt";
     readonly role: "role";
+    readonly status: "status";
+    readonly reviewedAt: "reviewedAt";
+    readonly reviewedBy: "reviewedBy";
+    readonly rejectionReason: "rejectionReason";
     readonly canReview: "canReview";
     readonly createdAt: "createdAt";
     readonly updatedAt: "updatedAt";
@@ -120,6 +128,49 @@ export declare const ReviewScalarFieldEnum: {
     readonly updatedAt: "updatedAt";
 };
 export type ReviewScalarFieldEnum = (typeof ReviewScalarFieldEnum)[keyof typeof ReviewScalarFieldEnum];
+export declare const NotificationScalarFieldEnum: {
+    readonly id: "id";
+    readonly title: "title";
+    readonly body: "body";
+    readonly type: "type";
+    readonly recipientId: "recipientId";
+    readonly sender: "sender";
+    readonly image: "image";
+    readonly link: "link";
+    readonly read: "read";
+    readonly createdAt: "createdAt";
+    readonly updatedAt: "updatedAt";
+};
+export type NotificationScalarFieldEnum = (typeof NotificationScalarFieldEnum)[keyof typeof NotificationScalarFieldEnum];
+export declare const DeviceTokenScalarFieldEnum: {
+    readonly id: "id";
+    readonly userId: "userId";
+    readonly token: "token";
+    readonly platform: "platform";
+    readonly createdAt: "createdAt";
+    readonly updatedAt: "updatedAt";
+};
+export type DeviceTokenScalarFieldEnum = (typeof DeviceTokenScalarFieldEnum)[keyof typeof DeviceTokenScalarFieldEnum];
+export declare const UserNotificationReadScalarFieldEnum: {
+    readonly id: "id";
+    readonly userId: "userId";
+    readonly notificationId: "notificationId";
+    readonly readAt: "readAt";
+};
+export type UserNotificationReadScalarFieldEnum = (typeof UserNotificationReadScalarFieldEnum)[keyof typeof UserNotificationReadScalarFieldEnum];
+export declare const BroadcastAuditLogScalarFieldEnum: {
+    readonly id: "id";
+    readonly adminId: "adminId";
+    readonly adminName: "adminName";
+    readonly title: "title";
+    readonly body: "body";
+    readonly targetGroup: "targetGroup";
+    readonly recipientsCount: "recipientsCount";
+    readonly fcmSuccessCount: "fcmSuccessCount";
+    readonly fcmFailureCount: "fcmFailureCount";
+    readonly createdAt: "createdAt";
+};
+export type BroadcastAuditLogScalarFieldEnum = (typeof BroadcastAuditLogScalarFieldEnum)[keyof typeof BroadcastAuditLogScalarFieldEnum];
 export declare const SortOrder: {
     readonly asc: "asc";
     readonly desc: "desc";

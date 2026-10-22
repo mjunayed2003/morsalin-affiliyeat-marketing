@@ -10,7 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-import { Controller, Post, Get, Body, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Body, Query, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { LoginDto } from './dto/login.dto.js';
@@ -43,6 +43,9 @@ let AuthController = class AuthController {
     }
     async guestLogin(dto) {
         return this.authService.guestLogin(dto);
+    }
+    async getRegistrationStatus(identifier) {
+        return this.authService.getRegistrationStatus(identifier);
     }
     async getProfile(currentUser) {
         return this.authService.getProfile(currentUser.id);
@@ -97,6 +100,13 @@ __decorate([
     __metadata("design:paramtypes", [GuestLoginDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "guestLogin", null);
+__decorate([
+    Get('registration-status'),
+    __param(0, Query('identifier')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "getRegistrationStatus", null);
 __decorate([
     Get('me'),
     UseGuards(JwtAuthGuard),

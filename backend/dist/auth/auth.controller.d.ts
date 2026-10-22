@@ -15,6 +15,7 @@ export declare class AuthController {
     }>;
     verifyRegisterOtp(dto: VerifyRegisterOtpDto): Promise<{
         success: boolean;
+        status: string;
         message: string;
         user: {
             id: string;
@@ -29,9 +30,10 @@ export declare class AuthController {
             paypalEmail: string | null;
             verified: boolean;
             role: import("../generated/prisma/enums.js").Role;
+            status: string;
             createdAt: Date;
         };
-        token: string;
+        token: null;
     }>;
     sendForgotPasswordOtp(dto: SendForgotPasswordOtpDto): Promise<{
         success: boolean;
@@ -44,6 +46,7 @@ export declare class AuthController {
     }>;
     register(dto: RegisterDto): Promise<{
         success: boolean;
+        status: string;
         message: string;
         user: {
             id: string;
@@ -55,9 +58,10 @@ export declare class AuthController {
             avatar: string | null;
             verified: boolean;
             role: import("../generated/prisma/enums.js").Role;
+            status: string;
             createdAt: Date;
         };
-        token: string;
+        token: null;
     }>;
     login(dto: LoginDto): Promise<{
         success: boolean;
@@ -76,6 +80,10 @@ export declare class AuthController {
             canReview: boolean;
             verified: boolean;
             role: import("../generated/prisma/enums.js").Role;
+            status: string;
+            reviewedAt: Date | null;
+            reviewedBy: string | null;
+            rejectionReason: string | null;
             createdAt: Date;
         };
         token: string;
@@ -94,6 +102,16 @@ export declare class AuthController {
         token: string;
         message: string;
     }>;
+    getRegistrationStatus(identifier: string): Promise<{
+        success: boolean;
+        status: string;
+        name: string;
+        email: string | null;
+        phone: string;
+        createdAt: Date;
+        reviewedAt: Date | null;
+        rejectionReason: string | null;
+    }>;
     getProfile(currentUser: AuthenticatedUser): Promise<{
         id: string;
         phone: string;
@@ -107,6 +125,10 @@ export declare class AuthController {
         paypalEmail: string | null;
         verified: boolean;
         role: import("../generated/prisma/enums.js").Role;
+        status: string;
+        reviewedAt: Date | null;
+        reviewedBy: string | null;
+        rejectionReason: string | null;
         canReview: boolean;
         createdAt: Date;
     }>;

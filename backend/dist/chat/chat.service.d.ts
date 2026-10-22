@@ -58,17 +58,17 @@ export declare class ChatService {
     }>;
     getLastCustomerMessage(userId?: string): Promise<{
         id: string;
+        createdAt: Date;
+        image: string | null;
         sender: string;
         senderName: string | null;
         text: string;
-        image: string | null;
         productId: string | null;
         productTitle: string | null;
         productPrice: number | null;
         productImage: string | null;
         read: boolean;
         userId: string | null;
-        createdAt: Date;
     } | null>;
     clearMessages(userId?: string): Promise<{
         success: boolean;

@@ -26,6 +26,60 @@ export class UsersController {
     return this.usersService.findAll(role);
   }
 
+  // Admin: Get count of pending registrations for badge
+  @Get('pending/count')
+  @Roles('ADMIN')
+  async getPendingCount() {
+    return this.usersService.getPendingCount();
+  }
+
+  // Admin: Get list of pending registrations with search & pagination
+  @Get('pending')
+  @Roles('ADMIN')
+  async findPendingRegistrations(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+  ) {
+    return this.usersService.findPendingRegistrations(
+      page ? parseInt(page, 10) : 1,
+      limit ? parseInt(limit, 10) : 10,
+      search,
+    );
+  }
+
+  // Admin: Approve a pending registration
+  @Patch(':id/approve')
+  @Roles('ADMIN')
+  async approveRegistration(
+    @Param('id') id: string,
+    @CurrentUser() adminUser: AuthenticatedUser,
+  ) {
+    return this.usersService.approveRegistration(id, adminUser);
+  }
+
+  // Admin: Reject a pending registration
+  @Patch(':id/reject')
+  @Roles('ADMIN')
+  async rejectRegistration(
+    @Param('id') id: string,
+    @Body('reason') reason: string,
+    @CurrentUser() adminUser: AuthenticatedUser,
+  ) {
+    return this.usersService.rejectRegistration(id, adminUser, reason);
+  }
+
+  // Admin: Update user status directly
+  @Patch(':id/status')
+  @Roles('ADMIN')
+  async updateStatus(
+    @Param('id') id: string,
+    @Body('status') status: 'ACTIVE' | 'PENDING' | 'REJECTED' | 'BLOCKED',
+    @CurrentUser() adminUser: AuthenticatedUser,
+  ) {
+    return this.usersService.updateStatus(id, status, adminUser);
+  }
+
   // Users can only view their own profile, ADMIN can view any
   @Get(':id')
   async findOne(

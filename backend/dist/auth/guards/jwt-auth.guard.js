@@ -10,13 +10,16 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 import { Injectable, UnauthorizedException, } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
+import { PrismaService } from '../../prisma/prisma.service.js';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator.js';
 let JwtAuthGuard = class JwtAuthGuard {
     jwtService;
     reflector;
-    constructor(jwtService, reflector) {
+    prisma;
+    constructor(jwtService, reflector, prisma) {
         this.jwtService = jwtService;
         this.reflector = reflector;
+        this.prisma = prisma;
     }
     async canActivate(context) {
         const isPublic = this.reflector.getAllAndOverride(IS_PUBLIC_KEY, [
@@ -35,18 +38,52 @@ let JwtAuthGuard = class JwtAuthGuard {
             const payload = await this.jwtService.verifyAsync(token, {
                 secret: process.env.JWT_SECRET || 'morsalin_affiliate_super_secure_jwt_token_secret_key_2026_x87123',
             });
+            const userId = (payload.sub || payload.id);
+            const dbUser = await this.prisma.user.findUnique({
+                where: { id: userId },
+                select: {
+                    id: true,
+                    phone: true,
+                    role: true,
+                    name: true,
+                    email: true,
+                    status: true,
+                    canReview: true,
+                },
+            });
+            if (!dbUser) {
+                if (isPublic)
+                    return true;
+                throw new UnauthorizedException('User account no longer exists.');
+            }
+            if (dbUser.role !== 'ADMIN') {
+                if (dbUser.status === 'PENDING') {
+                    throw new UnauthorizedException('Your account is awaiting administrator approval.');
+                }
+                if (dbUser.status === 'REJECTED') {
+                    throw new UnauthorizedException('Your registration was not approved by the administrator.');
+                }
+                if (dbUser.status === 'BLOCKED') {
+                    throw new UnauthorizedException('Your account has been suspended or blocked.');
+                }
+            }
             request.user = {
-                id: payload.sub || payload.id,
-                phone: payload.phone,
-                role: payload.role,
-                name: payload.name,
-                email: payload.email,
+                id: dbUser.id,
+                phone: dbUser.phone,
+                role: dbUser.role,
+                name: dbUser.name,
+                email: dbUser.email,
+                status: dbUser.status,
+                canReview: dbUser.canReview,
             };
             return true;
         }
-        catch {
+        catch (err) {
             if (isPublic) {
                 return true;
+            }
+            if (err instanceof UnauthorizedException) {
+                throw err;
             }
             throw new UnauthorizedException('Invalid, expired, or corrupted authentication token.');
         }
@@ -69,7 +106,8 @@ let JwtAuthGuard = class JwtAuthGuard {
 JwtAuthGuard = __decorate([
     Injectable(),
     __metadata("design:paramtypes", [JwtService,
-        Reflector])
+        Reflector,
+        PrismaService])
 ], JwtAuthGuard);
 export { JwtAuthGuard };
 //# sourceMappingURL=jwt-auth.guard.js.map

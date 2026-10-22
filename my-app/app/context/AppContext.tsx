@@ -80,6 +80,9 @@ interface AppContextType {
   markNotificationAsRead: (id: string) => void;
   markAllNotificationsAsRead: () => void;
   clearNotifications: () => void;
+  hasMoreNotifications: boolean;
+  isLoadingOlderNotifications: boolean;
+  loadOlderNotifications: () => Promise<void>;
   markConversationAsRead: (userId?: string) => void;
   chatPage: number;
   chatTotal: number;
@@ -295,10 +298,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return u.role === 'admin' ? 'freeproducts_notifications_admin' : `freeproducts_notifications_user_${u.id}`;
   };
 
-  // Notifications state
+  // Notifications state & pagination
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState<number>(0);
+  const [notificationPage, setNotificationPage] = useState<number>(1);
+  const [hasMoreNotifications, setHasMoreNotifications] = useState<boolean>(false);
+  const [isLoadingOlderNotifications, setIsLoadingOlderNotifications] = useState<boolean>(false);
 
-  // Load user-specific notifications whenever user changes (login / logout / switch account)
+  // Load user-specific notifications and sync with backend API
   useEffect(() => {
     const key = getNotificationsStorageKey(user);
     if (typeof window !== 'undefined') {
@@ -308,13 +315,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           const parsed = JSON.parse(stored);
           if (Array.isArray(parsed) && parsed.length > 0) {
             setNotifications(parsed);
-            return;
+            setUnreadNotificationsCount(parsed.filter((n: any) => !n.read).length);
           }
         }
       } catch (e) {}
     }
 
-    // Role-specific initial notifications
+    // Role-specific initial notifications fallback
     const initialForUser: NotificationItem[] = user?.role === 'admin' 
       ? [
           {
@@ -348,21 +355,56 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           },
         ];
 
-    setNotifications(initialForUser);
-    if (typeof window !== 'undefined') {
+    // Fetch persisted notifications and live unread count from backend
+    const syncWithBackend = async () => {
       try {
-        localStorage.setItem(key, JSON.stringify(initialForUser));
-      } catch (e) {}
-    }
-  }, [user?.id, user?.role]);
+        const userIdParam = user?.id ? `?userId=${encodeURIComponent(user.id)}&page=1&limit=20` : '?page=1&limit=20';
+        const [notifRes, unreadRes] = await Promise.all([
+          fetch(`${API_BASE_URL}/notifications${userIdParam}`, {
+            headers: getAuthHeaders(),
+          }),
+          fetch(`${API_BASE_URL}/notifications/unread-count${user?.id ? `?userId=${encodeURIComponent(user.id)}` : ''}`, {
+            headers: getAuthHeaders(),
+          }),
+        ]);
 
-  const unreadNotificationsCount = useMemo(
-    () => notifications.filter((n) => !n.read).length,
-    [notifications]
-  );
+        if (notifRes.ok) {
+          const data = await notifRes.json();
+          if (data && Array.isArray(data.notifications) && data.notifications.length > 0) {
+            setNotifications(data.notifications);
+            setHasMoreNotifications(Boolean(data.page < data.totalPages));
+            setNotificationPage(1);
+
+            if (typeof window !== 'undefined') {
+              try {
+                localStorage.setItem(key, JSON.stringify(data.notifications));
+              } catch (e) {}
+            }
+          } else {
+            // First time or empty list: set initial items
+            setNotifications((prev) => (prev.length > 0 ? prev : initialForUser));
+          }
+        } else {
+          setNotifications((prev) => (prev.length > 0 ? prev : initialForUser));
+        }
+
+        if (unreadRes.ok) {
+          const unreadData = await unreadRes.json();
+          if (typeof unreadData.unreadCount === 'number') {
+            setUnreadNotificationsCount(unreadData.unreadCount);
+          }
+        }
+      } catch (err) {
+        setNotifications((prev) => (prev.length > 0 ? prev : initialForUser));
+      }
+    };
+
+    syncWithBackend();
+  }, [user?.id, user?.role]);
 
   const persistNotifications = (updated: NotificationItem[]) => {
     setNotifications(updated);
+    setUnreadNotificationsCount(updated.filter((n) => !n.read).length);
     const key = getNotificationsStorageKey(user);
     if (typeof window !== 'undefined') {
       try {
@@ -372,13 +414,79 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const markNotificationAsRead = (id: string) => {
-    persistNotifications(
-      notifications.map((n) => (n.id === id ? { ...n, read: true } : n))
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
     );
+    setUnreadNotificationsCount((prev) => Math.max(0, prev - 1));
+
+    const token = typeof window !== 'undefined' ? localStorage.getItem('bytedesk_token_v2') : null;
+    const socket = getSocket();
+    if (socket) {
+      socket.emit('notification:read', {
+        id,
+        notificationId: id,
+        userId: user?.id,
+        token: token || undefined,
+      });
+    }
+
+    if (user?.id) {
+      fetch(`${API_BASE_URL}/notifications/${id}/read`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ userId: user.id }),
+      }).catch(() => {});
+    }
   };
 
   const markAllNotificationsAsRead = () => {
-    persistNotifications(notifications.map((n) => ({ ...n, read: true })));
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    setUnreadNotificationsCount(0);
+
+    const token = typeof window !== 'undefined' ? localStorage.getItem('bytedesk_token_v2') : null;
+    const socket = getSocket();
+    if (socket) {
+      socket.emit('notification:read-all', {
+        userId: user?.id,
+        token: token || undefined,
+      });
+    }
+
+    if (user?.id) {
+      fetch(`${API_BASE_URL}/notifications/read-all`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ userId: user.id }),
+      }).catch(() => {});
+    }
+  };
+
+  const loadOlderNotifications = async () => {
+    if (isLoadingOlderNotifications || !hasMoreNotifications) return;
+    setIsLoadingOlderNotifications(true);
+    try {
+      const nextPage = notificationPage + 1;
+      const userIdParam = user?.id ? `?userId=${encodeURIComponent(user.id)}&page=${nextPage}&limit=20` : `?page=${nextPage}&limit=20`;
+      const res = await fetch(`${API_BASE_URL}/notifications${userIdParam}`, {
+        headers: getAuthHeaders(),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && Array.isArray(data.notifications)) {
+          setNotifications((prev) => {
+            const existingIds = new Set(prev.map((n) => n.id));
+            const newItems = data.notifications.filter((n: NotificationItem) => !existingIds.has(n.id));
+            return [...prev, ...newItems];
+          });
+          setNotificationPage(nextPage);
+          setHasMoreNotifications(Boolean(data.page < data.totalPages));
+        }
+      }
+    } catch (e) {
+      console.warn('Could not load older notifications:', e);
+    } finally {
+      setIsLoadingOlderNotifications(false);
+    }
   };
 
   const clearNotifications = () => {
@@ -733,7 +841,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           image?: string;
         }) => {
           const isAdmin = user?.role === 'admin';
-          const isBroadcast = Boolean(notif.isBroadcast || notif.type === 'product');
+          const notifType = notif.type?.toUpperCase() || '';
+          const isBroadcast = Boolean(notif.isBroadcast || notifType === 'PRODUCT' || notifType === 'ANNOUNCEMENT');
 
           // If NOT a broadcast, only discard if current client is the actual sender of this message
           if (!isBroadcast) {
@@ -745,24 +854,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             if (!isAdmin && notif.userId && user?.id && notif.userId !== user.id) return;
           }
 
-          playChime();
-          const toastIcon = notif.type === 'product' ? '🎁' : '🔔';
-          showToast(`${toastIcon} ${notif.title}: ${notif.body}`);
-          showBrowserNotification(notif.title, {
-            body: notif.body,
-            url: notif.link || (notif.type === 'product' ? '/products' : '/chat'),
-          });
+          if (settings.enableSoundAlerts) {
+            playChime();
+          }
 
-          // Append to Notification Center for THIS user/guest
+          const isProd = notifType === 'PRODUCT' || notif.type === 'product';
+          const toastIcon = isProd ? '🎁' : (notifType === 'ANNOUNCEMENT' ? '📢' : '🔔');
+          showToast(`${toastIcon} ${notif.title}: ${notif.body}`);
+
+          // Send system browser notification when page is in background
+          if (typeof document !== 'undefined' && document.hidden) {
+            showBrowserNotification(notif.title, {
+              body: notif.body,
+              url: notif.link || (isProd ? '/products' : '/chat'),
+              icon: notif.image || '/browser-icon.png',
+            });
+          }
+
+          // Append to Notification Center
           const newNotifItem: NotificationItem = {
             id: notif.id || `notif-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
             title: notif.title || 'New Notification',
             body: notif.body || 'You have received an update.',
-            type: (notif.type as any) || (notif.title.toLowerCase().includes('call') ? 'call' : 'order'),
+            type: notif.type || 'system',
             timestamp: 'Just now',
             read: false,
-            link: notif.link || (notif.type === 'product' ? '/products' : '/chat'),
+            link: notif.link || (isProd ? '/products' : '/chat'),
             sender: notif.sender || 'system',
+            image: notif.image,
           };
 
           setNotifications((prev) => {
@@ -776,6 +895,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             }
             return nextList;
           });
+          setUnreadNotificationsCount((prev) => prev + 1);
+        };
+
+        const handleNotificationRead = (data: { id?: string; notificationId?: string }) => {
+          const targetId = data.id || data.notificationId;
+          if (!targetId) return;
+          setNotifications((prev) =>
+            prev.map((n) => (n.id === targetId ? { ...n, read: true } : n))
+          );
+          setUnreadNotificationsCount((prev) => Math.max(0, prev - 1));
+        };
+
+        const handleNotificationReadAll = () => {
+          setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+          setUnreadNotificationsCount(0);
+        };
+
+        const handleUnreadCountUpdate = (data: { count?: number; unreadCount?: number }) => {
+          const cnt = typeof data.unreadCount === 'number' ? data.unreadCount : (typeof data.count === 'number' ? data.count : undefined);
+          if (typeof cnt === 'number') {
+            setUnreadNotificationsCount(cnt);
+          }
         };
 
         const handleNewProductAdded = (newProd: Product) => {
@@ -965,6 +1106,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         socket.on('newMessage', handleNewMessage);
         socket.on('typing', handleTypingEvent);
         socket.on('notification', handleNotification);
+        socket.on('notification:new', handleNotification);
+        socket.on('notification:broadcast', handleNotification);
+        socket.on('notification:read', handleNotificationRead);
+        socket.on('notification:read-all', handleNotificationReadAll);
+        socket.on('notification:unread-count', handleUnreadCountUpdate);
         socket.on('newProductAdded', handleNewProductAdded);
         socket.on('settingsUpdated', handleSettingsUpdated);
         socket.on('incomingAudioCall', handleIncomingAudioCall);
@@ -989,6 +1135,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           socket.off('newMessage', handleNewMessage);
           socket.off('typing', handleTypingEvent);
           socket.off('notification', handleNotification);
+          socket.off('notification:new', handleNotification);
+          socket.off('notification:broadcast', handleNotification);
+          socket.off('notification:read', handleNotificationRead);
+          socket.off('notification:read-all', handleNotificationReadAll);
+          socket.off('notification:unread-count', handleUnreadCountUpdate);
           socket.off('newProductAdded', handleNewProductAdded);
           socket.off('settingsUpdated', handleSettingsUpdated);
           socket.off('incomingAudioCall', handleIncomingAudioCall);
@@ -1936,6 +2087,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         markNotificationAsRead,
         markAllNotificationsAsRead,
         clearNotifications,
+        hasMoreNotifications,
+        isLoadingOlderNotifications,
+        loadOlderNotifications,
         markConversationAsRead,
         chatPage,
         chatTotal,

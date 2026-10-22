@@ -7,11 +7,12 @@ import {
   MessageBody,
   ConnectedSocket,
 } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
-import { Logger } from '@nestjs/common';
+import { Logger, Inject, forwardRef } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import type { Server, Socket } from 'socket.io';
 import { ChatService } from './chat.service.js';
 import { SendMessageDto } from './dto/send-message.dto.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 
 @WebSocketGateway({
   cors: {
@@ -47,10 +48,26 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     private readonly chatService: ChatService,
     private readonly jwtService: JwtService,
+    @Inject(forwardRef(() => NotificationsService))
+    private readonly notificationsService: NotificationsService,
   ) {}
 
-  handleConnection(client: Socket) {
+  async handleConnection(client: Socket) {
     this.logger.log(`⚡ Client connected via Socket.IO: ${client.id}`);
+    try {
+      const user = await this.resolveSocketUser(client);
+      if (user) {
+        if (user.role?.toUpperCase() === 'ADMIN') {
+          client.join('admin_room');
+          this.logger.log(`🛡️ Admin auto-joined admin_room: ${user.name || user.id}`);
+        }
+        client.join(`room_${user.id}`);
+        this.logger.log(`🔒 User auto-joined room_${user.id}`);
+
+        const unreadCount = await this.notificationsService.getUnreadCount(user.id);
+        client.emit('notification:unread-count', { count: unreadCount, unreadCount });
+      }
+    } catch {}
   }
 
   handleDisconnect(client: Socket) {
@@ -224,18 +241,59 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // 2. Save message to database
     const savedMessage = await this.chatService.createMessage(payload);
 
-    // 3. Broadcast to the target user's private room, admin room, and connected clients
-    const notificationPayload = {
-      id: `notif-${Date.now()}`,
-      title: payload.sender === 'customer' 
-        ? `New Message from ${payload.senderName || 'Reviewer'}` 
-        : `Support Reply from ${payload.senderName || 'Admin'}`,
-      body: payload.text?.slice(0, 100) || 'Sent an attachment',
+    // 3. Persist notification and dispatch FCM push + real-time Socket.IO events
+    const notifTitle = payload.sender === 'customer'
+      ? `New Message from ${payload.senderName || 'Reviewer'}`
+      : `Support Reply from ${payload.senderName || 'Admin'}`;
+    const notifBody = payload.text?.slice(0, 120) || 'Sent an attachment';
+
+    let createdNotif: any = null;
+    try {
+      if (payload.sender === 'customer') {
+        // Customer messaging Admin: persist notification for Admin
+        createdNotif = await this.notificationsService.createNotification({
+          title: notifTitle,
+          body: notifBody,
+          type: 'MESSAGE',
+          sender: payload.senderName || 'Reviewer',
+          link: savedMessage.userId ? `/admin/inbox?user=${savedMessage.userId}` : '/admin/inbox',
+        });
+
+        // Dispatch background FCM push to all registered admin devices
+        const adminTokens = await this.notificationsService.getGroupDeviceTokens('ADMIN');
+        if (adminTokens.length > 0) {
+          this.notificationsService.sendPushNotification(adminTokens, {
+            title: notifTitle,
+            body: notifBody,
+            link: savedMessage.userId ? `/admin/inbox?user=${savedMessage.userId}` : '/admin/inbox',
+            data: { type: 'MESSAGE', sender: 'customer', userId: savedMessage.userId || '' },
+          }).catch(() => {});
+        }
+      } else if (savedMessage.userId) {
+        // Admin replying to Customer: persist notification for customer (auto-dispatches FCM push)
+        createdNotif = await this.notificationsService.createNotification({
+          title: notifTitle,
+          body: notifBody,
+          type: 'MESSAGE',
+          recipientId: savedMessage.userId,
+          sender: payload.senderName || 'Admin',
+          link: '/chat',
+        });
+      }
+    } catch (notifErr: any) {
+      this.logger.warn(`Failed to process message notification: ${notifErr.message}`);
+    }
+
+    const legacyNotificationPayload = {
+      id: createdNotif?.id || `notif-${Date.now()}`,
+      title: notifTitle,
+      body: notifBody,
       sender: payload.sender,
       senderName: payload.senderName,
       userId: savedMessage.userId,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      link: payload.sender === 'customer' ? '/admin/inbox' : '/chat',
+      link: payload.sender === 'customer' ? (savedMessage.userId ? `/admin/inbox?user=${savedMessage.userId}` : '/admin/inbox') : '/chat',
+      type: 'message',
     };
 
     if (savedMessage.userId) {
@@ -243,21 +301,24 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         .to(`room_${savedMessage.userId}`)
         .to('admin_room')
         .emit('newMessage', savedMessage);
-      client.broadcast.emit('newMessage', savedMessage);
 
       if (payload.sender === 'customer') {
-        this.server.to('admin_room').emit('notification', notificationPayload);
-        client.broadcast.emit('notification', notificationPayload);
+        if (createdNotif) this.server.to('admin_room').emit('notification:new', createdNotif);
+        this.server.to('admin_room').emit('notification', legacyNotificationPayload);
       } else {
-        this.server.to(`room_${savedMessage.userId}`).emit('notification', notificationPayload);
-        client.broadcast.emit('notification', notificationPayload);
+        if (createdNotif) this.server.to(`room_${savedMessage.userId}`).emit('notification:new', createdNotif);
+        this.server.to(`room_${savedMessage.userId}`).emit('notification', legacyNotificationPayload);
+
+        try {
+          const unreadCount = await this.notificationsService.getUnreadCount(savedMessage.userId);
+          this.server.to(`room_${savedMessage.userId}`).emit('notification:unread-count', { count: unreadCount, unreadCount });
+        } catch {}
       }
     } else {
       this.server.to('admin_room').emit('newMessage', savedMessage);
-      client.broadcast.emit('newMessage', savedMessage);
       if (payload.sender === 'customer') {
-        this.server.to('admin_room').emit('notification', notificationPayload);
-        client.broadcast.emit('notification', notificationPayload);
+        if (createdNotif) this.server.to('admin_room').emit('notification:new', createdNotif);
+        this.server.to('admin_room').emit('notification', legacyNotificationPayload);
       }
     }
 
@@ -286,16 +347,38 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
         if (payload.userId) {
           this.server.to(`room_${payload.userId}`).to('admin_room').emit('newMessage', autoAdminMessage);
-          // Notify ONLY this specific customer in their private room
-          this.server.to(`room_${payload.userId}`).emit('notification', {
-            id: `notif-${Date.now()}`,
+
+          let autoNotif: any = null;
+          try {
+            autoNotif = await this.notificationsService.createNotification({
+              title: 'Support Reply from FreeProducts Support',
+              body: replyText.slice(0, 100),
+              type: 'MESSAGE',
+              recipientId: payload.userId,
+              sender: 'FreeProducts Support',
+              link: '/chat',
+            });
+          } catch {}
+
+          const autoLegacy = {
+            id: autoNotif?.id || `notif-${Date.now()}`,
             title: 'Support Reply from FreeProducts Support',
             body: replyText.slice(0, 100),
             sender: 'admin',
             senderName: 'FreeProducts Support',
             userId: payload.userId,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          });
+            link: '/chat',
+            type: 'message',
+          };
+
+          if (autoNotif) this.server.to(`room_${payload.userId}`).emit('notification:new', autoNotif);
+          this.server.to(`room_${payload.userId}`).emit('notification', autoLegacy);
+
+          try {
+            const count = await this.notificationsService.getUnreadCount(payload.userId);
+            this.server.to(`room_${payload.userId}`).emit('notification:unread-count', { count, unreadCount: count });
+          } catch {}
         } else {
           this.server.to('admin_room').emit('newMessage', autoAdminMessage);
         }
@@ -413,8 +496,20 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const isAdmin = user?.role?.toUpperCase() === 'ADMIN';
     if (!isAdmin || !payload?.product) return { success: false };
 
+    let createdNotif: any = null;
+    try {
+      createdNotif = await this.notificationsService.createNotification({
+        title: 'New Product Added! 🎁',
+        body: `"${payload.product.title}" is now available to test & review for free!`,
+        type: 'PRODUCT',
+        sender: 'system',
+        image: payload.product.image,
+        link: `/p/${payload.product.id}`,
+      });
+    } catch {}
+
     const notifPayload = {
-      id: `notif-prod-${payload.product.id}-${Date.now()}`,
+      id: createdNotif?.id || `notif-prod-${payload.product.id}-${Date.now()}`,
       title: 'New Product Added! 🎁',
       body: `"${payload.product.title}" is now available to test & review for free!`,
       sender: 'system',
@@ -426,9 +521,104 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       timestamp: 'Just now',
     };
 
+    this.server.emit('notification:new', createdNotif || notifPayload);
+    this.server.emit('notification:broadcast', createdNotif || notifPayload);
     this.server.emit('notification', notifPayload);
     this.server.emit('newProductAdded', payload.product);
     return { success: true };
+  }
+
+  @SubscribeMessage('notification:read')
+  async handleNotificationRead(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: { notificationId?: string; id?: string; token?: string; userId?: string },
+  ) {
+    const user = await this.resolveSocketUser(client, payload?.token);
+    const targetUserId = user?.id || payload?.userId;
+    const notifId = payload?.notificationId || payload?.id;
+    if (!targetUserId || !notifId) return { success: false };
+
+    await this.notificationsService.markAsRead(notifId, targetUserId);
+    const unreadCount = await this.notificationsService.getUnreadCount(targetUserId);
+
+    this.server.to(`room_${targetUserId}`).emit('notification:read', {
+      id: notifId,
+      notificationId: notifId,
+      userId: targetUserId,
+    });
+    this.server.to(`room_${targetUserId}`).emit('notification:unread-count', {
+      count: unreadCount,
+      unreadCount,
+    });
+
+    return { success: true, id: notifId, unreadCount };
+  }
+
+  @SubscribeMessage('notification:read-all')
+  async handleNotificationReadAll(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: { token?: string; userId?: string },
+  ) {
+    const user = await this.resolveSocketUser(client, payload?.token);
+    const targetUserId = user?.id || payload?.userId;
+    if (!targetUserId) return { success: false };
+
+    await this.notificationsService.markAllAsRead(targetUserId);
+
+    this.server.to(`room_${targetUserId}`).emit('notification:read-all', {
+      userId: targetUserId,
+    });
+    this.server.to(`room_${targetUserId}`).emit('notification:unread-count', {
+      count: 0,
+      unreadCount: 0,
+    });
+
+    return { success: true, unreadCount: 0 };
+  }
+
+  @SubscribeMessage('notification:unread-count')
+  async handleNotificationUnreadCount(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: { token?: string; userId?: string },
+  ) {
+    const user = await this.resolveSocketUser(client, payload?.token);
+    const targetUserId = user?.id || payload?.userId;
+    if (!targetUserId) return { count: 0, unreadCount: 0 };
+
+    const count = await this.notificationsService.getUnreadCount(targetUserId);
+    client.emit('notification:unread-count', { count, unreadCount: count });
+    return { count, unreadCount: count };
+  }
+
+  @SubscribeMessage('notification:broadcast')
+  async handleNotificationBroadcast(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: { title: string; body: string; image?: string; link?: string; targetGroup?: 'ALL' | 'CLIENT' | 'ADMIN'; token?: string },
+  ) {
+    const user = await this.resolveSocketUser(client, payload?.token);
+    const isAdmin = user?.role?.toUpperCase() === 'ADMIN';
+    if (!isAdmin) {
+      return { success: false, error: 'Unauthorized: Admin access required.' };
+    }
+
+    const result = await this.notificationsService.broadcastNotification(
+      user,
+      {
+        title: payload.title,
+        body: payload.body,
+        image: payload.image,
+        link: payload.link,
+        targetGroup: payload.targetGroup || 'ALL',
+      }
+    );
+
+    if (result.notification) {
+      this.server.emit('notification:new', result.notification);
+      this.server.emit('notification:broadcast', result.notification);
+      this.server.emit('notification', result.notification);
+    }
+
+    return { ...result };
   }
 
   // =========================================================================

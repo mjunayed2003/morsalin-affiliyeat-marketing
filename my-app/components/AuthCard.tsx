@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/app/context/AuthContext';
 import { useApp } from '@/app/context/AppContext';
 import { validateUsaPhone, formatUsaPhoneInput } from '@/lib/phone';
@@ -46,6 +47,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
   } = useAuth();
 
   const { showToast } = useApp();
+  const router = useRouter();
 
   const [activeTab, setActiveTab] = useState<'login' | 'register' | 'forgot'>(initialTab);
   
@@ -321,6 +323,9 @@ export const AuthCard: React.FC<AuthCardProps> = ({
         showToast(res.message);
         stopCamera();
         if (onSuccess) onSuccess();
+        if (res.status === 'PENDING') {
+          router.push('/pending-approval');
+        }
       } else {
         setRegError(res.message);
       }
@@ -461,8 +466,21 @@ export const AuthCard: React.FC<AuthCardProps> = ({
         {activeTab === 'login' && (
           <form onSubmit={handleLoginSubmit} className="space-y-4">
             {loginError && (
-              <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 font-medium">
-                {loginError}
+              <div className={`p-3.5 border rounded-xl text-xs font-medium ${
+                loginError.toLowerCase().includes('pending') || loginError.toLowerCase().includes('awaiting')
+                  ? 'bg-amber-50 border-amber-200 text-amber-900'
+                  : 'bg-rose-50 border-rose-200 text-rose-700'
+              }`}>
+                <p>{loginError}</p>
+                {(loginError.toLowerCase().includes('pending') || loginError.toLowerCase().includes('awaiting')) && (
+                  <button
+                    type="button"
+                    onClick={() => router.push('/pending-approval')}
+                    className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-amber-900 underline hover:text-amber-950 cursor-pointer"
+                  >
+                    View Pending Approval Status &rarr;
+                  </button>
+                )}
               </div>
             )}
 

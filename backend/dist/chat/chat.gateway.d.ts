@@ -1,17 +1,19 @@
 import { OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
+import type { Server, Socket } from 'socket.io';
 import { ChatService } from './chat.service.js';
 import { SendMessageDto } from './dto/send-message.dto.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 export declare class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly chatService;
     private readonly jwtService;
+    private readonly notificationsService;
     server: Server;
     private readonly logger;
     private readonly lastCustomerMessageTimes;
     private readonly activeAudioCalls;
-    constructor(chatService: ChatService, jwtService: JwtService);
-    handleConnection(client: Socket): void;
+    constructor(chatService: ChatService, jwtService: JwtService, notificationsService: NotificationsService);
+    handleConnection(client: Socket): Promise<void>;
     handleDisconnect(client: Socket): void;
     private resolveSocketUser;
     handleJoinRoom(client: Socket, payload: {
@@ -81,6 +83,66 @@ export declare class ChatGateway implements OnGatewayConnection, OnGatewayDiscon
         token?: string;
     }): Promise<{
         success: boolean;
+    }>;
+    handleNotificationRead(client: Socket, payload: {
+        notificationId?: string;
+        id?: string;
+        token?: string;
+        userId?: string;
+    }): Promise<{
+        success: boolean;
+        id?: undefined;
+        unreadCount?: undefined;
+    } | {
+        success: boolean;
+        id: string;
+        unreadCount: number;
+    }>;
+    handleNotificationReadAll(client: Socket, payload: {
+        token?: string;
+        userId?: string;
+    }): Promise<{
+        success: boolean;
+        unreadCount?: undefined;
+    } | {
+        success: boolean;
+        unreadCount: number;
+    }>;
+    handleNotificationUnreadCount(client: Socket, payload: {
+        token?: string;
+        userId?: string;
+    }): Promise<{
+        count: number;
+        unreadCount: number;
+    }>;
+    handleNotificationBroadcast(client: Socket, payload: {
+        title: string;
+        body: string;
+        image?: string;
+        link?: string;
+        targetGroup?: 'ALL' | 'CLIENT' | 'ADMIN';
+        token?: string;
+    }): Promise<{
+        success: boolean;
+        error: string;
+    } | {
+        success: boolean;
+        notification: {
+            id: string;
+            title: string;
+            body: string;
+            type: "ANNOUNCEMENT";
+            sender: string;
+            image: string | null;
+            link: string | null;
+            isBroadcast: boolean;
+            timestamp: string;
+            createdAt: string;
+        };
+        recipientsCount: number;
+        fcmSuccessCount: number;
+        fcmFailureCount: number;
+        error?: undefined;
     }>;
     handleStartAudioCall(client: Socket, payload: {
         targetUserId?: string;

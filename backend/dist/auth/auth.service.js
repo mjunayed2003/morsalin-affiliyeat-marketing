@@ -7,20 +7,29 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+import { Injectable, BadRequestException, UnauthorizedException, Inject, forwardRef } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { MailService } from '../mail/mail.service.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
+import { ChatGateway } from '../chat/chat.gateway.js';
 import { validateAndFormatUsaPhone, formatUsaPhoneDisplay } from './utils/phone.util.js';
 import bcrypt from 'bcryptjs';
 let AuthService = class AuthService {
     prisma;
     jwtService;
     mailService;
-    constructor(prisma, jwtService, mailService) {
+    notificationsService;
+    chatGateway;
+    constructor(prisma, jwtService, mailService, notificationsService, chatGateway) {
         this.prisma = prisma;
         this.jwtService = jwtService;
         this.mailService = mailService;
+        this.notificationsService = notificationsService;
+        this.chatGateway = chatGateway;
     }
     normalizePhone(phone) {
         return phone.replace(/[\s\-()]/g, '').trim();
@@ -134,6 +143,7 @@ let AuthService = class AuthService {
                 verified: true,
                 verifiedAt: new Date(),
                 role: 'CLIENT',
+                status: 'PENDING',
             },
             select: {
                 id: true,
@@ -148,24 +158,49 @@ let AuthService = class AuthService {
                 paypalEmail: true,
                 verified: true,
                 role: true,
+                status: true,
                 createdAt: true,
             },
         });
         await this.prisma.emailOtp.deleteMany({
             where: { email: cleanEmail, type: 'REGISTER' },
         });
-        const token = await this.jwtService.signAsync({
-            sub: user.id,
-            phone: user.phone,
-            role: user.role,
-            name: user.name,
-            email: user.email,
-        });
+        try {
+            await this.notificationsService.createNotification({
+                title: 'New Registration Pending Approval',
+                body: `${user.name} (${user.email}) has registered and is awaiting admin review.`,
+                type: 'SYSTEM',
+                link: '/admin/pending-registrations',
+            });
+            if (this.chatGateway?.server) {
+                this.chatGateway.server.to('admin_room').emit('registration:pending', {
+                    id: user.id,
+                    name: user.name,
+                    email: user.email,
+                    phone: user.phone,
+                    role: user.role,
+                    status: user.status,
+                    createdAt: user.createdAt,
+                });
+            }
+        }
+        catch { }
+        try {
+            await this.notificationsService.createNotification({
+                recipientId: user.id,
+                title: 'Registration Submitted',
+                body: 'Your registration has been submitted and is awaiting admin review.',
+                type: 'SYSTEM',
+                link: '/pending-approval',
+            });
+        }
+        catch { }
         return {
             success: true,
-            message: `Account verified and created successfully! Welcome to FreeProducts.online, ${user.name}.`,
+            status: 'PENDING',
+            message: 'Your registration has been submitted and is awaiting admin review.',
             user,
-            token,
+            token: null,
         };
     }
     async sendForgotPasswordOtp(dto) {
@@ -275,6 +310,7 @@ let AuthService = class AuthService {
                 verified: true,
                 verifiedAt: new Date(),
                 role: 'CLIENT',
+                status: 'PENDING',
             },
             select: {
                 id: true,
@@ -286,21 +322,28 @@ let AuthService = class AuthService {
                 avatar: true,
                 verified: true,
                 role: true,
+                status: true,
                 createdAt: true,
             },
         });
-        const token = await this.jwtService.signAsync({
-            sub: user.id,
-            phone: user.phone,
-            role: user.role,
-            name: user.name,
-            email: user.email,
-        });
+        try {
+            await this.notificationsService.createNotification({
+                title: 'New Registration Pending Approval',
+                body: `${user.name} (${user.email || user.phone}) has registered and is awaiting admin review.`,
+                type: 'SYSTEM',
+                link: '/admin/pending-registrations',
+            });
+            if (this.chatGateway?.server) {
+                this.chatGateway.server.to('admin_room').emit('registration:pending', user);
+            }
+        }
+        catch { }
         return {
             success: true,
-            message: 'Account created successfully! Welcome to FreeProducts.online.',
+            status: 'PENDING',
+            message: 'Your registration has been submitted and is awaiting admin review.',
             user,
-            token,
+            token: null,
         };
     }
     async login(dto) {
@@ -339,6 +382,19 @@ let AuthService = class AuthService {
                 throw new UnauthorizedException('Incorrect password. Please try again or use Forgot Password.');
             }
         }
+        if (user.role !== 'ADMIN') {
+            const userStatus = (user.status || 'ACTIVE').toUpperCase();
+            if (userStatus === 'PENDING') {
+                throw new UnauthorizedException('Your registration has been submitted and is awaiting admin review. Please wait for an administrator to approve your account.');
+            }
+            if (userStatus === 'REJECTED') {
+                const reasonText = user.rejectionReason ? ` Reason: ${user.rejectionReason}` : '';
+                throw new UnauthorizedException(`Your registration was not approved by an administrator.${reasonText}`);
+            }
+            if (userStatus === 'BLOCKED') {
+                throw new UnauthorizedException('Your account has been suspended by an administrator. Please contact support.');
+            }
+        }
         const sanitizedUser = {
             id: user.id,
             name: user.name,
@@ -353,6 +409,10 @@ let AuthService = class AuthService {
             canReview: user.canReview,
             verified: user.verified,
             role: user.role,
+            status: user.status || 'ACTIVE',
+            reviewedAt: user.reviewedAt,
+            reviewedBy: user.reviewedBy,
+            rejectionReason: user.rejectionReason,
             createdAt: user.createdAt,
         };
         const token = await this.jwtService.signAsync({
@@ -392,6 +452,10 @@ let AuthService = class AuthService {
                 canReview: true,
                 verified: true,
                 role: true,
+                status: true,
+                reviewedAt: true,
+                reviewedBy: true,
+                rejectionReason: true,
                 createdAt: true,
             },
         });
@@ -399,6 +463,47 @@ let AuthService = class AuthService {
             throw new UnauthorizedException('User not found.');
         }
         return user;
+    }
+    async getRegistrationStatus(identifier) {
+        if (!identifier || !identifier.trim()) {
+            throw new BadRequestException('Identifier (email or phone) is required.');
+        }
+        const clean = identifier.trim().toLowerCase();
+        const phoneCheck = validateAndFormatUsaPhone(identifier);
+        const searchPhone = phoneCheck.isValid ? phoneCheck.formatted : this.normalizePhone(identifier);
+        const user = await this.prisma.user.findFirst({
+            where: {
+                OR: [
+                    { email: clean },
+                    { phone: searchPhone },
+                    { id: identifier.trim() },
+                ],
+            },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                phone: true,
+                status: true,
+                role: true,
+                createdAt: true,
+                reviewedAt: true,
+                rejectionReason: true,
+            },
+        });
+        if (!user) {
+            throw new BadRequestException('No account found matching this identifier.');
+        }
+        return {
+            success: true,
+            status: user.status || 'ACTIVE',
+            name: user.name,
+            email: user.email,
+            phone: user.phone,
+            createdAt: user.createdAt,
+            reviewedAt: user.reviewedAt,
+            rejectionReason: user.rejectionReason,
+        };
     }
     async guestLogin(dto) {
         if (!dto.name || !dto.name.trim()) {
@@ -463,9 +568,12 @@ let AuthService = class AuthService {
 };
 AuthService = __decorate([
     Injectable(),
+    __param(4, Inject(forwardRef(() => ChatGateway))),
     __metadata("design:paramtypes", [PrismaService,
         JwtService,
-        MailService])
+        MailService,
+        NotificationsService,
+        ChatGateway])
 ], AuthService);
 export { AuthService };
 //# sourceMappingURL=auth.service.js.map

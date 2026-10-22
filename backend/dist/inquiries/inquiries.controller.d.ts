@@ -14,9 +14,9 @@ export declare class InquiriesController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            category: string;
             title: string;
             description: string;
-            category: string;
             subCategory: string | null;
             price: number;
             originalPrice: number;
@@ -35,11 +35,11 @@ export declare class InquiriesController {
         };
     } & {
         id: string;
+        status: import("../generated/prisma/enums.js").InquiryStatus;
         createdAt: Date;
         updatedAt: Date;
         productId: string;
         userId: string;
-        status: import("../generated/prisma/enums.js").InquiryStatus;
         amazonOrderId: string | null;
         reviewUrl: string | null;
         notes: string | null;
@@ -54,9 +54,9 @@ export declare class InquiriesController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            category: string;
             title: string;
             description: string;
-            category: string;
             subCategory: string | null;
             price: number;
             originalPrice: number;
@@ -75,11 +75,11 @@ export declare class InquiriesController {
         };
     } & {
         id: string;
+        status: import("../generated/prisma/enums.js").InquiryStatus;
         createdAt: Date;
         updatedAt: Date;
         productId: string;
         userId: string;
-        status: import("../generated/prisma/enums.js").InquiryStatus;
         amazonOrderId: string | null;
         reviewUrl: string | null;
         notes: string | null;
@@ -89,9 +89,9 @@ export declare class InquiriesController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            category: string;
             title: string;
             description: string;
-            category: string;
             subCategory: string | null;
             price: number;
             originalPrice: number;
@@ -110,11 +110,11 @@ export declare class InquiriesController {
         };
     } & {
         id: string;
+        status: import("../generated/prisma/enums.js").InquiryStatus;
         createdAt: Date;
         updatedAt: Date;
         productId: string;
         userId: string;
-        status: import("../generated/prisma/enums.js").InquiryStatus;
         amazonOrderId: string | null;
         reviewUrl: string | null;
         notes: string | null;

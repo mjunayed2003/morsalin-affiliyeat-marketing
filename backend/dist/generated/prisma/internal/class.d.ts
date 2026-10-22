@@ -48,5 +48,17 @@ export interface PrismaClient<in LogOpts extends Prisma.LogLevel = never, in out
     get review(): Prisma.ReviewDelegate<ExtArgs, {
         omit: OmitOpts;
     }>;
+    get notification(): Prisma.NotificationDelegate<ExtArgs, {
+        omit: OmitOpts;
+    }>;
+    get deviceToken(): Prisma.DeviceTokenDelegate<ExtArgs, {
+        omit: OmitOpts;
+    }>;
+    get userNotificationRead(): Prisma.UserNotificationReadDelegate<ExtArgs, {
+        omit: OmitOpts;
+    }>;
+    get broadcastAuditLog(): Prisma.BroadcastAuditLogDelegate<ExtArgs, {
+        omit: OmitOpts;
+    }>;
 }
 export declare function getPrismaClientClass(): PrismaClientConstructor;

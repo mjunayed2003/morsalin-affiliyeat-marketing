@@ -8,11 +8,12 @@ import { Module } from '@nestjs/common';
 import { ProductsService } from './products.service.js';
 import { ProductsController } from './products.controller.js';
 import { ChatModule } from '../chat/chat.module.js';
+import { NotificationsModule } from '../notifications/notifications.module.js';
 let ProductsModule = class ProductsModule {
 };
 ProductsModule = __decorate([
     Module({
-        imports: [ChatModule],
+        imports: [ChatModule, NotificationsModule],
         controllers: [ProductsController],
         providers: [ProductsService],
         exports: [ProductsService],

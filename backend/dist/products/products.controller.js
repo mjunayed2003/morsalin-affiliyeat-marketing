@@ -18,12 +18,15 @@ import { RolesGuard } from '../auth/guards/roles.guard.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 import { ChatGateway } from '../chat/chat.gateway.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 let ProductsController = class ProductsController {
     productsService;
     chatGateway;
-    constructor(productsService, chatGateway) {
+    notificationsService;
+    constructor(productsService, chatGateway, notificationsService) {
         this.productsService = productsService;
         this.chatGateway = chatGateway;
+        this.notificationsService = notificationsService;
     }
     async findAll(category, search) {
         return this.productsService.findAll(category, search);
@@ -45,21 +48,35 @@ let ProductsController = class ProductsController {
     }
     async create(createProductDto) {
         const product = await this.productsService.create(createProductDto);
-        if (this.chatGateway.server) {
-            const notifPayload = {
-                id: `notif-prod-${product.id}-${Date.now()}`,
+        try {
+            const savedNotif = await this.notificationsService.createNotification({
                 title: 'New Product Added! 🎁',
                 body: `"${product.title}" is now available to test & review for free!`,
+                type: 'PRODUCT',
+                recipientId: undefined,
                 sender: 'system',
-                type: 'product',
-                link: `/p/${product.id}`,
-                productId: product.id,
-                isBroadcast: true,
                 image: product.image,
-                timestamp: 'Just now',
-            };
-            this.chatGateway.server.emit('notification', notifPayload);
-            this.chatGateway.server.emit('newProductAdded', product);
+                link: `/p/${product.id}`,
+            });
+            const tokens = await this.notificationsService.getGroupDeviceTokens('ALL');
+            if (tokens.length > 0) {
+                this.notificationsService.sendPushNotification(tokens, {
+                    title: 'New Product Added! 🎁',
+                    body: `"${product.title}" is now available to test & review for free!`,
+                    image: product.image,
+                    link: `/p/${product.id}`,
+                    data: { productId: product.id },
+                }).catch(() => { });
+            }
+            if (this.chatGateway.server) {
+                this.chatGateway.server.emit('notification:new', savedNotif);
+                this.chatGateway.server.emit('notification:broadcast', savedNotif);
+                this.chatGateway.server.emit('notification', savedNotif);
+                this.chatGateway.server.emit('newProductAdded', product);
+            }
+        }
+        catch (notifErr) {
+            console.warn('Product notification dispatch notice:', notifErr.message);
         }
         return product;
     }
@@ -142,7 +159,8 @@ __decorate([
 ProductsController = __decorate([
     Controller('products'),
     __metadata("design:paramtypes", [ProductsService,
-        ChatGateway])
+        ChatGateway,
+        NotificationsService])
 ], ProductsController);
 export { ProductsController };
 //# sourceMappingURL=products.controller.js.map

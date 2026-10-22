@@ -1,7 +1,11 @@
 import { PrismaService } from '../prisma/prisma.service.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
+import { ChatGateway } from '../chat/chat.gateway.js';
 export declare class UsersService {
     private readonly prisma;
-    constructor(prisma: PrismaService);
+    private readonly notificationsService;
+    private readonly chatGateway;
+    constructor(prisma: PrismaService, notificationsService: NotificationsService, chatGateway: ChatGateway);
     findAll(role?: string): Promise<{
         id: string;
         phone: string;
@@ -16,10 +20,45 @@ export declare class UsersService {
         verified: boolean;
         verifiedAt: Date | null;
         role: import("../generated/prisma/enums.js").Role;
+        status: string;
+        reviewedAt: Date | null;
+        reviewedBy: string | null;
+        rejectionReason: string | null;
         canReview: boolean;
         createdAt: Date;
         updatedAt: Date;
     }[]>;
+    findPendingRegistrations(page?: number, limit?: number, search?: string): Promise<{
+        users: {
+            id: string;
+            phone: string;
+            name: string;
+            email: string | null;
+            address: string | null;
+            city: string | null;
+            avatar: string | null;
+            selfieImage: string | null;
+            amazonProfileUrl: string | null;
+            paypalEmail: string | null;
+            verified: boolean;
+            verifiedAt: Date | null;
+            role: import("../generated/prisma/enums.js").Role;
+            status: string;
+            reviewedAt: Date | null;
+            reviewedBy: string | null;
+            rejectionReason: string | null;
+            canReview: boolean;
+            createdAt: Date;
+            updatedAt: Date;
+        }[];
+        total: number;
+        page: number;
+        limit: number;
+        totalPages: number;
+    }>;
+    getPendingCount(): Promise<{
+        count: number;
+    }>;
     findOne(id: string): Promise<{
         id: string;
         phone: string;
@@ -34,6 +73,10 @@ export declare class UsersService {
         verified: boolean;
         verifiedAt: Date | null;
         role: import("../generated/prisma/enums.js").Role;
+        status: string;
+        reviewedAt: Date | null;
+        reviewedBy: string | null;
+        rejectionReason: string | null;
         canReview: boolean;
         createdAt: Date;
         updatedAt: Date;
@@ -63,15 +106,79 @@ export declare class UsersService {
             };
         } & {
             id: string;
+            status: import("../generated/prisma/enums.js").InquiryStatus;
             createdAt: Date;
             updatedAt: Date;
-            productId: string;
             userId: string;
-            status: import("../generated/prisma/enums.js").InquiryStatus;
+            productId: string;
             amazonOrderId: string | null;
             reviewUrl: string | null;
             notes: string | null;
         })[];
+    }>;
+    approveRegistration(id: string, adminUser: {
+        id: string;
+        name?: string;
+        email?: string;
+    }): Promise<{
+        success: boolean;
+        message: string;
+        user: {
+            id: string;
+            phone: string;
+            name: string;
+            password: string | null;
+            email: string | null;
+            address: string | null;
+            city: string | null;
+            avatar: string | null;
+            selfieImage: string | null;
+            amazonProfileUrl: string | null;
+            paypalEmail: string | null;
+            fcmToken: string | null;
+            verified: boolean;
+            verifiedAt: Date | null;
+            role: import("../generated/prisma/enums.js").Role;
+            status: string;
+            reviewedAt: Date | null;
+            reviewedBy: string | null;
+            rejectionReason: string | null;
+            canReview: boolean;
+            createdAt: Date;
+            updatedAt: Date;
+        };
+    }>;
+    rejectRegistration(id: string, adminUser: {
+        id: string;
+        name?: string;
+        email?: string;
+    }, reason?: string): Promise<{
+        success: boolean;
+        message: string;
+        user: {
+            id: string;
+            phone: string;
+            name: string;
+            password: string | null;
+            email: string | null;
+            address: string | null;
+            city: string | null;
+            avatar: string | null;
+            selfieImage: string | null;
+            amazonProfileUrl: string | null;
+            paypalEmail: string | null;
+            fcmToken: string | null;
+            verified: boolean;
+            verifiedAt: Date | null;
+            role: import("../generated/prisma/enums.js").Role;
+            status: string;
+            reviewedAt: Date | null;
+            reviewedBy: string | null;
+            rejectionReason: string | null;
+            canReview: boolean;
+            createdAt: Date;
+            updatedAt: Date;
+        };
     }>;
     updateRole(id: string, role: 'CLIENT' | 'ADMIN'): Promise<{
         id: string;
@@ -89,6 +196,37 @@ export declare class UsersService {
         verified: boolean;
         verifiedAt: Date | null;
         role: import("../generated/prisma/enums.js").Role;
+        status: string;
+        reviewedAt: Date | null;
+        reviewedBy: string | null;
+        rejectionReason: string | null;
+        canReview: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
+    updateStatus(id: string, status: 'ACTIVE' | 'PENDING' | 'REJECTED' | 'BLOCKED', adminUser?: {
+        id: string;
+        name?: string;
+    }): Promise<{
+        id: string;
+        phone: string;
+        name: string;
+        password: string | null;
+        email: string | null;
+        address: string | null;
+        city: string | null;
+        avatar: string | null;
+        selfieImage: string | null;
+        amazonProfileUrl: string | null;
+        paypalEmail: string | null;
+        fcmToken: string | null;
+        verified: boolean;
+        verifiedAt: Date | null;
+        role: import("../generated/prisma/enums.js").Role;
+        status: string;
+        reviewedAt: Date | null;
+        reviewedBy: string | null;
+        rejectionReason: string | null;
         canReview: boolean;
         createdAt: Date;
         updatedAt: Date;
@@ -109,6 +247,10 @@ export declare class UsersService {
         verified: boolean;
         verifiedAt: Date | null;
         role: import("../generated/prisma/enums.js").Role;
+        status: string;
+        reviewedAt: Date | null;
+        reviewedBy: string | null;
+        rejectionReason: string | null;
         canReview: boolean;
         createdAt: Date;
         updatedAt: Date;
@@ -129,6 +271,10 @@ export declare class UsersService {
         verified: boolean;
         verifiedAt: Date | null;
         role: import("../generated/prisma/enums.js").Role;
+        status: string;
+        reviewedAt: Date | null;
+        reviewedBy: string | null;
+        rejectionReason: string | null;
         canReview: boolean;
         createdAt: Date;
         updatedAt: Date;
@@ -149,6 +295,10 @@ export declare class UsersService {
         verified: boolean;
         verifiedAt: Date | null;
         role: import("../generated/prisma/enums.js").Role;
+        status: string;
+        reviewedAt: Date | null;
+        reviewedBy: string | null;
+        rejectionReason: string | null;
         canReview: boolean;
         createdAt: Date;
         updatedAt: Date;
