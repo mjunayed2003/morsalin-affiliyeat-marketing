@@ -30,9 +30,9 @@ interface AppContextType {
   closeChat: () => void;
   clearInquiryProduct: () => void;
   copyClientLink: (product: Product) => void;
-  addProduct: (product: Product) => void;
-  updateProduct: (product: Product) => void;
-  deleteProduct: (productId: string) => void;
+  addProduct: (product: Product) => Promise<{ success: boolean; message?: string }> | void;
+  updateProduct: (product: Product) => Promise<{ success: boolean; message?: string }> | void;
+  deleteProduct: (productId: string) => Promise<{ success: boolean; message?: string }> | void;
   resetProducts: () => void;
   sendCustomerMessage: (text: string, image?: string, productInfo?: { title: string; price: number; image: string }) => void;
   sendAdminReply: (text: string, image?: string, targetUserId?: string) => void;
@@ -56,6 +56,11 @@ interface AppContextType {
   markAllNotificationsAsRead: () => void;
   clearNotifications: () => void;
   markConversationAsRead: (userId?: string) => void;
+  chatPage: number;
+  chatTotal: number;
+  hasMoreMessages: boolean;
+  isLoadingOlderMessages: boolean;
+  loadOlderMessages: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -143,9 +148,50 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [audioCall, setAudioCall] = useState<AudioCallState | null>(null);
+  const [chatPage, setChatPage] = useState(1);
+  const [chatTotal, setChatTotal] = useState(0);
+  const [hasMoreMessages, setHasMoreMessages] = useState(false);
+  const [isLoadingOlderMessages, setIsLoadingOlderMessages] = useState(false);
   const callTimerRef = useRef<NodeJS.Timeout | null>(null);
   const ringtoneIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const userRef = useRef(user);
+
+  // Sync products from backend API, fallback to localStorage / INITIAL_PRODUCTS
+  useEffect(() => {
+    let isMounted = true;
+    try {
+      const cached = localStorage.getItem('product_perks_catalog_v4');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setProducts(parsed);
+        }
+      }
+    } catch {}
+
+    fetch(`${API_BASE_URL}/products`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((serverProducts) => {
+        if (isMounted && Array.isArray(serverProducts) && serverProducts.length > 0) {
+          setProducts((prev) => {
+            const serverIds = new Set(serverProducts.map((p: any) => p.id));
+            const customLocalOnly = prev.filter(
+              (p) => !serverIds.has(p.id) && !INITIAL_PRODUCTS.some((ip) => ip.id === p.id)
+            );
+            const merged = [...serverProducts, ...customLocalOnly];
+            try {
+              localStorage.setItem('product_perks_catalog_v4', JSON.stringify(merged));
+            } catch {}
+            return merged;
+          });
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     userRef.current = user;
@@ -702,21 +748,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const syncMessages = async () => {
       try {
-        const chatFetchUrl = `${API_BASE_URL}/chat/messages`;
+        const chatFetchUrl = `${API_BASE_URL}/chat/messages?page=1&limit=50`;
         const res = await fetch(chatFetchUrl, {
           headers: getAuthHeaders(),
         });
         if (res.ok) {
           const data = await res.json();
-          if (Array.isArray(data)) {
+          const rawList = Array.isArray(data) ? data : (data.messages || []);
+          if (!Array.isArray(data) && typeof data.total === 'number') {
+            setChatTotal(data.total);
+            setHasMoreMessages(data.hasMore ?? false);
+          }
+
+          if (Array.isArray(rawList)) {
             // Strict isolation: Non-admin users strictly get their own messages
             const isAdmin = user?.role === 'admin';
             const isolatedData = isAdmin
-              ? data
-              : data.filter((m: any) => m.userId === user.id);
+              ? rawList
+              : rawList.filter((m: any) => m.userId === user.id);
 
             setMessages((prev) => {
               const serverIds = new Set(isolatedData.map((m: any) => m.id));
+              // Preserve any older loaded messages from previous pages
+              const alreadyLoadedOlder = prev.filter(
+                (m) =>
+                  !serverIds.has(m.id) &&
+                  !m.id.startsWith('msg-') &&
+                  (!m.localId || !m.localId.startsWith('msg-'))
+              );
               // Preserve pending optimistic messages for this user
               const pendingOptimistic = prev.filter(
                 (m) =>
@@ -724,7 +783,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                   !serverIds.has(m.id) &&
                   (isAdmin || m.userId === user.id)
               );
-              const merged = dedupeMessages([...isolatedData, ...pendingOptimistic]);
+              const merged = dedupeMessages([...alreadyLoadedOlder, ...isolatedData, ...pendingOptimistic]);
               if (storageKey) {
                 try {
                   localStorage.setItem(storageKey, JSON.stringify(merged));
@@ -807,31 +866,107 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setTimeout(() => setCopiedId(null), 2500);
   };
 
-  const addProduct = (newProd: Product) => {
-    setProducts((prev) => [newProd, ...prev]);
-    fetch(`${API_BASE_URL}/products`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify(newProd),
-    }).catch(() => {});
+  const addProduct = async (newProd: Product): Promise<{ success: boolean; message?: string }> => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/products`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(newProd),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        const errorMsg =
+          data.message ||
+          (res.status === 403
+            ? 'Admin privileges required to publish products. Please make sure you are logged in as an administrator.'
+            : res.status === 401
+            ? 'Authentication required. Please log in with an Admin account first.'
+            : `Failed to save product (status ${res.status})`);
+        return { success: false, message: errorMsg };
+      }
+
+      const saved = data && data.id ? data : newProd;
+      setProducts((prev) => [saved, ...prev.filter((p) => p.id !== saved.id)]);
+      return { success: true };
+    } catch (err: any) {
+      setProducts((prev) => [newProd, ...prev]);
+      return { success: true, message: 'Saved locally' };
+    }
   };
 
-  const updateProduct = (updated: Product) => {
-    setProducts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
-    fetch(`${API_BASE_URL}/products/${updated.id}`, {
-      method: 'PATCH',
-      headers: getAuthHeaders(),
-      body: JSON.stringify(updated),
-    }).catch(() => {});
+  const updateProduct = async (updated: Product): Promise<{ success: boolean; message?: string }> => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/products/${updated.id}`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(updated),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        const errorMsg = data.message || `Failed to update product (status ${res.status})`;
+        return { success: false, message: errorMsg };
+      }
+
+      const saved = data && data.id ? data : updated;
+      setProducts((prev) => prev.map((p) => (p.id === saved.id ? saved : p)));
+      return { success: true };
+    } catch (err: any) {
+      setProducts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+      return { success: true, message: 'Updated locally' };
+    }
   };
 
-  const deleteProduct = (id: string) => {
+  const deleteProduct = async (id: string): Promise<{ success: boolean; message?: string }> => {
     setProducts((prev) => prev.filter((p) => p.id !== id));
-    fetch(`${API_BASE_URL}/products/${id}`, {
-      method: 'DELETE',
-      headers: getAuthHeaders(),
-    }).catch(() => {});
-    showToast('Product removed.');
+    try {
+      const res = await fetch(`${API_BASE_URL}/products/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        showToast(data.message || 'Error removing product on server');
+        return { success: false, message: data.message };
+      }
+      showToast('Product removed.');
+      return { success: true };
+    } catch {
+      showToast('Product removed.');
+      return { success: true };
+    }
+  };
+
+  const loadOlderMessages = async () => {
+    if (isLoadingOlderMessages || !hasMoreMessages) return;
+    setIsLoadingOlderMessages(true);
+    try {
+      const nextPage = chatPage + 1;
+      const res = await fetch(`${API_BASE_URL}/chat/messages?page=${nextPage}&limit=30`, {
+        headers: getAuthHeaders(),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const older = Array.isArray(data) ? data : (data.messages || []);
+        if (older.length > 0) {
+          const isAdmin = user?.role === 'admin';
+          const isolated = isAdmin ? older : older.filter((m: any) => m.userId === user?.id);
+          setMessages((prev) => dedupeMessages([...isolated, ...prev]));
+          setChatPage(nextPage);
+          setHasMoreMessages(data.hasMore ?? false);
+          if (typeof data.total === 'number') setChatTotal(data.total);
+        } else {
+          setHasMoreMessages(false);
+        }
+      }
+    } catch {
+      showToast('Could not load earlier messages.');
+    } finally {
+      setIsLoadingOlderMessages(false);
+    }
   };
 
   const resetProducts = () => {
@@ -1216,6 +1351,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         markAllNotificationsAsRead,
         clearNotifications,
         markConversationAsRead,
+        chatPage,
+        chatTotal,
+        hasMoreMessages,
+        isLoadingOlderMessages,
+        loadOlderMessages,
       }}
     >
       {children}

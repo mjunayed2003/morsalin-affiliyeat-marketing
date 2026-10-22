@@ -61,7 +61,20 @@ interface ConversationItem {
 }
 
 export default function AdminInboxPage() {
-  const { messages, sendAdminReply, clearMessages, showToast, isTyping, typingSender, emitTyping, markConversationAsRead } = useApp();
+  const { 
+    messages, 
+    sendAdminReply, 
+    clearMessages, 
+    showToast, 
+    isTyping, 
+    typingSender, 
+    emitTyping, 
+    markConversationAsRead,
+    hasMoreMessages,
+    isLoadingOlderMessages,
+    loadOlderMessages,
+    chatTotal,
+  } = useApp();
   const { users } = useAuth();
 
   const [selectedConversationId, setSelectedConversationId] = useState<string>('');
@@ -485,6 +498,42 @@ export default function AdminInboxPage() {
 
           {/* Messages Feed */}
           <div ref={chatFeedRef} className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5 bg-stone-50/40">
+            {hasMoreMessages && (
+              <div className="flex justify-center my-1">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const container = chatFeedRef.current;
+                    const prevScrollHeight = container ? container.scrollHeight : 0;
+                    await loadOlderMessages();
+                    requestAnimationFrame(() => {
+                      if (container) {
+                        container.scrollTop += (container.scrollHeight - prevScrollHeight);
+                      }
+                    });
+                  }}
+                  disabled={isLoadingOlderMessages}
+                  className="px-3.5 py-1.5 bg-white hover:bg-stone-100 text-[#1b3b2b] text-xs font-bold rounded-full border border-stone-200 shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  {isLoadingOlderMessages ? (
+                    <>
+                      <div className="w-3 h-3 rounded-full border-2 border-[#1b3b2b] border-t-transparent animate-spin" />
+                      <span>Loading...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>⬆ Load Earlier Messages</span>
+                      {chatTotal > messages.length && (
+                        <span className="bg-emerald-50 text-emerald-800 text-[10px] px-1.5 py-0.2 rounded-full font-mono">
+                          +{chatTotal - messages.length}
+                        </span>
+                      )}
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+
             {activeMessages.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center text-slate-400">
                 <FaComments className="w-12 h-12 mb-2 opacity-30 text-emerald-800" />

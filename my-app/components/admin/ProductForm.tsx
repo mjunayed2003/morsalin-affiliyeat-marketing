@@ -46,8 +46,49 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
+  // Compress local image file using canvas to keep payload small (<200KB)
+  const compressImageFile = (file: File, maxWidth = 1200, maxHeight = 1200, quality = 0.8): Promise<string> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let width = img.width;
+          let height = img.height;
+
+          if (width > maxWidth || height > maxHeight) {
+            if (width > height) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            } else {
+              width = Math.round((width * maxHeight) / height);
+              height = maxHeight;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            resolve(e.target?.result as string);
+            return;
+          }
+
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressed = canvas.toDataURL('image/jpeg', quality);
+          resolve(compressed);
+        };
+        img.onerror = () => resolve(e.target?.result as string);
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = () => resolve('');
+      reader.readAsDataURL(file);
+    });
+  };
+
   // Handle local image file upload
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -56,19 +97,19 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const result = event.target?.result as string;
-      setImage(result);
-      if (!gallery.includes(result)) {
-        setGallery((prev) => [result, ...prev]);
+    showToast('Optimizing image...');
+    const optimized = await compressImageFile(file);
+    if (optimized) {
+      setImage(optimized);
+      if (!gallery.includes(optimized)) {
+        setGallery((prev) => [optimized, ...prev]);
       }
       showToast('Image uploaded and set as primary.');
-    };
-    reader.readAsDataURL(file);
+    }
+    e.target.value = '';
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -117,17 +158,24 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       createdAt: initialProduct?.createdAt || new Date().toISOString(),
     };
 
-    setTimeout(() => {
-      if (isEditMode) {
-        updateProduct(productPayload);
-        showToast('Product updated successfully!');
-      } else {
-        addProduct(productPayload);
-        showToast('Product created successfully!');
+    try {
+      const res = isEditMode
+        ? await updateProduct(productPayload)
+        : await addProduct(productPayload);
+
+      if (res && (res as any).success === false) {
+        setError((res as any).message || 'Failed to save product to server.');
+        setIsSubmitting(false);
+        return;
       }
+
+      showToast(isEditMode ? 'Product updated successfully!' : 'Product created successfully!');
       setIsSubmitting(false);
       router.push('/admin/products');
-    }, 300);
+    } catch (err: any) {
+      setError(err?.message || 'Error occurred while communicating with server.');
+      setIsSubmitting(false);
+    }
   };
 
   return (

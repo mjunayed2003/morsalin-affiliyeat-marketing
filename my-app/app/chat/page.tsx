@@ -37,6 +37,10 @@ export default function ChatPage() {
     audioCall,
     startAudioCall,
     requestPushNotifications,
+    hasMoreMessages,
+    isLoadingOlderMessages,
+    loadOlderMessages,
+    chatTotal,
   } = useApp();
 
   const { user, isAuthenticated, isLoading, openAuthModal, startGuestChat } = useAuth();
@@ -416,6 +420,44 @@ export default function ChatPage() {
                 Official FreeProducts.online Review Club Chat • Verified Admin
               </span>
             </div>
+
+            {/* Pagination: Load Earlier Messages */}
+            {hasMoreMessages && (
+              <div className="flex justify-center my-2">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const scrollContainer = chatFeedRef.current;
+                    const prevScrollHeight = scrollContainer ? scrollContainer.scrollHeight : 0;
+                    await loadOlderMessages();
+                    requestAnimationFrame(() => {
+                      if (scrollContainer) {
+                        const newScrollHeight = scrollContainer.scrollHeight;
+                        scrollContainer.scrollTop += (newScrollHeight - prevScrollHeight);
+                      }
+                    });
+                  }}
+                  disabled={isLoadingOlderMessages}
+                  className="px-4 py-1.5 bg-white hover:bg-stone-100 text-[#1b3b2b] text-xs font-bold rounded-full border border-stone-200 shadow-2xs transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  {isLoadingOlderMessages ? (
+                    <>
+                      <div className="w-3 h-3 rounded-full border-2 border-[#1b3b2b] border-t-transparent animate-spin" />
+                      <span>Loading earlier messages...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>⬆ Load Earlier Messages</span>
+                      {chatTotal > messages.length && (
+                        <span className="bg-emerald-50 text-emerald-800 text-[10px] px-2 py-0.5 rounded-full font-mono">
+                          +{chatTotal - messages.length}
+                        </span>
+                      )}
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
 
             {/* Messages List */}
             {messages.map((msg) => {
