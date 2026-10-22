@@ -11,6 +11,7 @@ import { AuthModal } from '@/components/AuthModal';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { MaintenanceScreen } from '@/components/MaintenanceScreen';
+import { MobileBottomNav } from '@/components/MobileBottomNav';
 
 const MaintenanceGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const pathname = usePathname();
@@ -48,7 +49,9 @@ const MaintenanceGuard: React.FC<{ children: React.ReactNode }> = ({ children })
           </div>
         </div>
       )}
-      {children}
+      <div className={pathname?.startsWith('/admin') ? '' : 'pb-[calc(4.25rem+env(safe-area-inset-bottom,0px))] md:pb-0'}>
+        {children}
+      </div>
     </>
   );
 };
@@ -122,6 +125,9 @@ const GlobalModals: React.FC = () => {
           router.push('/admin');
         }}
       />
+
+      {/* Mobile Fixed Bottom Navigation Bar (Home, Products, Chat, WhatsApp) */}
+      <MobileBottomNav />
 
       {/* Notification Toast */}
       <NotificationToast message={toastMessage} />

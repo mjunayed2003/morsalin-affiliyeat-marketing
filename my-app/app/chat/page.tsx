@@ -349,7 +349,7 @@ export default function ChatPage() {
       <Navbar />
 
       {/* Main Chat Hub Container - strictly viewport-contained */}
-      <main className="flex-1 max-w-5xl w-full mx-auto px-2 sm:px-6 lg:px-8 py-2 sm:py-3.5 flex flex-col min-h-0 overflow-hidden">
+      <main className="flex-1 max-w-5xl w-full mx-auto px-2 sm:px-6 lg:px-8 pt-2 pb-[calc(4.25rem+env(safe-area-inset-bottom,0px))] sm:py-3.5 flex flex-col min-h-0 overflow-hidden">
         
         {/* Unified Chat Box Container: Everything in ONE box */}
         <div className="flex-1 w-full bg-white rounded-3xl border border-stone-200/90 shadow-xl overflow-hidden flex flex-col min-h-0 relative">

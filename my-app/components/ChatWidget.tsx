@@ -199,9 +199,9 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
         </div>
       )}
 
-      {/* Floating Action Buttons (WhatsApp & Live Chat at Right Bottom) */}
+      {/* Floating Action Buttons (WhatsApp & Live Chat at Right Bottom on Desktop/Tablet) */}
       {!isOpen && (
-        <div className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] right-3 sm:bottom-6 sm:right-6 z-40 flex flex-col items-end gap-2.5 sm:gap-3 pointer-events-auto">
+        <div className="hidden md:flex fixed bottom-6 right-6 z-40 flex-col items-end gap-3 pointer-events-auto">
           {/* WhatsApp Floating Action */}
           <div className="relative group flex items-center">
             {/* Tooltip on hover */}
