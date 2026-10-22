@@ -10,7 +10,7 @@ import { FaShieldHalved } from 'react-icons/fa6';
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { isAuthenticated, isAdmin } = useAuth();
+  const { isAuthenticated, isAdmin, isLoading } = useAuth();
 
   const redirectPath = searchParams.get('redirect') || '/';
   const hasError = searchParams.get('error') === 'admin_required';
@@ -28,6 +28,15 @@ function LoginContent() {
       }
     }
   }, [isAuthenticated, isAdmin, redirectPath, router]);
+
+  if (isLoading) {
+    return (
+      <main className="flex-1 flex flex-col items-center justify-center p-8 z-10 text-center">
+        <div className="w-8 h-8 rounded-full border-2 border-[#1b3b2b] border-t-transparent animate-spin mb-2" />
+        <p className="text-xs text-slate-500 font-medium">Checking session...</p>
+      </main>
+    );
+  }
 
   return (
     <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 my-6 z-10">

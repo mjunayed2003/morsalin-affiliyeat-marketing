@@ -39,7 +39,7 @@ export default function ChatPage() {
     requestPushNotifications,
   } = useApp();
 
-  const { user, isAuthenticated, openAuthModal, startGuestChat } = useAuth();
+  const { user, isAuthenticated, isLoading, openAuthModal, startGuestChat } = useAuth();
 
   const [inputText, setInputText] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -174,6 +174,19 @@ export default function ChatPage() {
       setGuestSubmitting(false);
     }
   };
+
+  // Loading view
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-stone-50/50 text-slate-900 selection:bg-[#1b3b2b] selection:text-white font-sans pb-16">
+        <Navbar />
+        <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 my-12 z-10 text-center">
+          <div className="w-10 h-10 rounded-full border-3 border-[#1b3b2b] border-t-transparent animate-spin mb-3" />
+          <p className="text-xs font-semibold text-slate-500">Connecting to chat desk...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Unauthenticated view
   if (!isAuthenticated || !user) {

@@ -171,94 +171,110 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Check saved session & token on initial load
   useEffect(() => {
-    const initAuth = async () => {
-      try {
-        const storedToken = localStorage.getItem('bytedesk_token_v2');
-        const storedUser = localStorage.getItem('bytedesk_current_user_v2');
+    let activeToken: string | null = null;
 
-        if (storedToken) {
-          setToken(storedToken);
+    try {
+      const storedToken = localStorage.getItem('bytedesk_token_v2');
+      const storedUser = localStorage.getItem('bytedesk_current_user_v2');
 
-          // Verify token against backend /auth/me
-          try {
-            const res = await fetch(`${API_BASE_URL}/auth/me`, {
-              headers: {
-                Authorization: `Bearer ${storedToken}`,
-              },
-            });
+      if (storedToken && storedUser) {
+        try {
+          const parsed = JSON.parse(storedUser);
+          if (parsed && (parsed.id || parsed.phone || parsed.name)) {
+            setUser(parsed);
+            setToken(storedToken);
+            activeToken = storedToken;
+            setAuthCookies(storedToken, parsed.role || 'client');
 
-            if (res.ok) {
-              const verifiedUser = await res.json();
-              const formattedUser: User = {
-                id: verifiedUser.id,
-                phone: verifiedUser.phone,
-                name: verifiedUser.name,
-                email: verifiedUser.email,
-                address: verifiedUser.address,
-                city: verifiedUser.city,
-                avatar: verifiedUser.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(verifiedUser.name)}&backgroundColor=1b3b2b`,
-                selfieImage: verifiedUser.selfieImage || undefined,
-                amazonProfileUrl: verifiedUser.amazonProfileUrl || undefined,
-                paypalEmail: verifiedUser.paypalEmail || undefined,
-                verified: verifiedUser.verified,
-                verifiedAt: verifiedUser.verifiedAt,
-                createdAt: verifiedUser.createdAt,
-                role: verifiedUser.role?.toLowerCase() === 'admin' ? 'admin' : 'client',
-                status: 'ACTIVE',
-                canReview: verifiedUser.canReview ?? (verifiedUser.role?.toLowerCase() === 'admin'),
-              };
-
-              setUser(formattedUser);
-              localStorage.setItem('bytedesk_current_user_v2', JSON.stringify(formattedUser));
-              setAuthCookies(storedToken, formattedUser.role);
-
-              if (formattedUser.role === 'admin') {
-                loadAdminUsers(storedToken);
-              }
-            } else {
-              localStorage.removeItem('bytedesk_token_v2');
-              localStorage.removeItem('bytedesk_current_user_v2');
-              clearAuthCookies();
-              setUser(null);
-              setToken(null);
-            }
-          } catch {
-            if (storedUser) {
-              const parsed = JSON.parse(storedUser);
-              setUser(parsed);
-              setAuthCookies(storedToken, parsed.role || 'client');
+            if (parsed.role?.toLowerCase() === 'admin') {
+              loadAdminUsers(storedToken);
             }
           }
-        } else if (storedUser) {
-          localStorage.removeItem('bytedesk_current_user_v2');
-          clearAuthCookies();
-          setUser(null);
+        } catch (err) {
+          console.warn('Auth cached user parse error:', err);
         }
+      } else if (storedToken) {
+        setToken(storedToken);
+        activeToken = storedToken;
+      } else if (storedUser) {
+        localStorage.removeItem('bytedesk_current_user_v2');
+        clearAuthCookies();
+        setUser(null);
+      }
 
-        // Initialize users from storage if available
-        const storedUsers = localStorage.getItem('bytedesk_users_v2');
-        if (storedUsers) {
-          try {
-            const parsed = JSON.parse(storedUsers);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-              setUsers(parsed);
-            } else {
-              setUsers([]);
-            }
-          } catch {
+      // Initialize users from storage if available
+      const storedUsers = localStorage.getItem('bytedesk_users_v2');
+      if (storedUsers) {
+        try {
+          const parsed = JSON.parse(storedUsers);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setUsers(parsed);
+          } else {
             setUsers([]);
           }
-        } else {
+        } catch {
           setUsers([]);
         }
-      } catch (e) {
-        console.warn('Auth localstorage init error:', e);
-      } finally {
-        setIsLoading(false);
+      } else {
+        setUsers([]);
       }
-    };
+    } catch (e) {
+      console.warn('Auth localstorage init error:', e);
+    } finally {
+      // Local storage restore is synchronous and immediate (0ms) - UI is never blocked!
+      setIsLoading(false);
+    }
 
-    initAuth();
+    // Verify token with backend /auth/me in background without blocking UI
+    if (activeToken) {
+      fetch(`${API_BASE_URL}/auth/me`, {
+        headers: {
+          Authorization: `Bearer ${activeToken}`,
+        },
+      })
+        .then(async (res) => {
+          if (res.ok) {
+            const verifiedUser = await res.json();
+            const formattedUser: User = {
+              id: verifiedUser.id,
+              phone: verifiedUser.phone,
+              name: verifiedUser.name,
+              email: verifiedUser.email,
+              address: verifiedUser.address,
+              city: verifiedUser.city,
+              avatar: verifiedUser.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(verifiedUser.name)}&backgroundColor=1b3b2b`,
+              selfieImage: verifiedUser.selfieImage || undefined,
+              amazonProfileUrl: verifiedUser.amazonProfileUrl || undefined,
+              paypalEmail: verifiedUser.paypalEmail || undefined,
+              verified: verifiedUser.verified,
+              verifiedAt: verifiedUser.verifiedAt,
+              createdAt: verifiedUser.createdAt,
+              role: verifiedUser.role?.toLowerCase() === 'admin' ? 'admin' : 'client',
+              status: 'ACTIVE',
+              canReview: verifiedUser.canReview ?? (verifiedUser.role?.toLowerCase() === 'admin'),
+            };
+
+            setUser(formattedUser);
+            localStorage.setItem('bytedesk_current_user_v2', JSON.stringify(formattedUser));
+            setAuthCookies(activeToken!, formattedUser.role);
+
+            if (formattedUser.role === 'admin') {
+              loadAdminUsers(activeToken!);
+            }
+          } else if (res.status === 401 || res.status === 403) {
+            // Token is explicitly expired or invalid on server
+            localStorage.removeItem('bytedesk_token_v2');
+            localStorage.removeItem('bytedesk_current_user_v2');
+            clearAuthCookies();
+            setUser(null);
+            setToken(null);
+          }
+        })
+        .catch((err) => {
+          // Network error or offline: Keep local authenticated session intact
+          console.warn('Backend /auth/me check failed (offline/network):', err);
+        });
+    }
   }, []);
 
   const persistUsers = (newUsers: User[]) => {

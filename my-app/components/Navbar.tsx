@@ -36,7 +36,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const pathname = usePathname();
   const router = useRouter();
   const { unreadCount } = useApp();
-  const { user, isAuthenticated, isAdmin, openAuthModal, logout } = useAuth();
+  const { user, isAuthenticated, isAdmin, isLoading, openAuthModal, logout } = useAuth();
   
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -151,7 +151,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             <NotificationCenter />
 
             {/* Authenticated User Menu OR Log In / Sign Up Buttons */}
-            {isAuthenticated && user ? (
+            {isLoading ? (
+              <div className="hidden sm:flex items-center gap-2">
+                <div className="w-24 h-9 rounded-full bg-slate-100/90 animate-pulse border border-slate-200/50" />
+              </div>
+            ) : isAuthenticated && user ? (
               <div className="relative" ref={dropdownRef}>
                 <button
                   type="button"
@@ -299,7 +303,11 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           {/* Authenticated user menu in drawer */}
-          {isAuthenticated && user ? (
+          {isLoading ? (
+            <div className="pt-3 border-t border-slate-100 flex items-center justify-center py-2">
+              <div className="w-full h-10 rounded-xl bg-slate-100 animate-pulse" />
+            </div>
+          ) : isAuthenticated && user ? (
             <div className="pt-3 border-t border-slate-100 space-y-2">
               <div className="flex items-center gap-3 p-2 bg-slate-50 rounded-xl">
                 <img

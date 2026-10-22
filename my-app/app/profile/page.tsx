@@ -25,7 +25,7 @@ import { maskPhone } from '@/app/types';
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { user, isAuthenticated, logout, updateUserProfile } = useAuth();
+  const { user, isAuthenticated, isLoading, logout, updateUserProfile } = useAuth();
   const { messages, showToast } = useApp();
 
   // Form states for profile edit
@@ -99,8 +99,13 @@ export default function ProfilePage() {
 
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         
-        {/* If user is NOT logged in */}
-        {!isAuthenticated || !user ? (
+        {/* If auth is still loading, show loading state */}
+        {isLoading ? (
+          <div className="max-w-md mx-auto py-16 flex flex-col items-center justify-center text-center">
+            <div className="w-10 h-10 rounded-full border-3 border-[#1b3b2b] border-t-transparent animate-spin mb-3" />
+            <p className="text-xs font-semibold text-slate-500">Loading your profile...</p>
+          </div>
+        ) : !isAuthenticated || !user ? (
           <div className="max-w-lg mx-auto py-8">
             <div className="flex items-center justify-center gap-2.5 mb-6">
               <div className="w-11 h-11 rounded-2xl bg-[#1b3b2b] text-white flex items-center justify-center shadow-md">
