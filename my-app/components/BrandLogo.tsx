@@ -24,10 +24,10 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
       img: 'h-8 sm:h-9',
     },
     md: {
-      img: 'h-10 sm:h-13 lg:h-15',
+      img: 'h-9 sm:h-12 lg:h-14',
     },
     lg: {
-      img: 'h-13 sm:h-18',
+      img: 'h-12 sm:h-16',
     },
   }[size];
 
@@ -42,7 +42,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
           src="/logo.jpeg"
           alt="FreeProducts.online - Amazon Product Reviews & Free Testing Club USA"
           title="FreeProducts.online - Test Free Amazon Products"
-          className={`${sizeMap.img} w-auto object-contain max-w-[170px] sm:max-w-[240px] md:max-w-[280px]`}
+          className={`${sizeMap.img} w-auto object-contain max-w-[145px] sm:max-w-[240px] md:max-w-[280px]`}
           loading="eager"
         />
       </div>

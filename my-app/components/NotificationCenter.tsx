@@ -98,14 +98,14 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-slate-700 hover:text-slate-950 hover:bg-slate-100/90 transition-all cursor-pointer focus:outline-none"
+        className="relative w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-slate-700 hover:text-slate-950 hover:bg-slate-100/90 transition-all cursor-pointer focus:outline-none"
         title="Notifications"
         aria-label="View Notifications"
       >
-        <FaBell className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+        <FaBell className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5" />
         
         {unreadNotificationsCount > 0 && (
-          <span className="absolute top-1 right-1 flex items-center justify-center min-w-4 h-4 px-1 text-[10px] font-black text-white bg-rose-500 rounded-full ring-2 ring-white shadow-xs">
+          <span className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 flex items-center justify-center min-w-3.5 h-3.5 sm:min-w-4 sm:h-4 px-1 text-[9px] sm:text-[10px] font-black text-white bg-rose-500 rounded-full ring-2 ring-white shadow-xs">
             {unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount}
           </span>
         )}
@@ -121,7 +121,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
             aria-hidden="true"
           />
 
-          <div className="fixed left-3 right-3 top-18 sm:top-full sm:left-auto sm:right-0 sm:mt-2 w-auto sm:w-96 max-w-sm mx-auto sm:mx-0 bg-white rounded-2xl shadow-2xl border border-slate-100 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+          <div className="fixed inset-x-3 top-[104px] sm:top-auto sm:inset-x-auto sm:absolute sm:top-full sm:right-0 sm:mt-2 w-auto sm:w-96 max-w-sm mx-auto sm:mx-0 bg-white rounded-2xl shadow-2xl border border-slate-100 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             
             {/* Header */}
             <div className="p-3.5 bg-gradient-to-r from-slate-900 to-[#1b3b2b] text-white flex items-center justify-between">

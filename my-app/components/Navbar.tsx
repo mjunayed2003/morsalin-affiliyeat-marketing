@@ -84,7 +84,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       <TopBar />
       <div className="bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-2xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20 sm:h-24 gap-4">
+          <div className="flex items-center justify-between h-16 sm:h-20 lg:h-24 gap-2 sm:gap-4">
           
           {/* Logo */}
           <BrandLogo />
@@ -107,18 +107,24 @@ export const Navbar: React.FC<NavbarProps> = ({
           </nav>
 
           {/* Right Action Controls */}
-          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+          <div className="flex items-center gap-1 sm:gap-3 shrink-0">
             
             {/* Search Icon / Input */}
             <div className="relative">
               {showSearchInput ? (
-                <div className="flex items-center bg-slate-50 border border-slate-200 rounded-full px-2.5 sm:px-3 py-1.5 w-36 sm:w-60 animate-in fade-in zoom-in-95 duration-150">
+                <div className="absolute inset-x-3 top-1/2 -translate-y-1/2 sm:static sm:translate-y-0 flex items-center bg-white sm:bg-slate-50 border border-slate-300 sm:border-slate-200 rounded-full px-3 py-1.5 shadow-md sm:shadow-none w-[calc(100vw-24px)] sm:w-60 z-30 animate-in fade-in zoom-in-95 duration-150">
                   <FaMagnifyingGlass className="w-3.5 h-3.5 text-slate-400 shrink-0 mr-1.5" />
                   <input
                     type="text"
                     value={searchQuery || ''}
                     onChange={(e) => onSearchChange?.(e.target.value)}
-                    placeholder="Search..."
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && searchQuery?.trim()) {
+                        router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+                        setShowSearchInput(false);
+                      }
+                    }}
+                    placeholder="Search products..."
                     className="w-full bg-transparent text-xs text-slate-900 focus:outline-none min-w-0"
                     autoFocus
                   />
@@ -127,7 +133,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       setShowSearchInput(false);
                       onSearchChange?.('');
                     }}
-                    className="text-slate-400 hover:text-slate-600 text-xs ml-1"
+                    className="text-slate-400 hover:text-slate-600 text-xs ml-1.5 p-0.5 cursor-pointer"
                   >
                     ✕
                   </button>
@@ -139,10 +145,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                     setShowSearchInput(true);
                     onSearchClick?.();
                   }}
-                  className="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 hover:text-slate-950 hover:bg-slate-100 transition-colors cursor-pointer"
+                  className="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-slate-600 hover:text-slate-950 hover:bg-slate-100 transition-colors cursor-pointer"
                   title="Search"
                 >
-                  <FaMagnifyingGlass className="w-4 h-4" />
+                  <FaMagnifyingGlass className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </button>
               )}
             </div>
@@ -160,7 +166,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   type="button"
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200/80 border border-slate-200/80 py-1.5 px-3 rounded-full transition-all cursor-pointer"
+                  className="flex items-center gap-1 sm:gap-2 bg-slate-100 hover:bg-slate-200/80 border border-slate-200/80 p-1 sm:py-1.5 sm:px-3 rounded-full transition-all cursor-pointer"
+                  title={user.name}
                 >
                   <img
                     src={user.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${user.name}`}
@@ -170,7 +177,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <span className="text-xs font-bold text-slate-800 hidden sm:inline">
                     {user.name.split(' ')[0]}
                   </span>
-                  <FaChevronDown className="w-2.5 h-2.5 text-slate-500" />
+                  <FaChevronDown className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-slate-500 mr-0.5 sm:mr-0" />
                 </button>
 
                 {/* Dropdown Menu */}
@@ -181,7 +188,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       onClick={() => setUserDropdownOpen(false)}
                       aria-hidden="true"
                     />
-                    <div className="fixed left-4 right-4 top-18 sm:top-full sm:left-auto sm:right-0 sm:mt-2 w-auto sm:w-56 max-w-xs mx-auto sm:mx-0 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50 animate-in fade-in slide-from-top-2 duration-150">
+                    <div className="absolute top-full right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50 animate-in fade-in slide-from-top-2 duration-150">
                       <div className="px-4 py-2 border-b border-slate-100">
                       <p className="text-xs font-bold text-slate-900">{user.name}</p>
                       <p className="text-[11px] text-slate-500 font-mono flex items-center gap-1 mt-0.5">
@@ -270,8 +277,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
             )}
 
-            {/* Country Badge */}
-            <span className="text-[11px] sm:text-xs font-bold text-slate-700 bg-slate-100/90 border border-slate-200/90 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full select-none tracking-wide">
+            {/* Country Badge (Desktop/Tablet) */}
+            <span className="hidden sm:inline-flex items-center text-xs font-bold text-slate-700 bg-slate-100/90 border border-slate-200/90 px-2.5 py-1 rounded-full select-none tracking-wide">
               USA
             </span>
 
@@ -293,6 +300,17 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-slate-100 bg-white/98 backdrop-blur-md px-4 pt-3 pb-8 pb-safe space-y-4 animate-in fade-in duration-200 shadow-lg">
+          {/* USA Market Region Indicator */}
+          <div className="flex items-center justify-between px-3 py-2 bg-slate-50 border border-slate-100 rounded-xl text-xs font-semibold text-slate-700">
+            <span className="flex items-center gap-2">
+              <span className="text-base leading-none">🇺🇸</span>
+              <span>Amazon US Review Market</span>
+            </span>
+            <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100/80 border border-emerald-200 px-2 py-0.5 rounded-full">
+              Verified USA
+            </span>
+          </div>
+
           <div className="flex flex-col space-y-1">
             {navLinks.map((link) => (
               <button
