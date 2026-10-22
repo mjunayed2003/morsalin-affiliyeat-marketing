@@ -13,12 +13,24 @@ export const API_BASE_URL =
 
 let socket: Socket | null = null;
 
+const getStoredToken = (): string | undefined => {
+  if (!isBrowser) return undefined;
+  try {
+    return localStorage.getItem('bytedesk_token_v2') || undefined;
+  } catch {
+    return undefined;
+  }
+};
+
 export const getSocket = (): Socket => {
   if (!socket && isBrowser) {
     socket = io(BACKEND_URL, {
       autoConnect: true,
       transports: ['websocket', 'polling'],
       withCredentials: true,
+      auth: (cb) => {
+        cb({ token: getStoredToken() });
+      },
       reconnection: true,
       reconnectionAttempts: Infinity,
       reconnectionDelay: 1000,
@@ -39,4 +51,14 @@ export const getSocket = (): Socket => {
     });
   }
   return socket as Socket;
+};
+
+export const updateSocketAuth = (token?: string) => {
+  if (socket) {
+    const activeToken = token || getStoredToken();
+    socket.auth = { token: activeToken };
+    if (!socket.connected) {
+      socket.connect();
+    }
+  }
 };

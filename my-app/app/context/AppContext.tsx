@@ -717,7 +717,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           const token = typeof window !== 'undefined' ? localStorage.getItem('bytedesk_token_v2') : null;
           if (user?.role === 'admin') {
             socket.emit('joinRoom', { roomId: 'admin_room', token: token || undefined });
-          } else if (user?.id) {
+          }
+          if (user?.id) {
             socket.emit('joinRoom', { userId: user.id, token: token || undefined });
           }
         };
@@ -778,15 +779,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             setTypingSender(null);
           }
 
-          // WhatsApp Real-time Delivery & Seen Receipts
+          // Real-time Delivery & Seen Receipts
           const isRecipient = (!isAdmin && newMsg.sender === 'admin') || (isAdmin && newMsg.sender === 'customer');
           if (isRecipient && newMsg.id && !newMsg.id.startsWith('msg-')) {
             const token = typeof window !== 'undefined' ? localStorage.getItem('bytedesk_token_v2') : null;
             socket.emit('messageDelivered', { ids: [newMsg.id], userId: newMsg.userId, token: token || undefined });
             socket.emit('message:delivered', { ids: [newMsg.id], userId: newMsg.userId, token: token || undefined });
 
-            // If chat drawer/window is currently open and visible, emit SEEN immediately
-            if (isChatOpenRef.current) {
+            // If user is actively looking at chat (page or drawer), mark as SEEN immediately!
+            const isViewingChat =
+              isChatOpenRef.current ||
+              (typeof window !== 'undefined' &&
+                (window.location.pathname === '/chat' ||
+                  window.location.pathname.startsWith('/admin/inbox')));
+
+            if (isViewingChat) {
               socket.emit('markAsSeen', { ids: [newMsg.id], userId: newMsg.userId, token: token || undefined });
               socket.emit('message:read', { ids: [newMsg.id], userId: newMsg.userId, token: token || undefined });
               fetch(`${API_BASE_URL}/chat/messages/read`, {
@@ -948,6 +955,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
           if (!isIntendedRecipient) return;
 
+          if (callData.sdp) {
+            pendingOfferRef.current = callData.sdp;
+          }
+
           startRingtoneLoop();
           const incomingState: AudioCallState = {
             callId: callData.callId,
@@ -1072,23 +1083,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           }
         };
 
-        const handleMessageSeen = (data?: { ids?: string[]; seenAt?: string }) => {
-          if (data?.ids && data.ids.length > 0) {
-            const idSet = new Set(data.ids);
-            setMessages((prev) =>
-              prev.map((m) => {
-                if (idSet.has(m.id) || (m.localId && idSet.has(m.localId))) {
-                  return {
-                    ...m,
-                    read: true,
-                    status: 'SEEN' as const,
-                    seenAt: data.seenAt || new Date().toISOString(),
-                  };
-                }
-                return m;
-              })
-            );
-          }
+        const handleMessageSeen = (data?: { ids?: string[]; seenAt?: string; userId?: string }) => {
+          const idSet = data?.ids && data.ids.length > 0 ? new Set(data.ids) : null;
+          const seenTime = data?.seenAt || new Date().toISOString();
+
+          setMessages((prev) =>
+            prev.map((m) => {
+              const matchesId = idSet ? (idSet.has(m.id) || (m.localId ? idSet.has(m.localId) : false)) : false;
+              const matchesUser = data?.userId && m.userId === data.userId;
+
+              if (matchesId || matchesUser) {
+                return {
+                  ...m,
+                  read: true,
+                  status: 'SEEN' as const,
+                  seenAt: seenTime,
+                };
+              }
+              return m;
+            })
+          );
         };
 
         const handleSettingsUpdated = (newSettings: PlatformSettings) => {
@@ -1480,7 +1494,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       productInfo,
       timestamp: timeNow,
       createdAt,
-      read: true,
+      read: false,
+      status: 'SENT',
       userId: user?.id,
     };
     setMessages((prev) => dedupeMessages([...prev, newMsg]));
@@ -1546,7 +1561,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       image,
       timestamp: timeNow,
       createdAt,
-      read: true,
+      read: false,
+      status: 'SENT',
       userId: resolvedUserId || undefined,
     };
     setMessages((prev) => dedupeMessages([...prev, newMsg]));
@@ -1639,14 +1655,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (unreadIds.length > 0) {
       const socket = getSocket();
       const token = typeof window !== 'undefined' ? localStorage.getItem('bytedesk_token_v2') : null;
+      const effectiveUserId = convUserId || user?.id;
       if (socket && socket.connected) {
-        socket.emit('markAsSeen', { ids: unreadIds, userId: convUserId, token: token || undefined });
-        socket.emit('message:read', { ids: unreadIds, userId: convUserId, token: token || undefined });
+        socket.emit('markAsSeen', { ids: unreadIds, userId: effectiveUserId, token: token || undefined });
+        socket.emit('message:read', { ids: unreadIds, userId: effectiveUserId, token: token || undefined });
       }
       fetch(`${API_BASE_URL}/chat/messages/read`, {
         method: 'PATCH',
         headers: getAuthHeaders(),
-        body: JSON.stringify({ ids: unreadIds, userId: convUserId }),
+        body: JSON.stringify({ ids: unreadIds, userId: effectiveUserId }),
       }).catch(() => {});
     }
   };
@@ -1750,6 +1767,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           targetUserId,
           callerName,
           callerRole,
+          sdp: offer,
           token: token || undefined,
         });
 

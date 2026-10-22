@@ -20,7 +20,7 @@ let ChatService = class ChatService {
             minute: '2-digit',
         });
         let status = msg.status || (msg.read ? 'SEEN' : 'SENT');
-        if (msg.read && status !== 'SEEN') {
+        if (msg.read) {
             status = 'SEEN';
         }
         return {
@@ -40,7 +40,7 @@ let ChatService = class ChatService {
                 }
                 : undefined,
             timestamp: timeString,
-            read: Boolean(msg.read || status === 'SEEN'),
+            read: Boolean(msg.read),
             status,
             deliveredAt: msg.deliveredAt ? new Date(msg.deliveredAt).toISOString() : undefined,
             seenAt: msg.seenAt ? new Date(msg.seenAt).toISOString() : undefined,
@@ -127,7 +127,7 @@ let ChatService = class ChatService {
                 productTitle: dto.productInfo?.title || null,
                 productPrice: dto.productInfo?.price !== undefined ? dto.productInfo.price : null,
                 productImage: dto.productInfo?.image || null,
-                read: dto.sender === 'admin',
+                read: false,
                 userId: validUserId,
             },
             include: {
@@ -148,6 +148,7 @@ let ChatService = class ChatService {
         return {
             ...this.formatMessage(created),
             status: 'SENT',
+            read: false,
             localId: dto.localId,
         };
     }
@@ -197,9 +198,14 @@ let ChatService = class ChatService {
            WHERE "id" = ANY($2::text[])`, now, ids);
             }
             catch { }
-            return { ids, seenAt: now.toISOString() };
+            return { ids, userId, seenAt: now.toISOString() };
         }
         else if (userId) {
+            const unreadMsgs = await this.prisma.chatMessage.findMany({
+                where: { userId, read: false },
+                select: { id: true },
+            });
+            const resolvedIds = unreadMsgs.map((m) => m.id);
             await this.prisma.chatMessage.updateMany({
                 where: { userId },
                 data: { read: true },
@@ -210,7 +216,7 @@ let ChatService = class ChatService {
            WHERE "userId" = $2`, now, userId);
             }
             catch { }
-            return { userId, seenAt: now.toISOString() };
+            return { ids: resolvedIds, userId, seenAt: now.toISOString() };
         }
         else {
             await this.prisma.chatMessage.updateMany({
@@ -220,7 +226,7 @@ let ChatService = class ChatService {
                 await this.prisma.$executeRawUnsafe(`UPDATE "chat_messages" SET "status" = 'SEEN', "read" = true, "seenAt" = $1`, now);
             }
             catch { }
-            return { seenAt: now.toISOString() };
+            return { ids: [], seenAt: now.toISOString() };
         }
     }
     async createCallRecord(data) {

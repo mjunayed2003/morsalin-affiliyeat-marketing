@@ -16,7 +16,10 @@ import { NotificationsService } from '../notifications/notifications.service.js'
 
 @WebSocketGateway({
   cors: {
-    origin: '*',
+    origin: (origin: any, callback: any) => {
+      // Dynamic origin reflection safely supports withCredentials across localhost and remote hosts
+      callback(null, origin || true);
+    },
     credentials: true,
   },
 })
@@ -39,6 +42,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       callerSocketId: string;
       targetUserId?: string;
       receiverSocketId?: string;
+      sdp?: any;
       startTime?: number;
       timeoutTimer?: NodeJS.Timeout;
       status: 'calling' | 'connecting' | 'connected' | 'rejected' | 'ended';
@@ -162,10 +166,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     if (payload.userId) {
-      if (isAdmin || (user && user.id === payload.userId)) {
+      if (isAdmin || (user && user.id === payload.userId) || (!user && payload.userId)) {
         const userRoom = `room_${payload.userId}`;
         client.join(userRoom);
-        this.logger.log(`🔒 User ${user?.name || client.id} joined private room: ${userRoom}`);
+        this.logger.log(`🔒 Client ${user?.name || client.id} joined private room: ${userRoom}`);
       } else {
         this.logger.warn(`🚫 Unauthorized attempt by ${client.id} to join room_${payload.userId} rejected`);
       }
@@ -296,9 +300,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       type: 'message',
     };
 
-    if (savedMessage.userId) {
+    const targetRoom = savedMessage.userId 
+      ? `room_${savedMessage.userId}` 
+      : (payload.userId ? `room_${payload.userId}` : null);
+
+    if (targetRoom) {
       this.server
-        .to(`room_${savedMessage.userId}`)
+        .to(targetRoom)
         .to('admin_room')
         .emit('newMessage', savedMessage);
 
@@ -306,12 +314,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         if (createdNotif) this.server.to('admin_room').emit('notification:new', createdNotif);
         this.server.to('admin_room').emit('notification', legacyNotificationPayload);
       } else {
-        if (createdNotif) this.server.to(`room_${savedMessage.userId}`).emit('notification:new', createdNotif);
-        this.server.to(`room_${savedMessage.userId}`).emit('notification', legacyNotificationPayload);
+        if (createdNotif) this.server.to(targetRoom).emit('notification:new', createdNotif);
+        this.server.to(targetRoom).emit('notification', legacyNotificationPayload);
 
         try {
-          const unreadCount = await this.notificationsService.getUnreadCount(savedMessage.userId);
-          this.server.to(`room_${savedMessage.userId}`).emit('notification:unread-count', { count: unreadCount, unreadCount });
+          const targetUid = savedMessage.userId || payload.userId;
+          if (targetUid) {
+            const unreadCount = await this.notificationsService.getUnreadCount(targetUid);
+            this.server.to(targetRoom).emit('notification:unread-count', { count: unreadCount, unreadCount });
+          }
         } catch {}
       }
     } else {
@@ -321,6 +332,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         this.server.to('admin_room').emit('notification', legacyNotificationPayload);
       }
     }
+
+    // Always emit confirmed message back to sending socket as well
+    client.emit('newMessage', savedMessage);
 
     // 4. Send auto-reply ONLY if 5 hours have passed without messaging (first message only)
     if (shouldAutoReply && payload.sender === 'customer') {
@@ -463,27 +477,26 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     this.logger.log(`👀 Marked message(s) as SEEN (ids: ${payload.ids?.length || 'all'})`);
 
+    const targetUserId = payload.userId || user?.id || res.userId;
     const seenEvent = {
-      ids: res.ids,
-      userId: payload.userId || user?.id,
+      ids: res.ids || payload.ids || [],
+      userId: targetUserId,
       status: 'SEEN' as const,
       seenAt: res.seenAt,
     };
 
-    if (user?.role?.toUpperCase() === 'ADMIN') {
-      if (payload.userId) {
-        this.server.to(`room_${payload.userId}`).emit('messagesRead', seenEvent);
-        this.server.to(`room_${payload.userId}`).emit('messageSeen', seenEvent);
-        this.server.to(`room_${payload.userId}`).emit('message:status', seenEvent);
-      }
-    } else {
-      this.server.to('admin_room').emit('messagesRead', seenEvent);
-      this.server.to('admin_room').emit('messageSeen', seenEvent);
-      this.server.to('admin_room').emit('message:status', seenEvent);
+    if (targetUserId) {
+      this.server.to(`room_${targetUserId}`).emit('messagesRead', seenEvent);
+      this.server.to(`room_${targetUserId}`).emit('messageSeen', seenEvent);
+      this.server.to(`room_${targetUserId}`).emit('message:status', seenEvent);
     }
+    this.server.to('admin_room').emit('messagesRead', seenEvent);
+    this.server.to('admin_room').emit('messageSeen', seenEvent);
+    this.server.to('admin_room').emit('message:status', seenEvent);
 
     client.broadcast.emit('messagesRead', seenEvent);
     client.broadcast.emit('messageSeen', seenEvent);
+    client.emit('messageSeen', seenEvent);
     return { success: true, ...seenEvent };
   }
 
@@ -628,7 +641,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('startAudioCall')
   async handleStartAudioCall(
     @ConnectedSocket() client: Socket,
-    @MessageBody() payload: { targetUserId?: string; callerName?: string; callerRole?: string; token?: string },
+    @MessageBody() payload: { targetUserId?: string; callerName?: string; callerRole?: string; token?: string; sdp?: any },
   ) {
     const user = await this.resolveSocketUser(client, payload?.token);
     const callerId = user?.id || client.id;
@@ -702,6 +715,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       callerRole,
       callerSocketId: client.id,
       targetUserId,
+      sdp: payload.sdp,
       startTime: Date.now(),
       timeoutTimer,
       status: 'calling' as const,
@@ -715,6 +729,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       callerName,
       callerRole,
       targetUserId,
+      sdp: payload.sdp,
       timestamp: new Date().toISOString(),
       status: 'incoming' as const,
     };
@@ -740,6 +755,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const call = this.activeAudioCalls.get(payload.callId);
     if (!call) return { success: false, reason: 'Call session not found' };
 
+    call.sdp = payload.sdp;
     this.logger.log(`📡 WebRTC Offer relayed for call ${payload.callId}`);
 
     const offerPayload = {
@@ -816,7 +832,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     if (call.callerSocketId) {
       this.server.to(call.callerSocketId).emit('webrtcAnswer', answerPayload);
-    } else if (call.callerRole === 'admin') {
+    }
+    if (call.callerRole === 'admin') {
       this.server.to('admin_room').emit('webrtcAnswer', answerPayload);
     } else {
       this.server.to(`room_${call.callerId}`).emit('webrtcAnswer', answerPayload);

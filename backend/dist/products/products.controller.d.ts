@@ -10,17 +10,17 @@ export declare class ProductsController {
     constructor(productsService: ProductsService, chatGateway: ChatGateway, notificationsService: NotificationsService);
     findAll(category?: string, search?: string): Promise<{
         id: string;
+        image: string;
         createdAt: Date;
         updatedAt: Date;
+        price: number;
+        description: string;
         category: string;
         title: string;
-        description: string;
         subCategory: string | null;
-        price: number;
         originalPrice: number;
         commission: string | null;
         commissionAmount: number;
-        image: string;
         gallery: string[];
         affiliateCode: string | null;
         features: string[];
@@ -33,12 +33,12 @@ export declare class ProductsController {
     }[]>;
     getReviews(id: string): Promise<{
         id: string;
+        productId: string;
         createdAt: Date;
+        userId: string;
         updatedAt: Date;
         title: string | null;
         rating: number;
-        productId: string;
-        userId: string;
         userName: string;
         comment: string;
     }[]>;
@@ -48,12 +48,12 @@ export declare class ProductsController {
         comment: string;
     }): Promise<{
         id: string;
+        productId: string;
         createdAt: Date;
+        userId: string;
         updatedAt: Date;
         title: string | null;
         rating: number;
-        productId: string;
-        userId: string;
         userName: string;
         comment: string;
     }>;
@@ -63,17 +63,17 @@ export declare class ProductsController {
     }>;
     findOne(id: string): Promise<{
         id: string;
+        image: string;
         createdAt: Date;
         updatedAt: Date;
+        price: number;
+        description: string;
         category: string;
         title: string;
-        description: string;
         subCategory: string | null;
-        price: number;
         originalPrice: number;
         commission: string | null;
         commissionAmount: number;
-        image: string;
         gallery: string[];
         affiliateCode: string | null;
         features: string[];
@@ -86,17 +86,17 @@ export declare class ProductsController {
     }>;
     create(createProductDto: CreateProductDto): Promise<{
         id: string;
+        image: string;
         createdAt: Date;
         updatedAt: Date;
+        price: number;
+        description: string;
         category: string;
         title: string;
-        description: string;
         subCategory: string | null;
-        price: number;
         originalPrice: number;
         commission: string | null;
         commissionAmount: number;
-        image: string;
         gallery: string[];
         affiliateCode: string | null;
         features: string[];
@@ -109,17 +109,17 @@ export declare class ProductsController {
     }>;
     update(id: string, updateProductDto: UpdateProductDto): Promise<{
         id: string;
+        image: string;
         createdAt: Date;
         updatedAt: Date;
+        price: number;
+        description: string;
         category: string;
         title: string;
-        description: string;
         subCategory: string | null;
-        price: number;
         originalPrice: number;
         commission: string | null;
         commissionAmount: number;
-        image: string;
         gallery: string[];
         affiliateCode: string | null;
         features: string[];
@@ -132,17 +132,17 @@ export declare class ProductsController {
     }>;
     remove(id: string): Promise<{
         id: string;
+        image: string;
         createdAt: Date;
         updatedAt: Date;
+        price: number;
+        description: string;
         category: string;
         title: string;
-        description: string;
         subCategory: string | null;
-        price: number;
         originalPrice: number;
         commission: string | null;
         commissionAmount: number;
-        image: string;
         gallery: string[];
         affiliateCode: string | null;
         features: string[];

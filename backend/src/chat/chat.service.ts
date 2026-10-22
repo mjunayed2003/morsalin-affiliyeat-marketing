@@ -13,7 +13,7 @@ export class ChatService {
     });
 
     let status: 'SENT' | 'DELIVERED' | 'SEEN' = msg.status || (msg.read ? 'SEEN' : 'SENT');
-    if (msg.read && status !== 'SEEN') {
+    if (msg.read) {
       status = 'SEEN';
     }
 
@@ -34,7 +34,7 @@ export class ChatService {
           }
         : undefined,
       timestamp: timeString,
-      read: Boolean(msg.read || status === 'SEEN'),
+      read: Boolean(msg.read),
       status,
       deliveredAt: msg.deliveredAt ? new Date(msg.deliveredAt).toISOString() : undefined,
       seenAt: msg.seenAt ? new Date(msg.seenAt).toISOString() : undefined,
@@ -140,7 +140,7 @@ export class ChatService {
         productTitle: dto.productInfo?.title || null,
         productPrice: dto.productInfo?.price !== undefined ? dto.productInfo.price : null,
         productImage: dto.productInfo?.image || null,
-        read: dto.sender === 'admin',
+        read: false,
         userId: validUserId,
       },
       include: {
@@ -165,6 +165,7 @@ export class ChatService {
     return {
       ...this.formatMessage(created),
       status: 'SENT' as const,
+      read: false,
       localId: dto.localId,
     };
   }
@@ -225,8 +226,14 @@ export class ChatService {
           ids
         );
       } catch {}
-      return { ids, seenAt: now.toISOString() };
+      return { ids, userId, seenAt: now.toISOString() };
     } else if (userId) {
+      const unreadMsgs = await this.prisma.chatMessage.findMany({
+        where: { userId, read: false },
+        select: { id: true },
+      });
+      const resolvedIds = unreadMsgs.map((m) => m.id);
+
       await this.prisma.chatMessage.updateMany({
         where: { userId },
         data: { read: true },
@@ -240,7 +247,7 @@ export class ChatService {
           userId
         );
       } catch {}
-      return { userId, seenAt: now.toISOString() };
+      return { ids: resolvedIds, userId, seenAt: now.toISOString() };
     } else {
       await this.prisma.chatMessage.updateMany({
         data: { read: true },
@@ -251,7 +258,7 @@ export class ChatService {
           now
         );
       } catch {}
-      return { seenAt: now.toISOString() };
+      return { ids: [], seenAt: now.toISOString() };
     }
   }
 

@@ -115,10 +115,10 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
             }
         }
         if (payload.userId) {
-            if (isAdmin || (user && user.id === payload.userId)) {
+            if (isAdmin || (user && user.id === payload.userId) || (!user && payload.userId)) {
                 const userRoom = `room_${payload.userId}`;
                 client.join(userRoom);
-                this.logger.log(`🔒 User ${user?.name || client.id} joined private room: ${userRoom}`);
+                this.logger.log(`🔒 Client ${user?.name || client.id} joined private room: ${userRoom}`);
             }
             else {
                 this.logger.warn(`🚫 Unauthorized attempt by ${client.id} to join room_${payload.userId} rejected`);
@@ -232,9 +232,12 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
             link: payload.sender === 'customer' ? (savedMessage.userId ? `/admin/inbox?user=${savedMessage.userId}` : '/admin/inbox') : '/chat',
             type: 'message',
         };
-        if (savedMessage.userId) {
+        const targetRoom = savedMessage.userId
+            ? `room_${savedMessage.userId}`
+            : (payload.userId ? `room_${payload.userId}` : null);
+        if (targetRoom) {
             this.server
-                .to(`room_${savedMessage.userId}`)
+                .to(targetRoom)
                 .to('admin_room')
                 .emit('newMessage', savedMessage);
             if (payload.sender === 'customer') {
@@ -244,11 +247,14 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
             }
             else {
                 if (createdNotif)
-                    this.server.to(`room_${savedMessage.userId}`).emit('notification:new', createdNotif);
-                this.server.to(`room_${savedMessage.userId}`).emit('notification', legacyNotificationPayload);
+                    this.server.to(targetRoom).emit('notification:new', createdNotif);
+                this.server.to(targetRoom).emit('notification', legacyNotificationPayload);
                 try {
-                    const unreadCount = await this.notificationsService.getUnreadCount(savedMessage.userId);
-                    this.server.to(`room_${savedMessage.userId}`).emit('notification:unread-count', { count: unreadCount, unreadCount });
+                    const targetUid = savedMessage.userId || payload.userId;
+                    if (targetUid) {
+                        const unreadCount = await this.notificationsService.getUnreadCount(targetUid);
+                        this.server.to(targetRoom).emit('notification:unread-count', { count: unreadCount, unreadCount });
+                    }
                 }
                 catch { }
             }
@@ -261,6 +267,7 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
                 this.server.to('admin_room').emit('notification', legacyNotificationPayload);
             }
         }
+        client.emit('newMessage', savedMessage);
         if (shouldAutoReply && payload.sender === 'customer') {
             this.logger.log(`🤖 5-hour inactivity threshold met: Triggering auto-reply for customer ${clientKey}`);
             setTimeout(async () => {
@@ -373,26 +380,24 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
         const user = await this.resolveSocketUser(client, payload?.token);
         const res = await this.chatService.markAsSeen(payload.ids, payload.userId);
         this.logger.log(`👀 Marked message(s) as SEEN (ids: ${payload.ids?.length || 'all'})`);
+        const targetUserId = payload.userId || user?.id || res.userId;
         const seenEvent = {
-            ids: res.ids,
-            userId: payload.userId || user?.id,
+            ids: res.ids || payload.ids || [],
+            userId: targetUserId,
             status: 'SEEN',
             seenAt: res.seenAt,
         };
-        if (user?.role?.toUpperCase() === 'ADMIN') {
-            if (payload.userId) {
-                this.server.to(`room_${payload.userId}`).emit('messagesRead', seenEvent);
-                this.server.to(`room_${payload.userId}`).emit('messageSeen', seenEvent);
-                this.server.to(`room_${payload.userId}`).emit('message:status', seenEvent);
-            }
+        if (targetUserId) {
+            this.server.to(`room_${targetUserId}`).emit('messagesRead', seenEvent);
+            this.server.to(`room_${targetUserId}`).emit('messageSeen', seenEvent);
+            this.server.to(`room_${targetUserId}`).emit('message:status', seenEvent);
         }
-        else {
-            this.server.to('admin_room').emit('messagesRead', seenEvent);
-            this.server.to('admin_room').emit('messageSeen', seenEvent);
-            this.server.to('admin_room').emit('message:status', seenEvent);
-        }
+        this.server.to('admin_room').emit('messagesRead', seenEvent);
+        this.server.to('admin_room').emit('messageSeen', seenEvent);
+        this.server.to('admin_room').emit('message:status', seenEvent);
         client.broadcast.emit('messagesRead', seenEvent);
         client.broadcast.emit('messageSeen', seenEvent);
+        client.emit('messageSeen', seenEvent);
         return { success: true, ...seenEvent };
     }
     async handleBroadcastProduct(client, payload) {
@@ -555,6 +560,7 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
             callerRole,
             callerSocketId: client.id,
             targetUserId,
+            sdp: payload.sdp,
             startTime: Date.now(),
             timeoutTimer,
             status: 'calling',
@@ -566,6 +572,7 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
             callerName,
             callerRole,
             targetUserId,
+            sdp: payload.sdp,
             timestamp: new Date().toISOString(),
             status: 'incoming',
         };
@@ -584,6 +591,7 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
         const call = this.activeAudioCalls.get(payload.callId);
         if (!call)
             return { success: false, reason: 'Call session not found' };
+        call.sdp = payload.sdp;
         this.logger.log(`📡 WebRTC Offer relayed for call ${payload.callId}`);
         const offerPayload = {
             callId: payload.callId,
@@ -642,7 +650,7 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
         if (call.callerSocketId) {
             this.server.to(call.callerSocketId).emit('webrtcAnswer', answerPayload);
         }
-        else if (call.callerRole === 'admin') {
+        if (call.callerRole === 'admin') {
             this.server.to('admin_room').emit('webrtcAnswer', answerPayload);
         }
         else {
@@ -936,7 +944,9 @@ __decorate([
 ChatGateway = ChatGateway_1 = __decorate([
     WebSocketGateway({
         cors: {
-            origin: '*',
+            origin: (origin, callback) => {
+                callback(null, origin || true);
+            },
             credentials: true,
         },
     }),

@@ -27,6 +27,7 @@ export declare class ChatGateway implements OnGatewayConnection, OnGatewayDiscon
         token?: string;
     }): Promise<{
         status: "SENT";
+        read: boolean;
         localId: string | undefined;
         id: any;
         sender: any;
@@ -42,7 +43,6 @@ export declare class ChatGateway implements OnGatewayConnection, OnGatewayDiscon
             image: any;
         } | undefined;
         timestamp: string;
-        read: boolean;
         deliveredAt: string | undefined;
         seenAt: string | undefined;
         userId: any;
@@ -72,7 +72,7 @@ export declare class ChatGateway implements OnGatewayConnection, OnGatewayDiscon
         userId?: string;
         token?: string;
     }): Promise<{
-        ids: string[] | undefined;
+        ids: never[] | string[];
         userId: string | undefined;
         status: "SEEN";
         seenAt: string;
@@ -149,6 +149,7 @@ export declare class ChatGateway implements OnGatewayConnection, OnGatewayDiscon
         callerName?: string;
         callerRole?: string;
         token?: string;
+        sdp?: any;
     }): Promise<{
         success: boolean;
         reason: string;
@@ -161,6 +162,7 @@ export declare class ChatGateway implements OnGatewayConnection, OnGatewayDiscon
             callerName: string;
             callerRole: "customer" | "admin";
             targetUserId: string | undefined;
+            sdp: any;
             timestamp: string;
             status: "incoming";
         };

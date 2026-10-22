@@ -35,6 +35,7 @@ export declare class ChatService {
     }>;
     createMessage(dto: SendMessageDto): Promise<{
         status: "SENT";
+        read: boolean;
         localId: string | undefined;
         id: any;
         sender: any;
@@ -50,7 +51,6 @@ export declare class ChatService {
             image: any;
         } | undefined;
         timestamp: string;
-        read: boolean;
         deliveredAt: string | undefined;
         seenAt: string | undefined;
         userId: any;
@@ -58,17 +58,17 @@ export declare class ChatService {
     }>;
     getLastCustomerMessage(userId?: string): Promise<{
         id: string;
-        createdAt: Date;
-        image: string | null;
         sender: string;
         senderName: string | null;
         text: string;
+        image: string | null;
         productId: string | null;
         productTitle: string | null;
         productPrice: number | null;
         productImage: string | null;
         read: boolean;
         userId: string | null;
+        createdAt: Date;
     } | null>;
     clearMessages(userId?: string): Promise<{
         success: boolean;
@@ -76,15 +76,11 @@ export declare class ChatService {
     }>;
     markAsRead(ids?: string[], userId?: string): Promise<{
         ids: string[];
+        userId: string | undefined;
         seenAt: string;
-        userId?: undefined;
     } | {
-        userId: string;
+        ids: never[];
         seenAt: string;
-        ids?: undefined;
-    } | {
-        seenAt: string;
-        ids?: undefined;
         userId?: undefined;
     }>;
     markAsDelivered(ids: string[]): Promise<{
@@ -93,15 +89,11 @@ export declare class ChatService {
     }>;
     markAsSeen(ids?: string[], userId?: string): Promise<{
         ids: string[];
+        userId: string | undefined;
         seenAt: string;
-        userId?: undefined;
     } | {
-        userId: string;
+        ids: never[];
         seenAt: string;
-        ids?: undefined;
-    } | {
-        seenAt: string;
-        ids?: undefined;
         userId?: undefined;
     }>;
     createCallRecord(data: {

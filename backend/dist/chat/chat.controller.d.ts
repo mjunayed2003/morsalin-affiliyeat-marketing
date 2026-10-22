@@ -37,6 +37,7 @@ export declare class ChatController {
     }>;
     createMessage(dto: SendMessageDto, currentUser?: AuthenticatedUser): Promise<{
         status: "SENT";
+        read: boolean;
         localId: string | undefined;
         id: any;
         sender: any;
@@ -52,7 +53,6 @@ export declare class ChatController {
             image: any;
         } | undefined;
         timestamp: string;
-        read: boolean;
         deliveredAt: string | undefined;
         seenAt: string | undefined;
         userId: any;
@@ -68,15 +68,11 @@ export declare class ChatController {
     }>;
     markAsRead(ids?: string[], userId?: string): Promise<{
         ids: string[];
+        userId: string | undefined;
         seenAt: string;
-        userId?: undefined;
     } | {
-        userId: string;
+        ids: never[];
         seenAt: string;
-        ids?: undefined;
-    } | {
-        seenAt: string;
-        ids?: undefined;
         userId?: undefined;
     }>;
 }
