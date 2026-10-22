@@ -507,13 +507,18 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
                   <div className="flex items-center gap-1 text-[9px] text-slate-400 mt-0.5 px-1">
                     <span className="font-mono">{msg.timestamp}</span>
                     {isCustomer && (
-                      msg.read ? (
-                        <span className="inline-flex items-center gap-0.5 text-sky-600 font-bold ml-0.5" title="Seen by Support Desk">
+                      msg.status === 'SEEN' || msg.read ? (
+                        <span className="inline-flex items-center gap-0.5 text-sky-600 font-bold ml-0.5" title={`Seen ${msg.seenAt ? new Date(msg.seenAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}`}>
                           <FaCheckDouble className="w-2.5 h-2.5 text-sky-500" />
                           <span className="text-[8px]">Seen</span>
                         </span>
+                      ) : msg.status === 'DELIVERED' ? (
+                        <span className="inline-flex items-center gap-0.5 text-slate-500 font-medium ml-0.5" title={`Delivered ${msg.deliveredAt ? new Date(msg.deliveredAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}`}>
+                          <FaCheckDouble className="w-2.5 h-2.5 text-slate-400" />
+                          <span className="text-[8px]">Delivered</span>
+                        </span>
                       ) : (
-                        <span className="inline-flex items-center gap-0.5 text-slate-400 font-normal ml-0.5" title="Delivered">
+                        <span className="inline-flex items-center gap-0.5 text-slate-400 font-normal ml-0.5" title="Sent to server">
                           <FaCheck className="w-2 h-2 text-slate-400" />
                           <span className="text-[8px]">Sent</span>
                         </span>

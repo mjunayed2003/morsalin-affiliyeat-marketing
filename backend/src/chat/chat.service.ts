@@ -12,6 +12,11 @@ export class ChatService {
       minute: '2-digit',
     });
 
+    let status: 'SENT' | 'DELIVERED' | 'SEEN' = msg.status || (msg.read ? 'SEEN' : 'SENT');
+    if (msg.read && status !== 'SEEN') {
+      status = 'SEEN';
+    }
+
     return {
       id: msg.id,
       sender: msg.sender,
@@ -29,9 +34,12 @@ export class ChatService {
           }
         : undefined,
       timestamp: timeString,
-      read: msg.read,
+      read: Boolean(msg.read || status === 'SEEN'),
+      status,
+      deliveredAt: msg.deliveredAt ? new Date(msg.deliveredAt).toISOString() : undefined,
+      seenAt: msg.seenAt ? new Date(msg.seenAt).toISOString() : undefined,
       userId: msg.userId,
-      createdAt: msg.createdAt,
+      createdAt: msg.createdAt ? new Date(msg.createdAt).toISOString() : new Date().toISOString(),
     };
   }
 
@@ -147,8 +155,16 @@ export class ChatService {
       },
     });
 
+    try {
+      await this.prisma.$executeRawUnsafe(
+        `UPDATE "chat_messages" SET "status" = 'SENT' WHERE "id" = $1`,
+        created.id
+      );
+    } catch {}
+
     return {
       ...this.formatMessage(created),
+      status: 'SENT' as const,
       localId: dto.localId,
     };
   }
@@ -174,18 +190,99 @@ export class ChatService {
     return { success: true, message: 'Chat messages cleared successfully.' };
   }
 
-  async markAsRead(ids?: string[]) {
+  async markAsRead(ids?: string[], userId?: string) {
+    return this.markAsSeen(ids, userId);
+  }
+
+  async markAsDelivered(ids: string[]) {
+    if (!ids || ids.length === 0) return { updatedIds: [], deliveredAt: new Date().toISOString() };
+    const now = new Date();
+    try {
+      await this.prisma.$executeRawUnsafe(
+        `UPDATE "chat_messages" 
+         SET "status" = 'DELIVERED', "deliveredAt" = $1 
+         WHERE "id" = ANY($2::text[]) AND ("status" IS NULL OR "status" = 'SENT') AND "read" = false`,
+        now,
+        ids
+      );
+    } catch {}
+    return { updatedIds: ids, deliveredAt: now.toISOString() };
+  }
+
+  async markAsSeen(ids?: string[], userId?: string) {
+    const now = new Date();
     if (ids && ids.length > 0) {
       await this.prisma.chatMessage.updateMany({
         where: { id: { in: ids } },
         data: { read: true },
       });
+      try {
+        await this.prisma.$executeRawUnsafe(
+          `UPDATE "chat_messages" 
+           SET "status" = 'SEEN', "read" = true, "seenAt" = $1 
+           WHERE "id" = ANY($2::text[])`,
+          now,
+          ids
+        );
+      } catch {}
+      return { ids, seenAt: now.toISOString() };
+    } else if (userId) {
+      await this.prisma.chatMessage.updateMany({
+        where: { userId },
+        data: { read: true },
+      });
+      try {
+        await this.prisma.$executeRawUnsafe(
+          `UPDATE "chat_messages" 
+           SET "status" = 'SEEN', "read" = true, "seenAt" = $1 
+           WHERE "userId" = $2`,
+          now,
+          userId
+        );
+      } catch {}
+      return { userId, seenAt: now.toISOString() };
     } else {
       await this.prisma.chatMessage.updateMany({
         data: { read: true },
       });
+      try {
+        await this.prisma.$executeRawUnsafe(
+          `UPDATE "chat_messages" SET "status" = 'SEEN', "read" = true, "seenAt" = $1`,
+          now
+        );
+      } catch {}
+      return { seenAt: now.toISOString() };
     }
+  }
 
-    return { success: true };
+  async createCallRecord(data: {
+    callId: string;
+    callerId: string;
+    callerName?: string;
+    callerRole?: string;
+    receiverId?: string;
+    receiverName?: string;
+    status: string;
+    duration?: number;
+    startedAt?: Date;
+    endedAt?: Date;
+  }) {
+    try {
+      await this.prisma.$executeRawUnsafe(
+        `INSERT INTO "calls" ("id", "callerId", "callerName", "callerRole", "receiverId", "receiverName", "status", "startedAt", "endedAt", "duration")
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+         ON CONFLICT ("id") DO UPDATE SET "status" = $7, "endedAt" = $9, "duration" = $10`,
+        data.callId,
+        data.callerId,
+        data.callerName || 'Reviewer',
+        data.callerRole || 'customer',
+        data.receiverId || null,
+        data.receiverName || 'Support Desk',
+        data.status,
+        data.startedAt || new Date(),
+        data.endedAt || (data.status === 'COMPLETED' ? new Date() : null),
+        data.duration || 0
+      );
+    } catch {}
   }
 }

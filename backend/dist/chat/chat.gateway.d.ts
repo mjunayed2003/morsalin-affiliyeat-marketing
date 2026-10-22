@@ -24,6 +24,7 @@ export declare class ChatGateway implements OnGatewayConnection, OnGatewayDiscon
     handleSendMessage(client: Socket, payload: SendMessageDto & {
         token?: string;
     }): Promise<{
+        status: "SENT";
         localId: string | undefined;
         id: any;
         sender: any;
@@ -39,9 +40,11 @@ export declare class ChatGateway implements OnGatewayConnection, OnGatewayDiscon
             image: any;
         } | undefined;
         timestamp: string;
-        read: any;
+        read: boolean;
+        deliveredAt: string | undefined;
+        seenAt: string | undefined;
         userId: any;
-        createdAt: any;
+        createdAt: string;
     }>;
     handleTyping(client: Socket, payload: {
         isTyping: boolean;
@@ -49,9 +52,28 @@ export declare class ChatGateway implements OnGatewayConnection, OnGatewayDiscon
         userId?: string;
         token?: string;
     }): Promise<void>;
-    handleMarkAsRead(payload: {
-        ids?: string[];
+    handleMessageDelivered(client: Socket, payload: {
+        ids: string[];
+        userId?: string;
+        token?: string;
     }): Promise<{
+        success: boolean;
+    } | {
+        ids: string[];
+        status: "DELIVERED";
+        deliveredAt: string;
+        userId: string | undefined;
+        success: boolean;
+    }>;
+    handleMarkAsSeen(client: Socket, payload: {
+        ids?: string[];
+        userId?: string;
+        token?: string;
+    }): Promise<{
+        ids: string[] | undefined;
+        userId: string | undefined;
+        status: "SEEN";
+        seenAt: string;
         success: boolean;
     }>;
     handleBroadcastProduct(client: Socket, payload: {
@@ -67,6 +89,10 @@ export declare class ChatGateway implements OnGatewayConnection, OnGatewayDiscon
         token?: string;
     }): Promise<{
         success: boolean;
+        reason: string;
+        callData?: undefined;
+    } | {
+        success: boolean;
         callData: {
             callId: string;
             callerId: string;
@@ -74,13 +100,48 @@ export declare class ChatGateway implements OnGatewayConnection, OnGatewayDiscon
             callerRole: "customer" | "admin";
             targetUserId: string | undefined;
             timestamp: string;
-            status: "calling";
+            status: "incoming";
         };
+        reason?: undefined;
+    }>;
+    handleWebrtcOffer(client: Socket, payload: {
+        callId: string;
+        sdp: any;
+        targetUserId?: string;
+    }): Promise<{
+        success: boolean;
+        reason: string;
+    } | {
+        success: boolean;
+        reason?: undefined;
     }>;
     handleAcceptAudioCall(client: Socket, payload: {
         callId: string;
         targetUserId?: string;
+        callerId?: string;
         token?: string;
+    }): Promise<{
+        success: boolean;
+        reason: string;
+    } | {
+        success: boolean;
+        reason?: undefined;
+    }>;
+    handleWebrtcAnswer(client: Socket, payload: {
+        callId: string;
+        sdp: any;
+        targetUserId?: string;
+    }): Promise<{
+        success: boolean;
+        reason: string;
+    } | {
+        success: boolean;
+        reason?: undefined;
+    }>;
+    handleWebrtcIceCandidate(client: Socket, payload: {
+        callId: string;
+        candidate: any;
+        targetUserId?: string;
     }): Promise<{
         success: boolean;
     }>;

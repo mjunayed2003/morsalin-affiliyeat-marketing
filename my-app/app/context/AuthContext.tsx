@@ -4,18 +4,6 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '../types';
 import { API_BASE_URL } from '@/lib/socket';
 
-interface PendingOtp {
-  phone: string;
-  code: string;
-  expiresAt: number;
-}
-
-interface OtpBannerData {
-  phone: string;
-  code: string;
-  visible: boolean;
-}
-
 export type AuthModalMode = 'login' | 'register' | 'forgot-password';
 
 interface AuthContextType {
@@ -27,18 +15,9 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthModalOpen: boolean;
   authModalMode: AuthModalMode;
-  otpBanner: OtpBannerData | null;
   getAuthHeaders: () => Record<string, string>;
   openAuthModal: (mode?: AuthModalMode) => void;
   closeAuthModal: () => void;
-  registerUser: (
-    name: string,
-    phone: string,
-    password: string,
-    email?: string,
-    address?: string,
-    city?: string
-  ) => Promise<{ success: boolean; message: string }>;
   sendRegisterOtp: (data: {
     name: string;
     phone: string;
@@ -65,20 +44,9 @@ interface AuthContextType {
     code: string,
     newPassword: string
   ) => Promise<{ success: boolean; message: string }>;
-  sendOtp: (phone: string) => Promise<{ success: boolean; isExistingUser?: boolean; code?: string; message: string }>;
-  verifyOtpAndRegister: (
-    phone: string,
-    code: string,
-    name: string,
-    password: string,
-    email?: string,
-    address?: string
-  ) => Promise<{ success: boolean; message: string }>;
   loginWithPassword: (phoneOrEmail: string, password: string) => Promise<{ success: boolean; message: string }>;
-  loginWithOtp: (phone: string, code: string) => Promise<{ success: boolean; message: string }>;
   logout: () => void;
   updateUserProfile: (data: Partial<User>) => void;
-  dismissOtpBanner: () => void;
   blockUser: (userId: string) => void;
   unblockUser: (userId: string) => void;
   deleteUser: (userId: string) => void;
@@ -111,8 +79,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [token, setToken] = useState<string | null>(null);
-  const [pendingOtp, setPendingOtp] = useState<PendingOtp | null>(null);
-  const [otpBanner, setOtpBanner] = useState<OtpBannerData | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<AuthModalMode>('login');
   const [isLoading, setIsLoading] = useState(true);
@@ -312,9 +278,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsAuthModalOpen(false);
   };
 
-  const dismissOtpBanner = () => {
-    setOtpBanner(null);
-  };
 
   /**
    * STEP 1: Send Registration OTP to Gmail
@@ -479,65 +442,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Direct Client Registration
-  const registerUser = async (
-    name: string,
-    rawPhone: string,
-    password: string,
-    email?: string,
-    address?: string,
-    city?: string
-  ) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: name.trim(),
-          phone: rawPhone.trim(),
-          password,
-          email: email?.trim(),
-          address: address?.trim(),
-          city: city?.trim() || 'New York',
-        }),
-      });
-
-      const data = await response.json();
-      if (response.ok && data.success && data.user) {
-        const backendUser: User = {
-          id: data.user.id,
-          phone: data.user.phone,
-          name: data.user.name,
-          email: data.user.email || `${rawPhone}@reviewer.freeproducts.online`,
-          address: data.user.address || '',
-          city: data.user.city || 'New York',
-          avatar: data.user.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name.trim())}&backgroundColor=1b3b2b`,
-          verified: true,
-          verifiedAt: new Date().toISOString(),
-          createdAt: data.user.createdAt || new Date().toISOString(),
-          role: data.user.role?.toLowerCase() === 'admin' ? 'admin' : 'client',
-        };
-
-        setCurrentUser(backendUser, data.token);
-        setIsAuthModalOpen(false);
-
-        return {
-          success: true,
-          message: data.message || `Registration successful! Welcome to FreeProducts.online, ${backendUser.name}.`,
-        };
-      } else {
-        return {
-          success: false,
-          message: data.message || 'Registration failed. Please check details.',
-        };
-      }
-    } catch (e: any) {
-      return {
-        success: false,
-        message: e.message || 'Could not connect to authentication server.',
-      };
-    }
-  };
 
   // Log in with USA Phone OR Email + Password
   const loginWithPassword = async (phoneOrEmail: string, password: string) => {
@@ -592,36 +496,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const sendOtp = async (rawPhone: string) => {
-    const cleanPhone = normalizePhone(rawPhone);
-    const generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiry = Date.now() + 3 * 60 * 1000;
-    setPendingOtp({ phone: cleanPhone, code: generatedCode, expiresAt: expiry });
-    setOtpBanner({ phone: cleanPhone, code: generatedCode, visible: true });
-    return { success: true, code: generatedCode, message: `Code sent: ${generatedCode}` };
-  };
-
-  const verifyOtpAndRegister = async (
-    rawPhone: string,
-    code: string,
-    name: string,
-    password: string,
-    email?: string,
-    address?: string
-  ) => {
-    return registerUser(name, rawPhone, password, email, address);
-  };
-
-  const loginWithOtp = async (rawPhone: string, code: string) => {
-    const cleanPhone = normalizePhone(rawPhone);
-    const found = users.find((u) => normalizePhone(u.phone) === cleanPhone);
-    if (!found) {
-      return { success: false, message: 'Phone number not found.' };
-    }
-    setCurrentUser(found);
-    setIsAuthModalOpen(false);
-    return { success: true, message: `Logged in as ${found.name}` };
-  };
 
   const logout = () => {
     setCurrentUser(null);
@@ -803,22 +677,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         isAuthModalOpen,
         authModalMode,
-        otpBanner,
         getAuthHeaders,
         openAuthModal,
         closeAuthModal,
-        registerUser,
         sendRegisterOtp,
         verifyRegisterOtp,
         sendForgotPasswordOtp,
         resetPassword,
-        sendOtp,
-        verifyOtpAndRegister,
         loginWithPassword,
-        loginWithOtp,
         logout,
         updateUserProfile,
-        dismissOtpBanner,
         blockUser,
         unblockUser,
         deleteUser,

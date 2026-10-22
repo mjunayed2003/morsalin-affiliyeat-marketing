@@ -53,7 +53,7 @@ let MailService = MailService_1 = class MailService {
         };
     }
     getReplyTo() {
-        return process.env.SMTP_REPLY_TO || 'freeproductsonline1@gmail.com';
+        return process.env.SMTP_REPLY_TO || 'support@freeproducts.online';
     }
     async sendEmail(options) {
         const fromAddress = options.from || process.env.RESEND_FROM || 'FreeProducts.online <support@freeproducts.online>';

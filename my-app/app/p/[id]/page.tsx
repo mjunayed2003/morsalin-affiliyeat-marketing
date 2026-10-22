@@ -8,7 +8,8 @@ interface PageProps {
 
 async function getProduct(id: string) {
   try {
-    const res = await fetch(`http://localhost:3001/api/products/${id}`, { cache: 'no-store' });
+    const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api').replace(/\/$/, '');
+    const res = await fetch(`${apiUrl}/products/${id}`, { cache: 'no-store' });
     if (res.ok) {
       const data = await res.json();
       if (data && data.id) return data;

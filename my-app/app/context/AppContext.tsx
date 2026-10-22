@@ -2,11 +2,23 @@
 
 import React, { createContext, useContext, useState, useEffect, useRef, useMemo } from 'react';
 import { Product, ChatMessage, Review, AudioCallState, NotificationItem, PlatformSettings } from '../types';
-import { INITIAL_PRODUCTS, INITIAL_CHAT_MESSAGES, INITIAL_REVIEWS } from '../data/initialProducts';
+import { INITIAL_PRODUCTS } from '../data/initialProducts';
 import { getSocket, API_BASE_URL } from '@/lib/socket';
 import { showBrowserNotification, requestNotificationPermission, initFirebaseForegroundListener } from '@/lib/firebase';
 import { AudioCallModal } from '@/components/AudioCallModal';
 import { useAuth } from './AuthContext';
+import {
+  getMicrophoneAudioStream,
+  createPeerConnection,
+  addStreamToPeerConnection,
+  createWebRtcOffer,
+  createWebRtcAnswer,
+  applyWebRtcAnswer,
+  addIceCandidateSafely,
+  drainIceCandidateQueue,
+  cleanupWebRtc,
+  toggleMicrophone,
+} from '@/lib/webrtc';
 
 export const DEFAULT_PLATFORM_SETTINGS: PlatformSettings = {
   amazonTag: 'bwbh00-20',
@@ -169,40 +181,10 @@ const dedupeMessages = (list: ChatMessage[]): ChatMessage[] => {
   return result;
 };
 
-const INITIAL_NOTIFICATIONS: NotificationItem[] = [
-  {
-    id: 'notif-welcome',
-    title: 'Welcome to FreeProducts.online! 🎁',
-    body: 'Get 100% free Amazon products to test and review with USA sellers. Keep every item you review!',
-    type: 'system',
-    timestamp: 'Just now',
-    read: false,
-    link: '/products',
-  },
-  {
-    id: 'notif-call-ready',
-    title: 'Audio Call & Real-time Alerts 📞',
-    body: 'Instant audio call support and Socket.IO notifications are active on your account.',
-    type: 'call',
-    timestamp: '10m ago',
-    read: false,
-    link: '/chat',
-  },
-  {
-    id: 'notif-amazon-deal',
-    title: 'New Amazon Product Perks Added ⭐',
-    body: 'High-ticket tech & home products added for verified reviewers. Claim yours before stock ends.',
-    type: 'order',
-    timestamp: '1h ago',
-    read: true,
-    link: '/products',
-  },
-];
-
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isAuthenticated } = useAuth();
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
-  const [messages, setMessages] = useState<ChatMessage[]>(() => dedupeMessages(INITIAL_CHAT_MESSAGES));
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [typingSender, setTypingSender] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -214,10 +196,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [reviews, setReviews] = useState<Review[]>([]);
   const [audioCall, setAudioCall] = useState<AudioCallState | null>(null);
   const audioCallRef = useRef<AudioCallState | null>(null);
+  const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
+  const localStreamRef = useRef<MediaStream | null>(null);
+  const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
+  const iceCandidatesQueueRef = useRef<RTCIceCandidateInit[]>([]);
+  const pendingOfferRef = useRef<RTCSessionDescriptionInit | null>(null);
+  const isChatOpenRef = useRef(false);
 
   useEffect(() => {
     audioCallRef.current = audioCall;
   }, [audioCall]);
+
+  useEffect(() => {
+    isChatOpenRef.current = isChatOpen;
+  }, [isChatOpen]);
 
   const [chatPage, setChatPage] = useState(1);
   const [chatTotal, setChatTotal] = useState(0);
@@ -677,6 +669,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             setIsTyping(false);
             setTypingSender(null);
           }
+
+          // WhatsApp Real-time Delivery & Seen Receipts
+          const isRecipient = (!isAdmin && newMsg.sender === 'admin') || (isAdmin && newMsg.sender === 'customer');
+          if (isRecipient && newMsg.id && !newMsg.id.startsWith('msg-')) {
+            const token = typeof window !== 'undefined' ? localStorage.getItem('bytedesk_token_v2') : null;
+            socket.emit('messageDelivered', { ids: [newMsg.id], userId: newMsg.userId, token: token || undefined });
+            socket.emit('message:delivered', { ids: [newMsg.id], userId: newMsg.userId, token: token || undefined });
+
+            // If chat drawer/window is currently open and visible, emit SEEN immediately
+            if (isChatOpenRef.current) {
+              socket.emit('markAsSeen', { ids: [newMsg.id], userId: newMsg.userId, token: token || undefined });
+              socket.emit('message:read', { ids: [newMsg.id], userId: newMsg.userId, token: token || undefined });
+              fetch(`${API_BASE_URL}/chat/messages/read`, {
+                method: 'PATCH',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ ids: [newMsg.id], userId: newMsg.userId }),
+              }).catch(() => {});
+            }
+          }
         };
 
         let typingSafetyTimer: NodeJS.Timeout | null = null;
@@ -837,33 +848,104 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           });
         };
 
+        const handleWebrtcOffer = async (payload: { callId: string; sdp: any }) => {
+          pendingOfferRef.current = payload.sdp;
+          if (peerConnectionRef.current && peerConnectionRef.current.signalingState !== 'stable') {
+            try {
+              const answer = await createWebRtcAnswer(peerConnectionRef.current, payload.sdp);
+              socket.emit('webrtcAnswer', { callId: payload.callId, sdp: answer });
+              await drainIceCandidateQueue(peerConnectionRef.current, iceCandidatesQueueRef.current);
+            } catch (e) {
+              console.warn('Could not answer offer immediately:', e);
+            }
+          }
+        };
+
         const handleAudioCallAccepted = () => {
           stopRingtoneLoop();
-          setAudioCall((prev) => (prev ? { ...prev, status: 'connected' } : null));
-          showToast('📞 Call connected.');
+          setAudioCall((prev) => (prev ? { ...prev, status: 'connecting' } : null));
+          showToast('📞 Call connected. Establishing audio stream...');
+        };
+
+        const handleWebrtcAnswer = async (payload: { callId: string; sdp: any }) => {
+          if (peerConnectionRef.current) {
+            try {
+              await applyWebRtcAnswer(peerConnectionRef.current, payload.sdp);
+              await drainIceCandidateQueue(peerConnectionRef.current, iceCandidatesQueueRef.current);
+              stopRingtoneLoop();
+              setAudioCall((prev) => (prev ? { ...prev, status: 'connected' } : null));
+            } catch (e) {
+              console.warn('Error applying WebRTC answer:', e);
+            }
+          }
+        };
+
+        const handleWebrtcIceCandidate = async (payload: { callId: string; candidate: any }) => {
+          if (peerConnectionRef.current && payload.candidate) {
+            await addIceCandidateSafely(peerConnectionRef.current, payload.candidate, iceCandidatesQueueRef.current);
+          } else if (payload.candidate) {
+            iceCandidatesQueueRef.current.push(payload.candidate);
+          }
+        };
+
+        const handleAudioCallBusy = (data?: { reason?: string }) => {
+          cleanupCallResources();
+          showToast(data?.reason || 'User is currently on another call.');
+          setAudioCall((prev) => (prev ? { ...prev, status: 'busy' } : null));
+          setTimeout(() => {
+            setAudioCall(null);
+            audioCallRef.current = null;
+          }, 3500);
         };
 
         const handleAudioCallRejected = (data?: any) => {
-          stopRingtoneLoop();
-          if (callTimerRef.current) clearInterval(callTimerRef.current);
+          cleanupCallResources();
           audioCallRef.current = null;
           setAudioCall(null);
           showToast(data?.reason || 'Call was declined.');
         };
 
         const handleAudioCallEnded = (data?: any) => {
-          stopRingtoneLoop();
-          if (callTimerRef.current) clearInterval(callTimerRef.current);
+          cleanupCallResources();
           audioCallRef.current = null;
           setAudioCall(null);
-          showToast('📞 Call ended.');
+          showToast(data?.reason || '📞 Call ended.');
         };
 
-        const handleMessagesRead = (data?: { ids?: string[] }) => {
+        const handleMessageDelivered = (data?: { ids?: string[]; deliveredAt?: string }) => {
           if (data?.ids && data.ids.length > 0) {
             const idSet = new Set(data.ids);
             setMessages((prev) =>
-              prev.map((m) => (idSet.has(m.id) ? { ...m, read: true } : m))
+              prev.map((m) => {
+                if (idSet.has(m.id) || (m.localId && idSet.has(m.localId))) {
+                  if (m.status === 'SEEN' || m.read) return m;
+                  return {
+                    ...m,
+                    status: 'DELIVERED' as const,
+                    deliveredAt: data.deliveredAt || new Date().toISOString(),
+                  };
+                }
+                return m;
+              })
+            );
+          }
+        };
+
+        const handleMessageSeen = (data?: { ids?: string[]; seenAt?: string }) => {
+          if (data?.ids && data.ids.length > 0) {
+            const idSet = new Set(data.ids);
+            setMessages((prev) =>
+              prev.map((m) => {
+                if (idSet.has(m.id) || (m.localId && idSet.has(m.localId))) {
+                  return {
+                    ...m,
+                    read: true,
+                    status: 'SEEN' as const,
+                    seenAt: data.seenAt || new Date().toISOString(),
+                  };
+                }
+                return m;
+              })
             );
           }
         };
@@ -886,10 +968,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         socket.on('newProductAdded', handleNewProductAdded);
         socket.on('settingsUpdated', handleSettingsUpdated);
         socket.on('incomingAudioCall', handleIncomingAudioCall);
+        socket.on('webrtcOffer', handleWebrtcOffer);
         socket.on('audioCallAccepted', handleAudioCallAccepted);
+        socket.on('webrtcAnswer', handleWebrtcAnswer);
+        socket.on('webrtcIceCandidate', handleWebrtcIceCandidate);
+        socket.on('audioCallBusy', handleAudioCallBusy);
         socket.on('audioCallRejected', handleAudioCallRejected);
         socket.on('audioCallEnded', handleAudioCallEnded);
-        socket.on('messagesRead', handleMessagesRead);
+        socket.on('messagesRead', handleMessageSeen);
+        socket.on('messageSeen', handleMessageSeen);
+        socket.on('messageDelivered', handleMessageDelivered);
+        socket.on('message:status', (data: any) => {
+          if (data?.status === 'DELIVERED') handleMessageDelivered(data);
+          else if (data?.status === 'SEEN') handleMessageSeen(data);
+        });
 
         return () => {
           if (typingSafetyTimer) clearTimeout(typingSafetyTimer);
@@ -900,10 +992,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           socket.off('newProductAdded', handleNewProductAdded);
           socket.off('settingsUpdated', handleSettingsUpdated);
           socket.off('incomingAudioCall', handleIncomingAudioCall);
+          socket.off('webrtcOffer', handleWebrtcOffer);
           socket.off('audioCallAccepted', handleAudioCallAccepted);
+          socket.off('webrtcAnswer', handleWebrtcAnswer);
+          socket.off('webrtcIceCandidate', handleWebrtcIceCandidate);
+          socket.off('audioCallBusy', handleAudioCallBusy);
           socket.off('audioCallRejected', handleAudioCallRejected);
           socket.off('audioCallEnded', handleAudioCallEnded);
-          socket.off('messagesRead', handleMessagesRead);
+          socket.off('messagesRead', handleMessageSeen);
+          socket.off('messageSeen', handleMessageSeen);
+          socket.off('messageDelivered', handleMessageDelivered);
+          socket.off('message:status');
         };
       }
     } catch (e) {
@@ -1342,7 +1441,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (targetUserId) {
       setMessages((prev) => prev.filter((m) => m.userId !== targetUserId));
     } else {
-      setMessages(INITIAL_CHAT_MESSAGES);
+      setMessages([]);
     }
     const query = targetUserId ? `?userId=${encodeURIComponent(targetUserId)}` : '';
     fetch(`${API_BASE_URL}/chat/messages${query}`, {
@@ -1365,6 +1464,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const markConversationAsRead = (convUserId?: string) => {
     const unreadIds: string[] = [];
+    const seenAt = new Date().toISOString();
     setMessages((prev) => {
       let changed = false;
       const isAdmin = user?.role === 'admin';
@@ -1375,10 +1475,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           ? (convUserId === 'guest' || !convUserId ? !m.userId : m.userId === convUserId)
           : true;
 
-        if (matchConv && m.sender === targetSender && !m.read) {
+        if (matchConv && m.sender === targetSender && (!m.read || m.status !== 'SEEN')) {
           unreadIds.push(m.id);
           changed = true;
-          return { ...m, read: true };
+          return { ...m, read: true, status: 'SEEN' as const, seenAt };
         }
         return m;
       });
@@ -1387,25 +1487,45 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     if (unreadIds.length > 0) {
       const socket = getSocket();
-      if (socket) {
-        socket.emit('markAsRead', { ids: unreadIds });
+      const token = typeof window !== 'undefined' ? localStorage.getItem('bytedesk_token_v2') : null;
+      if (socket && socket.connected) {
+        socket.emit('markAsSeen', { ids: unreadIds, userId: convUserId, token: token || undefined });
+        socket.emit('message:read', { ids: unreadIds, userId: convUserId, token: token || undefined });
       }
       fetch(`${API_BASE_URL}/chat/messages/read`, {
         method: 'PATCH',
         headers: getAuthHeaders(),
-        body: JSON.stringify({ ids: unreadIds }),
+        body: JSON.stringify({ ids: unreadIds, userId: convUserId }),
       }).catch(() => {});
     }
   };
 
-  // Audio Call Actions
-  const startAudioCall = (targetUserId?: string, partnerName?: string) => {
+  // WebRTC Audio Calling Lifecycle & Resource Cleanup
+  const cleanupCallResources = () => {
+    stopRingtoneLoop();
+    if (callTimerRef.current) {
+      clearInterval(callTimerRef.current);
+      callTimerRef.current = null;
+    }
+    cleanupWebRtc(peerConnectionRef.current, localStreamRef.current, remoteAudioRef.current);
+    peerConnectionRef.current = null;
+    localStreamRef.current = null;
+    pendingOfferRef.current = null;
+    iceCandidatesQueueRef.current = [];
+  };
+
+  const startAudioCall = async (targetUserId?: string, partnerName?: string) => {
+    if (audioCallRef.current) {
+      showToast('You are already in a call.');
+      return;
+    }
+
     const socket = getSocket();
     const token = typeof window !== 'undefined' ? localStorage.getItem('bytedesk_token_v2') : null;
     const callerName = user?.name || (user?.role === 'admin' ? 'FreeProducts Support' : 'Reviewer');
     const callerRole = user?.role === 'admin' ? ('admin' as const) : ('customer' as const);
 
-    const callId = `call_${Date.now()}`;
+    const callId = `call_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     const newCallState: AudioCallState = {
       callId,
       callerId: user?.id || 'guest',
@@ -1418,47 +1538,198 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     audioCallRef.current = newCallState;
-    startRingtoneLoop();
     setAudioCall(newCallState);
+    startRingtoneLoop();
 
-    if (socket) {
-      socket.emit('startAudioCall', {
-        callId,
-        targetUserId,
-        callerName,
-        callerRole,
-        token: token || undefined,
-      });
+    // 1. Acquire local microphone stream with echo cancellation & noise suppression
+    let stream: MediaStream;
+    try {
+      stream = await getMicrophoneAudioStream();
+      localStreamRef.current = stream;
+    } catch (err: any) {
+      cleanupCallResources();
+      const errorMsg = err.message || 'Microphone access failed';
+      setAudioCall({ ...newCallState, status: 'ended', errorMessage: errorMsg });
+      showToast(`🎤 ${errorMsg}`);
+      setTimeout(() => {
+        setAudioCall(null);
+        audioCallRef.current = null;
+      }, 3500);
+      return;
     }
-    showToast(callerRole === 'admin' ? `📞 Calling ${partnerName || 'customer'}...` : '📞 Calling Support Desk...');
+
+    // 2. Setup RTCPeerConnection with STUN/TURN and event handlers
+    try {
+      const pc = createPeerConnection({
+        onIceCandidate: (candidate) => {
+          const sock = getSocket();
+          if (sock && sock.connected) {
+            sock.emit('webrtcIceCandidate', {
+              callId,
+              candidate,
+              targetUserId,
+            });
+          }
+        },
+        onRemoteStream: (remoteStream) => {
+          if (remoteAudioRef.current) {
+            remoteAudioRef.current.srcObject = remoteStream;
+            remoteAudioRef.current.play().catch(() => {});
+          }
+        },
+        onConnectionStateChange: (state) => {
+          if (state === 'connected') {
+            stopRingtoneLoop();
+            setAudioCall((prev) => (prev ? { ...prev, status: 'connected' } : null));
+          } else if (state === 'failed') {
+            endAudioCall();
+          }
+        },
+      });
+
+      peerConnectionRef.current = pc;
+      addStreamToPeerConnection(pc, stream);
+
+      // 3. Create WebRTC Offer
+      const offer = await createWebRtcOffer(pc);
+
+      if (socket) {
+        socket.emit('startAudioCall', {
+          callId,
+          targetUserId,
+          callerName,
+          callerRole,
+          token: token || undefined,
+        });
+
+        socket.emit('webrtcOffer', {
+          callId,
+          sdp: offer,
+          targetUserId,
+        });
+      }
+
+      showToast(callerRole === 'admin' ? `📞 Calling ${partnerName || 'customer'}...` : '📞 Calling Support Desk...');
+    } catch (err: any) {
+      cleanupCallResources();
+      setAudioCall({ ...newCallState, status: 'ended', errorMessage: err.message });
+      showToast(`Call error: ${err.message}`);
+      setTimeout(() => {
+        setAudioCall(null);
+        audioCallRef.current = null;
+      }, 3000);
+    }
   };
 
-  const acceptAudioCall = () => {
+  const acceptAudioCall = async () => {
     stopRingtoneLoop();
     if (!audioCallRef.current) return;
     const current = audioCallRef.current;
     const socket = getSocket();
     const token = typeof window !== 'undefined' ? localStorage.getItem('bytedesk_token_v2') : null;
-    if (socket) {
-      socket.emit('acceptAudioCall', {
-        callId: current.callId,
-        targetUserId: current.targetUserId,
-        token: token || undefined,
-      });
+
+    setAudioCall({ ...current, status: 'connecting' });
+
+    let stream: MediaStream;
+    try {
+      stream = await getMicrophoneAudioStream();
+      localStreamRef.current = stream;
+    } catch (err: any) {
+      const errorMsg = err.message || 'Microphone access denied';
+      showToast(`🎤 ${errorMsg}`);
+      if (socket) {
+        socket.emit('rejectAudioCall', {
+          callId: current.callId,
+          targetUserId: current.targetUserId,
+          callerId: current.callerId,
+          reason: errorMsg,
+          token: token || undefined,
+        });
+      }
+      cleanupCallResources();
+      setAudioCall({ ...current, status: 'ended', errorMessage: errorMsg });
+      setTimeout(() => {
+        setAudioCall(null);
+        audioCallRef.current = null;
+      }, 3500);
+      return;
     }
-    const updatedState: AudioCallState = { ...current, status: 'connected' };
-    audioCallRef.current = updatedState;
-    setAudioCall(updatedState);
+
+    try {
+      const pc = createPeerConnection({
+        onIceCandidate: (candidate) => {
+          const sock = getSocket();
+          if (sock && sock.connected) {
+            sock.emit('webrtcIceCandidate', {
+              callId: current.callId,
+              candidate,
+              targetUserId: current.targetUserId,
+            });
+          }
+        },
+        onRemoteStream: (remoteStream) => {
+          if (remoteAudioRef.current) {
+            remoteAudioRef.current.srcObject = remoteStream;
+            remoteAudioRef.current.play().catch(() => {});
+          }
+        },
+        onConnectionStateChange: (state) => {
+          if (state === 'connected') {
+            stopRingtoneLoop();
+            setAudioCall((prev) => (prev ? { ...prev, status: 'connected' } : null));
+          } else if (state === 'failed') {
+            endAudioCall();
+          }
+        },
+      });
+
+      peerConnectionRef.current = pc;
+      addStreamToPeerConnection(pc, stream);
+
+      if (pendingOfferRef.current) {
+        const answer = await createWebRtcAnswer(pc, pendingOfferRef.current);
+        if (socket) {
+          socket.emit('acceptAudioCall', {
+            callId: current.callId,
+            targetUserId: current.targetUserId,
+            callerId: current.callerId,
+            token: token || undefined,
+          });
+          socket.emit('webrtcAnswer', {
+            callId: current.callId,
+            sdp: answer,
+            targetUserId: current.targetUserId,
+          });
+        }
+        await drainIceCandidateQueue(pc, iceCandidatesQueueRef.current);
+      } else {
+        if (socket) {
+          socket.emit('acceptAudioCall', {
+            callId: current.callId,
+            targetUserId: current.targetUserId,
+            callerId: current.callerId,
+            token: token || undefined,
+          });
+        }
+      }
+
+      const updatedState: AudioCallState = { ...current, status: 'connecting' };
+      audioCallRef.current = updatedState;
+      setAudioCall(updatedState);
+    } catch (err: any) {
+      cleanupCallResources();
+      showToast(`Call error: ${err.message}`);
+      setAudioCall(null);
+      audioCallRef.current = null;
+    }
   };
 
   const rejectAudioCall = () => {
-    stopRingtoneLoop();
-    if (callTimerRef.current) clearInterval(callTimerRef.current);
-    if (!audioCallRef.current) return;
     const current = audioCallRef.current;
+    cleanupCallResources();
     const socket = getSocket();
     const token = typeof window !== 'undefined' ? localStorage.getItem('bytedesk_token_v2') : null;
-    if (socket) {
+    if (socket && current) {
       socket.emit('rejectAudioCall', {
         callId: current.callId,
         targetUserId: current.targetUserId,
@@ -1473,17 +1744,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const endAudioCall = () => {
-    stopRingtoneLoop();
-    if (callTimerRef.current) clearInterval(callTimerRef.current);
-    if (!audioCallRef.current) return;
     const current = audioCallRef.current;
+    const duration = current?.durationSeconds || 0;
+    cleanupCallResources();
     const socket = getSocket();
-    if (socket) {
+    if (socket && current) {
       socket.emit('endAudioCall', {
         callId: current.callId,
         targetUserId: current.targetUserId,
         callerId: current.callerId,
-        durationSeconds: current.durationSeconds,
+        durationSeconds: duration,
       });
     }
     audioCallRef.current = null;
@@ -1492,7 +1762,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const toggleAudioCallMute = () => {
-    setAudioCall((prev) => (prev ? { ...prev, isMuted: !prev.isMuted } : null));
+    if (localStreamRef.current) {
+      const isMutedNow = !audioCall?.isMuted;
+      toggleMicrophone(localStreamRef.current, !isMutedNow);
+      setAudioCall((prev) => (prev ? { ...prev, isMuted: isMutedNow } : null));
+    }
   };
 
   // Setup Firebase foreground listener with strict user isolation (initialized once)
@@ -1671,6 +1945,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }}
     >
       {children}
+      <audio
+        ref={remoteAudioRef}
+        id="webrtc-remote-audio"
+        autoPlay
+        playsInline
+        style={{ display: 'none' }}
+      />
       <AudioCallModal
         callState={audioCall}
         onAccept={acceptAudioCall}

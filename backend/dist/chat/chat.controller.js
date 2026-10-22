@@ -115,10 +115,17 @@ let ChatController = class ChatController {
         }
         return { success: false, message: 'Authentication required' };
     }
-    async markAsRead(ids) {
-        const res = await this.chatService.markAsRead(ids);
+    async markAsDelivered(ids) {
+        const res = await this.chatService.markAsDelivered(ids);
         if (this.chatGateway.server) {
-            this.chatGateway.server.emit('messagesRead', { ids });
+            this.chatGateway.server.emit('messageDelivered', { ids, deliveredAt: res.deliveredAt });
+        }
+        return res;
+    }
+    async markAsRead(ids, userId) {
+        const res = await this.chatService.markAsSeen(ids, userId);
+        if (this.chatGateway.server) {
+            this.chatGateway.server.emit('messagesRead', { ids: res.ids, seenAt: res.seenAt, userId: res.userId });
         }
         return res;
     }
@@ -153,11 +160,20 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ChatController.prototype, "clearMessages", null);
 __decorate([
-    Patch('messages/read'),
+    Patch('messages/delivered'),
     Public(),
     __param(0, Body('ids')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Array]),
+    __metadata("design:returntype", Promise)
+], ChatController.prototype, "markAsDelivered", null);
+__decorate([
+    Patch('messages/read'),
+    Public(),
+    __param(0, Body('ids')),
+    __param(1, Body('userId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Array, String]),
     __metadata("design:returntype", Promise)
 ], ChatController.prototype, "markAsRead", null);
 ChatController = __decorate([

@@ -34,6 +34,9 @@ export interface ChatMessage {
   };
   timestamp: string;
   read: boolean;
+  status?: 'SENT' | 'DELIVERED' | 'SEEN';
+  deliveredAt?: string;
+  seenAt?: string;
   senderName?: string;
   userPhone?: string;
   userEmail?: string;
@@ -84,9 +87,10 @@ export interface AudioCallState {
   callerName: string;
   callerRole: 'admin' | 'customer';
   targetUserId?: string;
-  status: 'calling' | 'incoming' | 'connected';
+  status: 'calling' | 'incoming' | 'connecting' | 'connected' | 'rejected' | 'ended' | 'busy';
   durationSeconds: number;
   isMuted?: boolean;
+  errorMessage?: string;
 }
 
 export interface NotificationItem {

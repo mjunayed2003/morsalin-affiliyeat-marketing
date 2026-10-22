@@ -1,6 +1,4 @@
-import { Product, ChatMessage, Review } from '../types';
-
-export const INITIAL_REVIEWS: Review[] = [];
+import { Product } from '../types';
 
 export const INITIAL_PRODUCTS: Product[] = [
   {
@@ -108,6 +106,4 @@ export const INITIAL_PRODUCTS: Product[] = [
     amazonUrl: "https://www.amazon.com/dp/B0HFZYY4FD?tag=bwbh00-20&linkCode=ogi&th=1&psc=1"
   }
 ];
-
-export const INITIAL_CHAT_MESSAGES: ChatMessage[] = [];
 

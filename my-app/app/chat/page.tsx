@@ -573,13 +573,18 @@ export default function ChatPage() {
                       }`}>
                         <span className="font-mono">{msg.timestamp}</span>
                         {isCustomer && (
-                          msg.read ? (
-                            <span className="inline-flex items-center gap-1 text-sky-300 font-bold" title="Seen by Support Desk">
+                          msg.status === 'SEEN' || msg.read ? (
+                            <span className="inline-flex items-center gap-1 text-sky-300 font-bold" title={`Seen ${msg.seenAt ? new Date(msg.seenAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}`}>
                               <FaCheckDouble className="w-3 h-3 text-sky-300" />
                               <span className="text-[9px]">Seen</span>
                             </span>
+                          ) : msg.status === 'DELIVERED' ? (
+                            <span className="inline-flex items-center gap-1 text-emerald-200/90 font-medium" title={`Delivered ${msg.deliveredAt ? new Date(msg.deliveredAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}`}>
+                              <FaCheckDouble className="w-3 h-3 text-emerald-200/90" />
+                              <span className="text-[9px]">Delivered</span>
+                            </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 text-emerald-200/70 font-normal" title="Delivered to Support Desk">
+                            <span className="inline-flex items-center gap-1 text-emerald-200/70 font-normal" title="Sent to server">
                               <FaCheck className="w-2.5 h-2.5 text-emerald-200/70" />
                               <span className="text-[9px]">Sent</span>
                             </span>

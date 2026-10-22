@@ -1,17 +1,13 @@
 import { io, Socket } from 'socket.io-client';
 
 const isBrowser = typeof window !== 'undefined';
-const isLocalhost = isBrowser && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
-// When developing locally on localhost, always target the local NestJS backend on port 3001
 export const BACKEND_URL = 
-  (isLocalhost ? 'http://localhost:3001' : null) ||
   process.env.NEXT_PUBLIC_SOCKET_URL?.replace(/\/+$/, '') ||
   process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/+$/, '') ||
   (process.env.NEXT_PUBLIC_API_URL ? process.env.NEXT_PUBLIC_API_URL.replace(/\/api\/?$/, '') : 'http://localhost:3001');
 
 export const API_BASE_URL = 
-  (isLocalhost ? 'http://localhost:3001/api' : null) ||
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, '') || 
   `${BACKEND_URL}/api`;
 
@@ -31,7 +27,7 @@ export const getSocket = (): Socket => {
     });
 
     socket.on('connect', () => {
-      console.log(`⚡ [Socket.IO] Connected successfully to ${BACKEND_URL} (ID: ${socket?.id})`);
+      console.log(`⚡ [Socket.IO] Connected to ${BACKEND_URL}`);
     });
 
     socket.on('connect_error', (err) => {

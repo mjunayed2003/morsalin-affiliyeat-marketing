@@ -20,9 +20,12 @@ export declare class ChatService {
                 image: any;
             } | undefined;
             timestamp: string;
-            read: any;
+            read: boolean;
+            status: "SENT" | "DELIVERED" | "SEEN";
+            deliveredAt: string | undefined;
+            seenAt: string | undefined;
             userId: any;
-            createdAt: any;
+            createdAt: string;
         }[];
         total: number;
         page: number;
@@ -31,6 +34,7 @@ export declare class ChatService {
         hasMore: boolean;
     }>;
     createMessage(dto: SendMessageDto): Promise<{
+        status: "SENT";
         localId: string | undefined;
         id: any;
         sender: any;
@@ -46,29 +50,70 @@ export declare class ChatService {
             image: any;
         } | undefined;
         timestamp: string;
-        read: any;
+        read: boolean;
+        deliveredAt: string | undefined;
+        seenAt: string | undefined;
         userId: any;
-        createdAt: any;
+        createdAt: string;
     }>;
     getLastCustomerMessage(userId?: string): Promise<{
         id: string;
-        createdAt: Date;
-        image: string | null;
         sender: string;
         senderName: string | null;
         text: string;
+        image: string | null;
         productId: string | null;
         productTitle: string | null;
         productPrice: number | null;
         productImage: string | null;
         read: boolean;
         userId: string | null;
+        createdAt: Date;
     } | null>;
     clearMessages(userId?: string): Promise<{
         success: boolean;
         message: string;
     }>;
-    markAsRead(ids?: string[]): Promise<{
-        success: boolean;
+    markAsRead(ids?: string[], userId?: string): Promise<{
+        ids: string[];
+        seenAt: string;
+        userId?: undefined;
+    } | {
+        userId: string;
+        seenAt: string;
+        ids?: undefined;
+    } | {
+        seenAt: string;
+        ids?: undefined;
+        userId?: undefined;
     }>;
+    markAsDelivered(ids: string[]): Promise<{
+        updatedIds: string[];
+        deliveredAt: string;
+    }>;
+    markAsSeen(ids?: string[], userId?: string): Promise<{
+        ids: string[];
+        seenAt: string;
+        userId?: undefined;
+    } | {
+        userId: string;
+        seenAt: string;
+        ids?: undefined;
+    } | {
+        seenAt: string;
+        ids?: undefined;
+        userId?: undefined;
+    }>;
+    createCallRecord(data: {
+        callId: string;
+        callerId: string;
+        callerName?: string;
+        callerRole?: string;
+        receiverId?: string;
+        receiverName?: string;
+        status: string;
+        duration?: number;
+        startedAt?: Date;
+        endedAt?: Date;
+    }): Promise<void>;
 }

@@ -155,13 +155,24 @@ export class ChatController {
     return { success: false, message: 'Authentication required' };
   }
 
-  // Mark messages as read
+  // Mark messages as delivered
+  @Patch('messages/delivered')
+  @Public()
+  async markAsDelivered(@Body('ids') ids: string[]) {
+    const res = await this.chatService.markAsDelivered(ids);
+    if (this.chatGateway.server) {
+      this.chatGateway.server.emit('messageDelivered', { ids, deliveredAt: res.deliveredAt });
+    }
+    return res;
+  }
+
+  // Mark messages as read / seen
   @Patch('messages/read')
   @Public()
-  async markAsRead(@Body('ids') ids?: string[]) {
-    const res = await this.chatService.markAsRead(ids);
+  async markAsRead(@Body('ids') ids?: string[], @Body('userId') userId?: string) {
+    const res = await this.chatService.markAsSeen(ids, userId);
     if (this.chatGateway.server) {
-      this.chatGateway.server.emit('messagesRead', { ids });
+      this.chatGateway.server.emit('messagesRead', { ids: res.ids, seenAt: res.seenAt, userId: res.userId });
     }
     return res;
   }

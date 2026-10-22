@@ -23,6 +23,30 @@ let PrismaService = PrismaService_1 = class PrismaService extends PrismaClient {
         try {
             await this.$connect();
             this.logger.log('✅ Successfully connected to PostgreSQL via Prisma 7 PG Driver Adapter.');
+            try {
+                await this.$executeRawUnsafe(`
+          ALTER TABLE "chat_messages" ADD COLUMN IF NOT EXISTS "status" TEXT DEFAULT 'SENT';
+          ALTER TABLE "chat_messages" ADD COLUMN IF NOT EXISTS "deliveredAt" TIMESTAMP(3);
+          ALTER TABLE "chat_messages" ADD COLUMN IF NOT EXISTS "seenAt" TIMESTAMP(3);
+
+          CREATE TABLE IF NOT EXISTS "calls" (
+            "id" TEXT PRIMARY KEY,
+            "callerId" TEXT NOT NULL,
+            "callerName" TEXT,
+            "callerRole" TEXT DEFAULT 'customer',
+            "receiverId" TEXT,
+            "receiverName" TEXT,
+            "status" TEXT NOT NULL DEFAULT 'COMPLETED',
+            "startedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            "endedAt" TIMESTAMP(3),
+            "duration" INTEGER NOT NULL DEFAULT 0
+          );
+        `);
+                this.logger.log('✅ Database schema verified: chat_messages status/receipts and calls history active.');
+            }
+            catch (schemaErr) {
+                this.logger.warn(`Schema sync note: ${schemaErr?.message || schemaErr}`);
+            }
         }
         catch (error) {
             this.logger.warn(`⚠️ Database connection notice: ${error instanceof Error ? error.message : error}. ` +

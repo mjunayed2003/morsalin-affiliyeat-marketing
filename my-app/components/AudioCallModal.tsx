@@ -36,7 +36,10 @@ export const AudioCallModal: React.FC<AudioCallModalProps> = ({
 
   const isIncoming = callState.status === 'incoming';
   const isCalling = callState.status === 'calling';
+  const isConnecting = callState.status === 'connecting';
   const isConnected = callState.status === 'connected';
+  const isBusy = callState.status === 'busy';
+  const isEnded = callState.status === 'ended' || callState.status === 'rejected';
 
   return (
     <div className="fixed inset-0 z-70 bg-black/75 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
@@ -52,7 +55,14 @@ export const AudioCallModal: React.FC<AudioCallModalProps> = ({
           <span>FreeProducts.online Audio Call</span>
         </div>
 
-        {/* Caller Avatar & Ringing Animation */}
+        {/* Error Message Banner */}
+        {callState.errorMessage && (
+          <div className="mb-4 p-2.5 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs text-center font-medium">
+            {callState.errorMessage}
+          </div>
+        )}
+
+        {/* Caller Avatar & Ringing / Connecting Animation */}
         <div className="relative w-28 h-28 mx-auto mb-5 flex items-center justify-center">
           {(isIncoming || isCalling) && (
             <>
@@ -61,12 +71,20 @@ export const AudioCallModal: React.FC<AudioCallModalProps> = ({
             </>
           )}
 
+          {isConnecting && (
+            <div className="absolute -inset-2 rounded-full border-2 border-emerald-400 border-t-transparent animate-spin" />
+          )}
+
           {isConnected && (
             <div className="absolute -inset-2 rounded-full border-2 border-emerald-500/40 animate-pulse" />
           )}
 
-          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#1b3b2b] to-emerald-950 border-2 border-emerald-400 flex items-center justify-center shadow-lg text-white">
-            <FaVolumeHigh className="w-10 h-10 text-emerald-300" />
+          <div className={`w-24 h-24 rounded-full border-2 flex items-center justify-center shadow-lg text-white transition-all ${
+            isBusy || isEnded
+              ? 'bg-rose-950/80 border-rose-500/60'
+              : 'bg-gradient-to-br from-[#1b3b2b] to-emerald-950 border-emerald-400'
+          }`}>
+            <FaVolumeHigh className={`w-10 h-10 ${isBusy || isEnded ? 'text-rose-400' : 'text-emerald-300'}`} />
           </div>
         </div>
 
@@ -76,10 +94,25 @@ export const AudioCallModal: React.FC<AudioCallModalProps> = ({
         </h3>
         <p className="text-xs text-slate-400 mb-6 font-mono">
           {isIncoming && 'Incoming Audio Call...'}
-          {isCalling && 'Calling Support Desk...'}
+          {isCalling && 'Calling...'}
+          {isConnecting && (
+            <span className="text-emerald-300 font-semibold animate-pulse">
+              Connecting audio stream...
+            </span>
+          )}
           {isConnected && (
             <span className="text-emerald-400 font-bold">
               Connected • {formatDuration(callState.durationSeconds)}
+            </span>
+          )}
+          {isBusy && (
+            <span className="text-amber-400 font-semibold">
+              User is currently on another call
+            </span>
+          )}
+          {isEnded && (
+            <span className="text-rose-400 font-semibold">
+              Call ended
             </span>
           )}
         </p>
@@ -126,8 +159,8 @@ export const AudioCallModal: React.FC<AudioCallModalProps> = ({
             </>
           )}
 
-          {/* Case 2: Calling / Outgoing (Cancel) */}
-          {isCalling && (
+          {/* Case 2: Calling / Connecting (Cancel / End) */}
+          {(isCalling || isConnecting) && (
             <button
               type="button"
               onClick={onEnd}
@@ -167,6 +200,17 @@ export const AudioCallModal: React.FC<AudioCallModalProps> = ({
                 <FaPhoneSlash className="w-5 h-5" />
               </button>
             </>
+          )}
+
+          {/* Case 4: Busy or Ended (Dismiss) */}
+          {(isBusy || isEnded) && (
+            <button
+              type="button"
+              onClick={onEnd}
+              className="px-6 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-white text-xs font-bold border border-slate-700 shadow-md cursor-pointer transition-all"
+            >
+              Close
+            </button>
           )}
         </div>
 

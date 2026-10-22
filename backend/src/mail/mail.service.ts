@@ -70,7 +70,7 @@ export class MailService {
   }
 
   private getReplyTo(): string {
-    return process.env.SMTP_REPLY_TO || 'freeproductsonline1@gmail.com';
+    return process.env.SMTP_REPLY_TO || 'support@freeproducts.online';
   }
 
   /**

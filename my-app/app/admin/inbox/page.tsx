@@ -688,13 +688,18 @@ export default function AdminInboxPage() {
                     {/* Delivery & Seen Status */}
                     <div className="flex items-center gap-1.5 px-1 text-[10px]">
                       {isAdmin ? (
-                        msg.read ? (
-                          <span className="inline-flex items-center gap-1 text-sky-600 font-bold" title="Seen by customer">
+                        msg.status === 'SEEN' || msg.read ? (
+                          <span className="inline-flex items-center gap-1 text-sky-600 font-bold" title={`Seen ${msg.seenAt ? new Date(msg.seenAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}`}>
                             <FaCheckDouble className="w-3 h-3 text-sky-500" />
                             <span>Seen</span>
                           </span>
+                        ) : msg.status === 'DELIVERED' ? (
+                          <span className="inline-flex items-center gap-1 text-slate-500 font-medium" title={`Delivered ${msg.deliveredAt ? new Date(msg.deliveredAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}`}>
+                            <FaCheckDouble className="w-3 h-3 text-slate-400" />
+                            <span>Delivered</span>
+                          </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 text-slate-400 font-medium" title="Delivered to customer">
+                          <span className="inline-flex items-center gap-1 text-slate-400 font-medium" title="Sent to server">
                             <FaCheck className="w-2.5 h-2.5 text-slate-400" />
                             <span>Sent</span>
                           </span>

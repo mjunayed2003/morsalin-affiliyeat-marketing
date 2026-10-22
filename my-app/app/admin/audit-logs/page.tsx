@@ -68,7 +68,7 @@ export default function AdminAuditLogsPage() {
         action: 'LIVE_CHAT_SYNC',
         target: 'Room: general_support',
         details: `${messages.length} customer inquiry message(s) synced in real-time`,
-        ipAddress: 'localhost:3001',
+        ipAddress: 'Socket Cluster',
         timestamp: 'Live',
         status: 'SUCCESS',
       });

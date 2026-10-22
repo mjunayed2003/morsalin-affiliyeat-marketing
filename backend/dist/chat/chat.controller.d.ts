@@ -22,9 +22,12 @@ export declare class ChatController {
                 image: any;
             } | undefined;
             timestamp: string;
-            read: any;
+            read: boolean;
+            status: "SENT" | "DELIVERED" | "SEEN";
+            deliveredAt: string | undefined;
+            seenAt: string | undefined;
             userId: any;
-            createdAt: any;
+            createdAt: string;
         }[];
         total: number;
         page: number;
@@ -33,6 +36,7 @@ export declare class ChatController {
         hasMore: boolean;
     }>;
     createMessage(dto: SendMessageDto, currentUser?: AuthenticatedUser): Promise<{
+        status: "SENT";
         localId: string | undefined;
         id: any;
         sender: any;
@@ -48,15 +52,31 @@ export declare class ChatController {
             image: any;
         } | undefined;
         timestamp: string;
-        read: any;
+        read: boolean;
+        deliveredAt: string | undefined;
+        seenAt: string | undefined;
         userId: any;
-        createdAt: any;
+        createdAt: string;
     }>;
     clearMessages(currentUser?: AuthenticatedUser, queryUserId?: string): Promise<{
         success: boolean;
         message: string;
     }>;
-    markAsRead(ids?: string[]): Promise<{
-        success: boolean;
+    markAsDelivered(ids: string[]): Promise<{
+        updatedIds: string[];
+        deliveredAt: string;
+    }>;
+    markAsRead(ids?: string[], userId?: string): Promise<{
+        ids: string[];
+        seenAt: string;
+        userId?: undefined;
+    } | {
+        userId: string;
+        seenAt: string;
+        ids?: undefined;
+    } | {
+        seenAt: string;
+        ids?: undefined;
+        userId?: undefined;
     }>;
 }
