@@ -650,19 +650,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     const targetUserId = payload.targetUserId;
 
-    // Check for busy participant
+    // Auto-cleanup any previous/stale call session for this caller so new calls always ring through cleanly
     for (const [existingId, activeCall] of this.activeAudioCalls.entries()) {
-      if (activeCall.status === 'connected' || activeCall.status === 'calling' || activeCall.status === 'connecting') {
-        const isTargetBusy = targetUserId && (activeCall.callerId === targetUserId || activeCall.targetUserId === targetUserId);
-        const isCallerBusy = activeCall.callerId === callerId || (activeCall.targetUserId && activeCall.targetUserId === callerId);
-
-        if (isTargetBusy || isCallerBusy) {
-          client.emit('audioCallBusy', {
-            callId: existingId,
-            reason: 'User is currently on another call.',
-          });
-          return { success: false, reason: 'BUSY' };
-        }
+      if (activeCall.callerId === callerId || (targetUserId && activeCall.targetUserId === targetUserId)) {
+        if (activeCall.timeoutTimer) clearTimeout(activeCall.timeoutTimer);
+        this.activeAudioCalls.delete(existingId);
       }
     }
 
