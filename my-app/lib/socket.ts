@@ -41,7 +41,7 @@ export const getSocket = (): Socket => {
   if (!socket && isBrowser) {
     socket = io(BACKEND_URL, {
       autoConnect: true,
-      transports: ['websocket', 'polling'],
+      transports: ['polling', 'websocket'],
       withCredentials: true,
       auth: (cb) => {
         cb({ token: getStoredToken() });
