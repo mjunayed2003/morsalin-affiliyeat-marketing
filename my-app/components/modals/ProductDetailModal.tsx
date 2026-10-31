@@ -63,6 +63,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     if (!isAuthenticated) {
       e.preventDefault();
       openAuthModal('login');
+      showToast('Please login to access the Amazon link.');
     }
   };
 
@@ -436,13 +437,20 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           <div className="flex items-center gap-2 flex-wrap">
             {product.amazonUrl && (
               <a
-                href={product.amazonUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 bg-[#ff9900] hover:bg-[#ea8b00] active:scale-95 text-slate-950 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black shadow-md transition-all cursor-pointer border border-[#e08500]"
+                href={isAuthenticated ? product.amazonUrl : '#'}
+                target={isAuthenticated ? "_blank" : undefined}
+                rel={isAuthenticated ? "noopener noreferrer" : undefined}
+                onClick={handleAmazonClick}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black shadow-md transition-all cursor-pointer border ${
+                  isAuthenticated
+                    ? 'bg-[#ff9900] hover:bg-[#ea8b00] active:scale-95 text-slate-950 border-[#e08500]'
+                    : 'bg-amber-100 hover:bg-amber-200 text-amber-950 border-amber-300'
+                }`}
+                title={isAuthenticated ? 'Buy on Amazon' : 'Login required to unlock Amazon link'}
               >
                 <FaAmazon className="w-4 h-4" />
-                <span>Buy on Amazon</span>
+                <span>{isAuthenticated ? 'Buy on Amazon' : 'Sign In for Amazon'}</span>
+                {!isAuthenticated && <FaLock className="w-3.5 h-3.5" />}
               </a>
             )}
             <button

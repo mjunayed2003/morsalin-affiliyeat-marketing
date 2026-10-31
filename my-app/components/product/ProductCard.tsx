@@ -4,7 +4,9 @@ import React from 'react';
 import Link from 'next/link';
 import { Product } from '@/types';
 import { getCategoryStyle } from '@/lib/constants';
-import { FaStar } from 'react-icons/fa6';
+import { useAuth } from '@/app/context/AuthContext';
+import { useApp } from '@/app/context/AppContext';
+import { FaStar, FaLock } from 'react-icons/fa6';
 import { FaAmazon, FaStore } from 'react-icons/fa';
 
 export interface ProductCardProps {
@@ -18,7 +20,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   showRating = false,
   className = '',
 }) => {
+  const { isAuthenticated, openAuthModal } = useAuth();
+  const { showToast, formatAmazonUrl } = useApp();
   const badgeStyle = getCategoryStyle(product.category);
+
+  const handleAmazonClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.stopPropagation();
+    if (!isAuthenticated) {
+      e.preventDefault();
+      openAuthModal('login');
+      showToast('Please log in to access the Amazon link.');
+    }
+  };
 
   return (
     <div
@@ -118,18 +131,33 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
         {product.amazonUrl && (
           <a
-            href={product.amazonUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => {
-              e.stopPropagation();
-            }}
-            className="py-1.5 sm:py-2.5 px-2 sm:px-3 rounded-lg sm:rounded-xl font-bold text-[11px] sm:text-xs border transition-all duration-200 inline-flex items-center justify-center gap-1 shadow-2xs cursor-pointer shrink-0 bg-[#fff8e7] hover:bg-[#ff9900] text-[#92400e] hover:text-slate-950 border-amber-300 hover:border-[#e08500]"
-            title={`View on Amazon (${product.store || 'Amazon'})`}
+            href={isAuthenticated ? (formatAmazonUrl ? formatAmazonUrl(product.amazonUrl) : product.amazonUrl) : '#'}
+            target={isAuthenticated ? "_blank" : undefined}
+            rel={isAuthenticated ? "noopener noreferrer" : undefined}
+            onClick={handleAmazonClick}
+            className={`py-1.5 sm:py-2.5 px-2 sm:px-3 rounded-lg sm:rounded-xl font-bold text-[11px] sm:text-xs border transition-all duration-200 inline-flex items-center justify-center gap-1 shadow-2xs cursor-pointer shrink-0 ${
+              isAuthenticated
+                ? 'bg-[#fff8e7] hover:bg-[#ff9900] text-[#92400e] hover:text-slate-950 border-amber-300 hover:border-[#e08500]'
+                : 'bg-amber-50/90 hover:bg-amber-100 text-[#92400e] border-amber-300/80'
+            }`}
+            title={
+              isAuthenticated
+                ? `View on Amazon (${product.store || 'Amazon'})`
+                : 'Login required to unlock Amazon link'
+            }
           >
             <FaAmazon className="w-3.5 h-3.5 text-[#e08500]" />
-            <span className="hidden sm:inline">Amazon</span>
-            <span className="sm:hidden">🛒</span>
+            {isAuthenticated ? (
+              <>
+                <span className="hidden sm:inline">Amazon</span>
+                <span className="sm:hidden">🛒</span>
+              </>
+            ) : (
+              <>
+                <span className="hidden sm:inline">Amazon</span>
+                <FaLock className="w-2.5 sm:w-3 h-2.5 sm:h-3 text-amber-700 ml-0.5" />
+              </>
+            )}
           </a>
         )}
       </div>

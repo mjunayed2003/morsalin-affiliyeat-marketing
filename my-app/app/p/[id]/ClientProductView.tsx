@@ -566,15 +566,34 @@ export const ClientProductView: React.FC<ClientProductViewProps> = ({ productId,
                   <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 flex-wrap">
                     {product.amazonUrl && (
                       <a
-                        href={formatAmazonUrl(product.amazonUrl)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex-1 min-w-[200px] flex items-center justify-center gap-2 font-bold py-3 px-4 rounded-xl text-xs sm:text-sm shadow-xs transition-all cursor-pointer border bg-[#ff9900] hover:bg-[#eb8c00] active:scale-98 text-slate-950 border-[#e08500]"
-                        title={`View on Amazon (${product.store || 'Amazon Partner Store'})`}
+                        href={isAuthenticated ? formatAmazonUrl(product.amazonUrl) : '#'}
+                        target={isAuthenticated ? "_blank" : undefined}
+                        rel={isAuthenticated ? "noopener noreferrer" : undefined}
+                        onClick={(e) => {
+                          if (!isAuthenticated) {
+                            e.preventDefault();
+                            openAuthModal('login');
+                            showToast('Please login to access the Amazon link.');
+                          }
+                        }}
+                        className={`flex-1 min-w-[200px] flex items-center justify-center gap-2 font-bold py-3 px-4 rounded-xl text-xs sm:text-sm shadow-xs transition-all cursor-pointer border ${
+                          isAuthenticated
+                            ? 'bg-[#ff9900] hover:bg-[#eb8c00] active:scale-98 text-slate-950 border-[#e08500]'
+                            : 'bg-amber-100 hover:bg-amber-200 text-amber-950 border-amber-300'
+                        }`}
+                        title={
+                          isAuthenticated
+                            ? `View on Amazon (${product.store || 'Amazon Partner Store'})`
+                            : 'Login required to unlock Amazon product link'
+                        }
                       >
                         <FaAmazon className="w-4 h-4 text-slate-950 shrink-0" />
-                        <span>View on Amazon ({product.store || 'Amazon Partner Store'})</span>
-                        <FaArrowUpRightFromSquare className="w-3 h-3 opacity-75 shrink-0" />
+                        <span>{isAuthenticated ? `View on Amazon (${product.store || 'Amazon Partner Store'})` : 'Sign In to View on Amazon'}</span>
+                        {isAuthenticated ? (
+                          <FaArrowUpRightFromSquare className="w-3 h-3 opacity-75 shrink-0" />
+                        ) : (
+                          <FaLock className="w-3.5 h-3.5 text-amber-900 shrink-0" />
+                        )}
                       </a>
                     )}
                     <a
