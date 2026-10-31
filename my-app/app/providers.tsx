@@ -1,17 +1,19 @@
 'use client';
 
 import React from 'react';
-import { AppProvider, useApp } from '@/app/context/AppContext';
-import { AuthProvider, useAuth } from '@/app/context/AuthContext';
-import { ShareModal } from '@/components/ShareModal';
-import { ProductDetailModal } from '@/components/ProductDetailModal';
-import { ChatWidget } from '@/components/ChatWidget';
-import { NotificationToast } from '@/components/NotificationToast';
-import { AuthModal } from '@/components/AuthModal';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { MaintenanceScreen } from '@/components/MaintenanceScreen';
-import { MobileBottomNav } from '@/components/MobileBottomNav';
+import { AppProvider, useApp } from '@/app/context/AppContext';
+import { AuthProvider, useAuth } from '@/app/context/AuthContext';
+import { 
+  ShareModal, 
+  ProductDetailModal, 
+  ChatWidget, 
+  NotificationToast, 
+  AuthModal, 
+  MaintenanceScreen, 
+  MobileBottomNav 
+} from '@/components';
 
 const MaintenanceGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const pathname = usePathname();

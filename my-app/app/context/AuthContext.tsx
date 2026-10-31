@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User } from '../types';
+import { User } from '@/types';
 import { API_BASE_URL } from '@/lib/socket';
 
 export type AuthModalMode = 'login' | 'register' | 'forgot-password';

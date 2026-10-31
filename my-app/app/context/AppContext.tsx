@@ -1,11 +1,10 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useRef, useMemo } from 'react';
-import { Product, ChatMessage, Review, AudioCallState, NotificationItem, PlatformSettings } from '../types';
-import { INITIAL_PRODUCTS } from '../data/initialProducts';
+import { Product, ChatMessage, Review, AudioCallState, NotificationItem, PlatformSettings } from '@/types';
 import { getSocket, API_BASE_URL } from '@/lib/socket';
 import { showBrowserNotification, requestNotificationPermission, initFirebaseForegroundListener } from '@/lib/firebase';
-import { AudioCallModal } from '@/components/AudioCallModal';
+import { AudioCallModal } from '@/components';
 import { useAuth } from './AuthContext';
 import {
   getMicrophoneAudioStream,
