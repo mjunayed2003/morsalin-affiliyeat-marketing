@@ -5,8 +5,6 @@ export declare class ProductsService {
     constructor(prisma: PrismaService);
     findAll(category?: string, search?: string): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         title: string;
         description: string;
         category: string;
@@ -25,11 +23,11 @@ export declare class ProductsService {
         inStock: boolean;
         store: string | null;
         amazonUrl: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }[]>;
     findOne(id: string): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         title: string;
         description: string;
         category: string;
@@ -48,11 +46,11 @@ export declare class ProductsService {
         inStock: boolean;
         store: string | null;
         amazonUrl: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     create(dto: CreateProductDto): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         title: string;
         description: string;
         category: string;
@@ -71,11 +69,11 @@ export declare class ProductsService {
         inStock: boolean;
         store: string | null;
         amazonUrl: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
-    update(id: string, dto: UpdateProductDto): Promise<{
+    update(id: string, dto: UpdateProductDto | any): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         title: string;
         description: string;
         category: string;
@@ -94,11 +92,34 @@ export declare class ProductsService {
         inStock: boolean;
         store: string | null;
         amazonUrl: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
+    toggleStock(id: string, inStock: boolean): Promise<{
+        id: string;
+        title: string;
+        description: string;
+        category: string;
+        subCategory: string | null;
+        price: number;
+        originalPrice: number;
+        commission: string | null;
+        commissionAmount: number;
+        image: string;
+        gallery: string[];
+        affiliateCode: string | null;
+        features: string[];
+        rating: number;
+        reviewsCount: number;
+        badge: string | null;
+        inStock: boolean;
+        store: string | null;
+        amazonUrl: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     remove(id: string): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         title: string;
         description: string;
         category: string;
@@ -117,13 +138,15 @@ export declare class ProductsService {
         inStock: boolean;
         store: string | null;
         amazonUrl: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     getReviews(productId: string): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         title: string | null;
         rating: number;
+        createdAt: Date;
+        updatedAt: Date;
         productId: string;
         userId: string;
         userName: string;
@@ -135,10 +158,10 @@ export declare class ProductsService {
         comment: string;
     }): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         title: string | null;
         rating: number;
+        createdAt: Date;
+        updatedAt: Date;
         productId: string;
         userId: string;
         userName: string;

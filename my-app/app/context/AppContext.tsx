@@ -60,6 +60,7 @@ interface AppContextType {
   addProduct: (product: Product) => Promise<{ success: boolean; message?: string }> | void;
   updateProduct: (product: Product) => Promise<{ success: boolean; message?: string }> | void;
   deleteProduct: (productId: string) => Promise<{ success: boolean; message?: string }> | void;
+  toggleProductStock: (productId: string, inStock: boolean) => Promise<{ success: boolean; message?: string }>;
   resetProducts: () => void;
   sendCustomerMessage: (text: string, image?: string, productInfo?: { title: string; price: number; image: string }) => void;
   sendAdminReply: (text: string, image?: string, targetUserId?: string) => void;
@@ -1540,6 +1541,51 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const toggleProductStock = async (productId: string, inStock: boolean): Promise<{ success: boolean; message?: string }> => {
+    // 1. Instant optimistic state and cache update
+    setProducts((prev) => {
+      const updatedList = prev.map((p) => (p.id === productId ? { ...p, inStock } : p));
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('products_live_cache_v5', JSON.stringify(updatedList));
+        } catch {}
+      }
+      return updatedList;
+    });
+
+    // 2. Persist to backend database
+    try {
+      const res = await fetch(`${API_BASE_URL}/products/${productId}/stock`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ inStock: Boolean(inStock) }),
+      });
+
+      if (!res.ok) {
+        // Fallback to general patch endpoint
+        const fallbackRes = await fetch(`${API_BASE_URL}/products/${productId}`, {
+          method: 'PATCH',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ inStock: Boolean(inStock) }),
+        });
+        if (!fallbackRes.ok) {
+          const data = await fallbackRes.json().catch(() => ({}));
+          showToast(data.message || 'Failed to update stock status on server');
+          fetchProducts().catch(() => {});
+          return { success: false, message: data.message };
+        }
+      }
+
+      showToast(inStock ? 'Product marked as In Stock ✅' : 'Product marked as Stock Out ❌');
+      fetchProducts().catch(() => {});
+      return { success: true };
+    } catch (err: any) {
+      showToast(err?.message || 'Network error updating stock status');
+      fetchProducts().catch(() => {});
+      return { success: false, message: err?.message };
+    }
+  };
+
   const loadOlderMessages = async () => {
     if (isLoadingOlderMessages || !hasMoreMessages) return;
     setIsLoadingOlderMessages(true);
@@ -2206,6 +2252,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addProduct,
         updateProduct,
         deleteProduct,
+        toggleProductStock,
         resetProducts,
         sendCustomerMessage,
         sendAdminReply,

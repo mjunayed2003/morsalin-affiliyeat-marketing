@@ -111,6 +111,14 @@ let ProductsController = class ProductsController {
         }
         return updated;
     }
+    async toggleStock(id, body) {
+        const updated = await this.productsService.toggleStock(id, Boolean(body.inStock));
+        if (this.chatGateway.server) {
+            this.chatGateway.server.emit('product:updated', updated);
+            this.chatGateway.server.emit('products:refresh');
+        }
+        return updated;
+    }
     async remove(id) {
         const result = await this.productsService.remove(id);
         if (this.chatGateway.server) {
@@ -183,6 +191,16 @@ __decorate([
     __metadata("design:paramtypes", [String, UpdateProductDto]),
     __metadata("design:returntype", Promise)
 ], ProductsController.prototype, "update", null);
+__decorate([
+    Patch(':id/stock'),
+    UseGuards(JwtAuthGuard, RolesGuard),
+    Roles('ADMIN'),
+    __param(0, Param('id')),
+    __param(1, Body()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], ProductsController.prototype, "toggleStock", null);
 __decorate([
     Delete(':id'),
     UseGuards(JwtAuthGuard, RolesGuard),

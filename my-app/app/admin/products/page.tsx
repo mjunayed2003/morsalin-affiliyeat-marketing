@@ -24,7 +24,7 @@ import { ConfirmModal } from '@/components/admin/ConfirmModal';
 
 export default function AdminProductsPage() {
   const router = useRouter();
-  const { products, deleteProduct, resetProducts, showToast } = useApp();
+  const { products, deleteProduct, toggleProductStock, resetProducts, showToast } = useApp();
 
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
@@ -114,9 +114,24 @@ export default function AdminProductsPage() {
     },
     {
       key: 'status',
-      header: 'Status',
+      header: 'Stock Status',
       render: (p) => (
-        p.inStock ? <Badge variant="published">Published</Badge> : <Badge variant="archived">Out of Stock</Badge>
+        <button
+          onClick={() => toggleProductStock(p.id, !p.inStock)}
+          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold border transition-all cursor-pointer shadow-2xs active:scale-95 ${
+            p.inStock
+              ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
+              : 'bg-rose-50 text-rose-800 border-rose-300 hover:bg-rose-100'
+          }`}
+          title={p.inStock ? 'Click to mark as Stock Out' : 'Click to mark as In Stock'}
+        >
+          <span
+            className={`w-2 h-2 rounded-full ${
+              p.inStock ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'
+            }`}
+          />
+          <span>{p.inStock ? 'In Stock' : 'Stock Out'}</span>
+        </button>
       ),
     },
     {
@@ -125,6 +140,18 @@ export default function AdminProductsPage() {
       className: 'text-right',
       render: (p) => (
         <div className="flex items-center justify-end gap-1.5">
+          <button
+            onClick={() => toggleProductStock(p.id, !p.inStock)}
+            className={`px-2 py-1 rounded-lg border text-[11px] font-bold transition-all cursor-pointer ${
+              p.inStock
+                ? 'border-amber-200 text-amber-800 bg-amber-50/70 hover:bg-amber-100'
+                : 'border-emerald-300 text-emerald-800 bg-emerald-50 hover:bg-emerald-100'
+            }`}
+            title={p.inStock ? 'Mark as Out of Stock' : 'Mark as In Stock'}
+          >
+            {p.inStock ? 'Set Stock Out' : 'Set In Stock'}
+          </button>
+
           <Link
             href={`/p/${p.id}`}
             target="_blank"

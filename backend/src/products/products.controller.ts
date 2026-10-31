@@ -167,6 +167,22 @@ export class ProductsController {
     return updated;
   }
 
+  // Admin Only: Fast toggle stock status
+  @Patch(':id/stock')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  async toggleStock(
+    @Param('id') id: string,
+    @Body() body: { inStock: boolean },
+  ) {
+    const updated = await this.productsService.toggleStock(id, Boolean(body.inStock));
+    if (this.chatGateway.server) {
+      this.chatGateway.server.emit('product:updated', updated);
+      this.chatGateway.server.emit('products:refresh');
+    }
+    return updated;
+  }
+
   // Admin Only: Remove product
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)

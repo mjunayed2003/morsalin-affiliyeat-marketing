@@ -340,9 +340,14 @@ export default function Home() {
                           <img 
                             src={prod.image} 
                             alt={prod.title}
-                            className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 cursor-pointer"
+                            className={`w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 cursor-pointer ${!prod.inStock ? 'opacity-75' : ''}`}
                             loading="lazy"
                           />
+                          {!prod.inStock ? (
+                            <div className="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 bg-rose-600 text-white font-bold text-[9px] sm:text-[10px] px-2 py-0.5 rounded-full shadow-xs z-10">
+                              Stock Out
+                            </div>
+                          ) : null}
                         </Link>
 
                         {/* Category Pill & Store Badge */}
@@ -379,13 +384,22 @@ export default function Home() {
 
                       {/* Action Buttons: "Get It Free" + "Amazon" */}
                       <div className="pt-2.5 sm:pt-5 flex items-center gap-1.5 sm:gap-2">
-                        <Link
-                          href={`/p/${prod.id}`}
-                          className="flex-1 py-1.5 sm:py-2.5 px-2 sm:px-3 rounded-lg sm:rounded-xl font-bold text-[11px] sm:text-sm bg-[#1b3b2b] hover:bg-[#142e20] text-white transition-all duration-200 cursor-pointer shadow-2xs text-center whitespace-nowrap"
-                        >
-                          <span className="sm:hidden">Get Free</span>
-                          <span className="hidden sm:inline">Get It Free</span>
-                        </Link>
+                        {prod.inStock ? (
+                          <Link
+                            href={`/p/${prod.id}`}
+                            className="flex-1 py-1.5 sm:py-2.5 px-2 sm:px-3 rounded-lg sm:rounded-xl font-bold text-[11px] sm:text-sm bg-[#1b3b2b] hover:bg-[#142e20] text-white transition-all duration-200 cursor-pointer shadow-2xs text-center whitespace-nowrap"
+                          >
+                            <span className="sm:hidden">Get Free</span>
+                            <span className="hidden sm:inline">Get It Free</span>
+                          </Link>
+                        ) : (
+                          <Link
+                            href={`/p/${prod.id}`}
+                            className="flex-1 py-1.5 sm:py-2.5 px-2 sm:px-3 rounded-lg sm:rounded-xl font-bold text-[11px] sm:text-sm bg-rose-100 text-rose-800 hover:bg-rose-200 transition-all duration-200 cursor-pointer shadow-2xs text-center whitespace-nowrap"
+                          >
+                            <span>Stock Out</span>
+                          </Link>
+                        )}
                         {prod.amazonUrl && (
                           <a
                             href={prod.amazonUrl}

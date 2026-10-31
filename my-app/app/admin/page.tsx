@@ -266,7 +266,11 @@ export default function AdminOverviewPage() {
                       {prod.commission}
                     </td>
                     <td className="py-3 px-3">
-                      <Badge variant="published">In Stock</Badge>
+                      {prod.inStock ? (
+                        <Badge variant="published">In Stock</Badge>
+                      ) : (
+                        <Badge variant="archived">Stock Out</Badge>
+                      )}
                     </td>
                   </tr>
                 ))}

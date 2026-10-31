@@ -73,9 +73,53 @@ let ProductsService = class ProductsService {
     }
     async update(id, dto) {
         await this.findOne(id);
+        const updateData = {};
+        if (dto.title !== undefined)
+            updateData.title = String(dto.title).trim();
+        if (dto.description !== undefined)
+            updateData.description = String(dto.description).trim();
+        if (dto.category !== undefined)
+            updateData.category = String(dto.category).trim();
+        if (dto.subCategory !== undefined)
+            updateData.subCategory = dto.subCategory ? String(dto.subCategory).trim() : null;
+        if (dto.price !== undefined)
+            updateData.price = typeof dto.price === 'number' ? dto.price : parseFloat(String(dto.price || '0')) || 0;
+        if (dto.originalPrice !== undefined)
+            updateData.originalPrice = typeof dto.originalPrice === 'number' ? dto.originalPrice : parseFloat(String(dto.originalPrice || '0')) || 0;
+        if (dto.commission !== undefined)
+            updateData.commission = dto.commission;
+        if (dto.commissionAmount !== undefined)
+            updateData.commissionAmount = typeof dto.commissionAmount === 'number' ? dto.commissionAmount : parseFloat(String(dto.commissionAmount || '0')) || 0;
+        if (dto.image !== undefined)
+            updateData.image = String(dto.image).trim();
+        if (dto.gallery !== undefined)
+            updateData.gallery = Array.isArray(dto.gallery) ? dto.gallery : [dto.image];
+        if (dto.affiliateCode !== undefined)
+            updateData.affiliateCode = dto.affiliateCode;
+        if (dto.features !== undefined)
+            updateData.features = Array.isArray(dto.features) ? dto.features : [];
+        if (dto.rating !== undefined)
+            updateData.rating = typeof dto.rating === 'number' ? dto.rating : parseFloat(String(dto.rating || '5.0')) || 5.0;
+        if (dto.reviewsCount !== undefined)
+            updateData.reviewsCount = typeof dto.reviewsCount === 'number' ? dto.reviewsCount : parseInt(String(dto.reviewsCount || '0'), 10) || 0;
+        if (dto.badge !== undefined)
+            updateData.badge = dto.badge || null;
+        if (dto.inStock !== undefined)
+            updateData.inStock = Boolean(dto.inStock);
+        if (dto.store !== undefined)
+            updateData.store = dto.store ? String(dto.store).trim() : null;
+        if (dto.amazonUrl !== undefined)
+            updateData.amazonUrl = dto.amazonUrl ? String(dto.amazonUrl).trim() : null;
         return this.prisma.product.update({
             where: { id },
-            data: dto,
+            data: updateData,
+        });
+    }
+    async toggleStock(id, inStock) {
+        await this.findOne(id);
+        return this.prisma.product.update({
+            where: { id },
+            data: { inStock: Boolean(inStock) },
         });
     }
     async remove(id) {

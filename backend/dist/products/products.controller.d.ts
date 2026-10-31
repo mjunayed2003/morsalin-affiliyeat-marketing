@@ -131,6 +131,31 @@ export declare class ProductsController {
         createdAt: Date;
         updatedAt: Date;
     }>;
+    toggleStock(id: string, body: {
+        inStock: boolean;
+    }): Promise<{
+        id: string;
+        title: string;
+        description: string;
+        category: string;
+        subCategory: string | null;
+        price: number;
+        originalPrice: number;
+        commission: string | null;
+        commissionAmount: number;
+        image: string;
+        gallery: string[];
+        affiliateCode: string | null;
+        features: string[];
+        rating: number;
+        reviewsCount: number;
+        badge: string | null;
+        inStock: boolean;
+        store: string | null;
+        amazonUrl: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
     remove(id: string): Promise<{
         id: string;
         title: string;

@@ -546,10 +546,16 @@ export const ClientProductView: React.FC<ClientProductViewProps> = ({ productId,
                         Est. Amazon Retail: {currencySymbol}{product.originalPrice.toLocaleString()}
                       </span>
                     )}
-                    <span className="ml-auto text-xs bg-emerald-100 text-emerald-800 font-bold px-3 py-1 rounded-full flex items-center gap-1">
-                      <FaAmazon className="w-3 h-3 text-[#ff9900]" />
-                      <span>100% Free Amazon Review Perk</span>
-                    </span>
+                    {product.inStock ? (
+                      <span className="ml-auto text-xs bg-emerald-100 text-emerald-800 font-bold px-3 py-1 rounded-full flex items-center gap-1">
+                        <FaAmazon className="w-3 h-3 text-[#ff9900]" />
+                        <span>In Stock • 100% Free Amazon Review Perk</span>
+                      </span>
+                    ) : (
+                      <span className="ml-auto text-xs bg-rose-100 text-rose-800 border border-rose-300 font-bold px-3 py-1 rounded-full flex items-center gap-1">
+                        <span>❌ Stock Out / Currently Unavailable</span>
+                      </span>
+                    )}
                   </div>
 
                   <p className="text-xs text-slate-600 font-medium leading-relaxed">
