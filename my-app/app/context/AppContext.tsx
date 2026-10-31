@@ -35,6 +35,8 @@ interface AppContextType {
   currencySymbol: string;
   formatAmazonUrl: (rawUrl?: string) => string;
   products: Product[];
+  isProductsLoading: boolean;
+  refreshProducts: () => Promise<void>;
   messages: ChatMessage[];
   unreadCount: number;
   isTyping: boolean;
@@ -186,7 +188,8 @@ const dedupeMessages = (list: ChatMessage[]): ChatMessage[] => {
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isAuthenticated } = useAuth();
-  const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isProductsLoading, setIsProductsLoading] = useState<boolean>(true);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [typingSender, setTypingSender] = useState<string | null>(null);
@@ -251,40 +254,126 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       .catch(() => {});
   }, []);
 
-  // Sync products from backend API, fallback to localStorage / INITIAL_PRODUCTS
-  useEffect(() => {
-    let isMounted = true;
+  const fetchProducts = async () => {
     try {
-      const cached = localStorage.getItem('product_perks_catalog_v4');
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setProducts(parsed);
+      const res = await fetch(`${API_BASE_URL}/products?_t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          Pragma: 'no-cache',
+        },
+      });
+      if (res.ok) {
+        const serverProducts = await res.json();
+        if (Array.isArray(serverProducts)) {
+          setProducts(serverProducts);
+          if (typeof window !== 'undefined') {
+            try {
+              localStorage.setItem('products_live_cache_v5', JSON.stringify(serverProducts));
+            } catch {}
+          }
         }
       }
-    } catch {}
+    } catch (err) {
+      console.warn('Failed to fetch products from backend API:', err);
+    } finally {
+      setIsProductsLoading(false);
+    }
+  };
 
-    fetch(`${API_BASE_URL}/products`)
-      .then((res) => (res.ok ? res.json() : null))
-      .then((serverProducts) => {
-        if (isMounted && Array.isArray(serverProducts) && serverProducts.length > 0) {
-          setProducts((prev) => {
-            const serverIds = new Set(serverProducts.map((p: any) => p.id));
-            const customLocalOnly = prev.filter(
-              (p) => !serverIds.has(p.id) && !INITIAL_PRODUCTS.some((ip) => ip.id === p.id)
-            );
-            const merged = [...serverProducts, ...customLocalOnly];
-            try {
-              localStorage.setItem('product_perks_catalog_v4', JSON.stringify(merged));
-            } catch {}
-            return merged;
-          });
+  const refreshProducts = async () => {
+    await fetchProducts();
+  };
+
+  // Sync products strictly from backend database API, purge legacy dummy cache
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // 1. Purge legacy dummy storage keys so old 12 dummy products never return
+      try {
+        localStorage.removeItem('product_perks_catalog_v4');
+        localStorage.removeItem('product_perks_catalog_v3');
+        localStorage.removeItem('product_perks_catalog_v2');
+        localStorage.removeItem('product_perks_catalog');
+      } catch {}
+
+      // 2. Load cached live products for instant rendering
+      try {
+        const cached = localStorage.getItem('products_live_cache_v5');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setProducts(parsed);
+            setIsProductsLoading(false);
+          }
         }
-      })
-      .catch(() => {});
+      } catch {}
+    }
+
+    // 3. Always fetch live database products from server with no-store
+    fetchProducts();
+  }, []);
+
+  // Real-time synchronization of products across all devices via Socket.IO
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
+
+    const handleProductCreated = (product: Product) => {
+      if (!product || !product.id) return;
+      setProducts((prev) => {
+        if (prev.some((p) => p.id === product.id)) return prev;
+        const updated = [product, ...prev];
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('products_live_cache_v5', JSON.stringify(updated));
+          } catch {}
+        }
+        return updated;
+      });
+    };
+
+    const handleProductUpdated = (product: Product) => {
+      if (!product || !product.id) return;
+      setProducts((prev) => {
+        const updated = prev.map((p) => (p.id === product.id ? product : p));
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('products_live_cache_v5', JSON.stringify(updated));
+          } catch {}
+        }
+        return updated;
+      });
+    };
+
+    const handleProductDeleted = ({ id }: { id: string }) => {
+      if (!id) return;
+      setProducts((prev) => {
+        const updated = prev.filter((p) => p.id !== id);
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('products_live_cache_v5', JSON.stringify(updated));
+          } catch {}
+        }
+        return updated;
+      });
+    };
+
+    const handleRefresh = () => {
+      fetchProducts().catch(() => {});
+    };
+
+    socket.on('product:created', handleProductCreated);
+    socket.on('newProductAdded', handleProductCreated);
+    socket.on('product:updated', handleProductUpdated);
+    socket.on('product:deleted', handleProductDeleted);
+    socket.on('products:refresh', handleRefresh);
 
     return () => {
-      isMounted = false;
+      socket.off('product:created', handleProductCreated);
+      socket.off('newProductAdded', handleProductCreated);
+      socket.off('product:updated', handleProductUpdated);
+      socket.off('product:deleted', handleProductDeleted);
+      socket.off('products:refresh', handleRefresh);
     };
   }, []);
 
@@ -1362,7 +1451,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
 
       const saved = data && data.id ? data : newProd;
-      setProducts((prev) => [saved, ...prev.filter((p) => p.id !== saved.id)]);
+      setProducts((prev) => {
+        const updated = [saved, ...prev.filter((p) => p.id !== saved.id)];
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('products_live_cache_v5', JSON.stringify(updated));
+          } catch {}
+        }
+        return updated;
+      });
 
       // Broadcast over socket for instant real-time synchronization to all clients
       const socket = getSocket();
@@ -1371,10 +1468,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         socket.emit('broadcastProduct', { product: saved, token: token || undefined });
       }
 
+      // Re-fetch in background to ensure 100% sync
+      fetchProducts().catch(() => {});
+
       return { success: true };
     } catch (err: any) {
-      setProducts((prev) => [newProd, ...prev]);
-      return { success: true, message: 'Saved locally' };
+      return { success: false, message: err?.message || 'Network error communicating with server' };
     }
   };
 
@@ -1394,16 +1493,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
 
       const saved = data && data.id ? data : updated;
-      setProducts((prev) => prev.map((p) => (p.id === saved.id ? saved : p)));
+      setProducts((prev) => {
+        const updatedList = prev.map((p) => (p.id === saved.id ? saved : p));
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('products_live_cache_v5', JSON.stringify(updatedList));
+          } catch {}
+        }
+        return updatedList;
+      });
+
+      fetchProducts().catch(() => {});
       return { success: true };
     } catch (err: any) {
-      setProducts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
-      return { success: true, message: 'Updated locally' };
+      return { success: false, message: err?.message || 'Network error updating product' };
     }
   };
 
   const deleteProduct = async (id: string): Promise<{ success: boolean; message?: string }> => {
-    setProducts((prev) => prev.filter((p) => p.id !== id));
+    setProducts((prev) => {
+      const updatedList = prev.filter((p) => p.id !== id);
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('products_live_cache_v5', JSON.stringify(updatedList));
+        } catch {}
+      }
+      return updatedList;
+    });
+
     try {
       const res = await fetch(`${API_BASE_URL}/products/${id}`, {
         method: 'DELETE',
@@ -1415,10 +1532,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return { success: false, message: data.message };
       }
       showToast('Product removed.');
+      fetchProducts().catch(() => {});
       return { success: true };
-    } catch {
-      showToast('Product removed.');
-      return { success: true };
+    } catch (err: any) {
+      showToast('Error communicating with server.');
+      return { success: false, message: err?.message };
     }
   };
 
@@ -1451,12 +1569,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const resetProducts = () => {
-    setProducts(INITIAL_PRODUCTS);
-    try {
-      localStorage.setItem('product_perks_catalog_v4', JSON.stringify(INITIAL_PRODUCTS));
-    } catch (e) {}
-    showToast('Catalog restored to official Amazon products.');
+  const resetProducts = async () => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem('products_live_cache_v5');
+        localStorage.removeItem('product_perks_catalog_v4');
+      } catch {}
+    }
+    await fetchProducts();
+    showToast('Product catalog refreshed from database.');
   };
 
   const emitTyping = (typingState: boolean, targetUserId?: string) => {
@@ -2060,6 +2181,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         currencySymbol,
         formatAmazonUrl,
         products,
+        isProductsLoading,
+        refreshProducts,
         messages,
         unreadCount,
         isTyping,

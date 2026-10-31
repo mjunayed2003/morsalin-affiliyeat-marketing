@@ -33,9 +33,12 @@ import {
 } from 'react-icons/fa6';
 import { FaWhatsapp, FaAmazon, FaStore } from 'react-icons/fa';
 import { FiX } from 'react-icons/fi';
+import { API_BASE_URL } from '@/lib/socket';
+import { Product } from '@/app/types';
 
 interface ClientProductViewProps {
   productId: string;
+  initialProduct?: Product;
 }
 
 // Pastel category badges map
@@ -55,7 +58,7 @@ const CATEGORY_STYLES: Record<string, { bg: string; text: string }> = {
   'Beauty & Personal Care': { bg: 'bg-[#fff1f2]', text: 'text-[#9f1239]' },
 };
 
-export const ClientProductView: React.FC<ClientProductViewProps> = ({ productId }) => {
+export const ClientProductView: React.FC<ClientProductViewProps> = ({ productId, initialProduct }) => {
   const { 
     getProductById, 
     messages, 
@@ -69,7 +72,41 @@ export const ClientProductView: React.FC<ClientProductViewProps> = ({ productId 
     formatAmazonUrl
   } = useApp();
   const { isAuthModalOpen, closeAuthModal, isAuthenticated, user, openAuthModal } = useAuth();
-  const product = getProductById(productId);
+  
+  const contextProduct = getProductById(productId);
+  const [product, setProduct] = useState<Product | undefined>(initialProduct || contextProduct);
+  const [isLoadingProduct, setIsLoadingProduct] = useState<boolean>(!initialProduct && !contextProduct);
+
+  useEffect(() => {
+    if (contextProduct) {
+      setProduct(contextProduct);
+      setIsLoadingProduct(false);
+      return;
+    }
+    if (initialProduct) {
+      setProduct(initialProduct);
+      setIsLoadingProduct(false);
+      return;
+    }
+
+    let isMounted = true;
+    setIsLoadingProduct(true);
+    fetch(`${API_BASE_URL}/products/${productId}?_t=${Date.now()}`, { cache: 'no-store' })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (isMounted && data && data.id) {
+          setProduct(data);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (isMounted) setIsLoadingProduct(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [productId, contextProduct, initialProduct]);
 
   const [inputText, setInputText] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -98,6 +135,26 @@ export const ClientProductView: React.FC<ClientProductViewProps> = ({ productId 
       chatFeedRef.current.scrollTop = chatFeedRef.current.scrollHeight;
     }
   }, [messages, selectedImage]);
+
+  if (isLoadingProduct && !product) {
+    return (
+      <div className="min-h-screen bg-stone-50/40 text-slate-900 font-sans flex flex-col">
+        <Navbar />
+        <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full animate-pulse space-y-6">
+          <div className="h-6 bg-stone-200 rounded w-32" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="aspect-4/3 bg-stone-200 rounded-2xl w-full" />
+            <div className="space-y-4">
+              <div className="h-8 bg-stone-200 rounded w-3/4" />
+              <div className="h-4 bg-stone-200 rounded w-1/4" />
+              <div className="h-24 bg-stone-200 rounded w-full" />
+              <div className="h-12 bg-stone-200 rounded-xl w-1/2" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -506,25 +563,12 @@ export const ClientProductView: React.FC<ClientProductViewProps> = ({ productId 
                         href={formatAmazonUrl(product.amazonUrl)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        onClick={handleAmazonLinkClick}
-                        className={`flex-1 min-w-[200px] flex items-center justify-center gap-2 font-bold py-3 px-4 rounded-xl text-xs sm:text-sm shadow-xs transition-all cursor-pointer border ${
-                          isAuthenticated
-                            ? 'bg-[#ff9900] hover:bg-[#eb8c00] active:scale-98 text-slate-950 border-[#e08500]'
-                            : 'bg-amber-100 hover:bg-amber-200 text-amber-950 border-amber-300'
-                        }`}
-                        title={isAuthenticated ? `View on Amazon (${product.store || 'Store'})` : 'Sign in to access Amazon review link'}
+                        className="flex-1 min-w-[200px] flex items-center justify-center gap-2 font-bold py-3 px-4 rounded-xl text-xs sm:text-sm shadow-xs transition-all cursor-pointer border bg-[#ff9900] hover:bg-[#eb8c00] active:scale-98 text-slate-950 border-[#e08500]"
+                        title={`View on Amazon (${product.store || 'Amazon Partner Store'})`}
                       >
                         <FaAmazon className="w-4 h-4 text-slate-950 shrink-0" />
-                        <span>
-                          {isAuthenticated
-                            ? `View on Amazon (${product.store || 'Store'})`
-                            : `Sign In to View on Amazon`}
-                        </span>
-                        {isAuthenticated ? (
-                          <FaArrowUpRightFromSquare className="w-3 h-3 opacity-75 shrink-0" />
-                        ) : (
-                          <FaLock className="w-3.5 h-3.5 text-amber-900 shrink-0" />
-                        )}
+                        <span>View on Amazon ({product.store || 'Amazon Partner Store'})</span>
+                        <FaArrowUpRightFromSquare className="w-3 h-3 opacity-75 shrink-0" />
                       </a>
                     )}
                     <a

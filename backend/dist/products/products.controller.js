@@ -10,7 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-import { Controller, Get, Post, Patch, Delete, Param, Body, Query, UseGuards, ForbiddenException } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body, Query, UseGuards, ForbiddenException, Res } from '@nestjs/common';
 import { ProductsService } from './products.service.js';
 import { CreateProductDto, UpdateProductDto } from './dto/create-product.dto.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
@@ -28,22 +28,41 @@ let ProductsController = class ProductsController {
         this.chatGateway = chatGateway;
         this.notificationsService = notificationsService;
     }
-    async findAll(category, search) {
+    async findAll(res, category, search) {
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
         return this.productsService.findAll(category, search);
     }
-    async getReviews(id) {
+    async getReviews(id, res) {
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
         return this.productsService.getReviews(id);
     }
     async addReview(id, currentUser, body) {
         if (currentUser.role !== 'ADMIN' && !currentUser.canReview) {
             throw new ForbiddenException('Review access restricted: Admin authorization is required.');
         }
-        return this.productsService.addReview(id, currentUser.id, currentUser.name || 'Verified Reviewer', body);
+        const review = await this.productsService.addReview(id, currentUser.id, currentUser.name || 'Verified Reviewer', body);
+        if (this.chatGateway.server) {
+            this.chatGateway.server.emit('review:created', { productId: id, review });
+            this.chatGateway.server.emit('products:refresh');
+        }
+        return review;
     }
     async deleteReview(reviewId) {
-        return this.productsService.deleteReview(reviewId);
+        const result = await this.productsService.deleteReview(reviewId);
+        if (this.chatGateway.server) {
+            this.chatGateway.server.emit('review:deleted', { reviewId });
+            this.chatGateway.server.emit('products:refresh');
+        }
+        return result;
     }
-    async findOne(id) {
+    async findOne(id, res) {
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
         return this.productsService.findOne(id);
     }
     async create(createProductDto) {
@@ -72,34 +91,50 @@ let ProductsController = class ProductsController {
                 this.chatGateway.server.emit('notification:new', savedNotif);
                 this.chatGateway.server.emit('notification:broadcast', savedNotif);
                 this.chatGateway.server.emit('notification', savedNotif);
-                this.chatGateway.server.emit('newProductAdded', product);
             }
         }
         catch (notifErr) {
             console.warn('Product notification dispatch notice:', notifErr.message);
         }
+        if (this.chatGateway.server) {
+            this.chatGateway.server.emit('newProductAdded', product);
+            this.chatGateway.server.emit('product:created', product);
+            this.chatGateway.server.emit('products:refresh');
+        }
         return product;
     }
     async update(id, updateProductDto) {
-        return this.productsService.update(id, updateProductDto);
+        const updated = await this.productsService.update(id, updateProductDto);
+        if (this.chatGateway.server) {
+            this.chatGateway.server.emit('product:updated', updated);
+            this.chatGateway.server.emit('products:refresh');
+        }
+        return updated;
     }
     async remove(id) {
-        return this.productsService.remove(id);
+        const result = await this.productsService.remove(id);
+        if (this.chatGateway.server) {
+            this.chatGateway.server.emit('product:deleted', { id });
+            this.chatGateway.server.emit('products:refresh');
+        }
+        return result;
     }
 };
 __decorate([
     Get(),
-    __param(0, Query('category')),
-    __param(1, Query('search')),
+    __param(0, Res({ passthrough: true })),
+    __param(1, Query('category')),
+    __param(2, Query('search')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:paramtypes", [Object, String, String]),
     __metadata("design:returntype", Promise)
 ], ProductsController.prototype, "findAll", null);
 __decorate([
     Get(':id/reviews'),
     __param(0, Param('id')),
+    __param(1, Res({ passthrough: true })),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], ProductsController.prototype, "getReviews", null);
 __decorate([
@@ -124,8 +159,9 @@ __decorate([
 __decorate([
     Get(':id'),
     __param(0, Param('id')),
+    __param(1, Res({ passthrough: true })),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], ProductsController.prototype, "findOne", null);
 __decorate([

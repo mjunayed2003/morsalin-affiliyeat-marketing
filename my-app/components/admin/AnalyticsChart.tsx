@@ -20,7 +20,7 @@ export const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ metrics }) => {
   const defaultMetrics: PlatformMetric[] = [
     { label: 'Catalog Products', count: 3, subtext: 'Verified items', color: '#1b3b2b' },
     { label: 'In-Stock Deals', count: 3, subtext: 'Prime eligible', color: '#15803d' },
-    { label: 'Partner Stores', count: 3, subtext: 'LONG YUE, Lickoon, IMPS', color: '#d97706' },
+    { label: 'Partner Stores', count: 0, subtext: 'Verified Sellers', color: '#d97706' },
     { label: 'Registered Reviewers', count: 1, subtext: 'Active accounts', color: '#2563eb' },
     { label: 'Chat Inquiries', count: 0, subtext: 'Customer threads', color: '#7c3aed' },
   ];

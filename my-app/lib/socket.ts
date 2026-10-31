@@ -3,6 +3,17 @@ import { io, Socket } from 'socket.io-client';
 const isBrowser = typeof window !== 'undefined';
 
 const resolveBackendUrl = (): string => {
+  if (isBrowser) {
+    const host = window.location.hostname;
+    if (host !== 'localhost' && host !== '127.0.0.1') {
+      const prodUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_SOCKET_URL;
+      if (prodUrl && !prodUrl.includes('localhost') && !prodUrl.includes('127.0.0.1')) {
+        return prodUrl.replace(/\/+$/, '');
+      }
+      return `${window.location.protocol}//${window.location.host}`;
+    }
+  }
+
   let url = 
     process.env.NEXT_PUBLIC_SOCKET_URL?.replace(/\/+$/, '') ||
     process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/+$/, '') ||
@@ -16,6 +27,17 @@ const resolveBackendUrl = (): string => {
 };
 
 const resolveApiBaseUrl = (): string => {
+  if (isBrowser) {
+    const host = window.location.hostname;
+    if (host !== 'localhost' && host !== '127.0.0.1') {
+      const prodApi = process.env.NEXT_PUBLIC_API_URL;
+      if (prodApi && !prodApi.includes('localhost') && !prodApi.includes('127.0.0.1')) {
+        return prodApi.replace(/\/+$/, '');
+      }
+      return '/api';
+    }
+  }
+
   let apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, '') || '';
   if (apiUrl.includes('30011')) {
     apiUrl = apiUrl.replace('30011', '3001');

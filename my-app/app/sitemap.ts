@@ -1,15 +1,24 @@
 import { MetadataRoute } from 'next';
-import { INITIAL_PRODUCTS } from './data/initialProducts';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://freeproducts.online';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://freeproducts.online';
+  const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api').replace(/\/$/, '');
 
-  const productUrls: MetadataRoute.Sitemap = INITIAL_PRODUCTS.map((product) => ({
-    url: `${baseUrl}/p/${product.id}`,
-    lastModified: new Date(),
-    changeFrequency: 'weekly',
-    priority: 0.8,
-  }));
+  let productUrls: MetadataRoute.Sitemap = [];
+  try {
+    const res = await fetch(`${apiUrl}/products?_t=${Date.now()}`, { cache: 'no-store' });
+    if (res.ok) {
+      const products = await res.json();
+      if (Array.isArray(products)) {
+        productUrls = products.map((product: any) => ({
+          url: `${baseUrl}/p/${product.id}`,
+          lastModified: product.updatedAt ? new Date(product.updatedAt) : new Date(),
+          changeFrequency: 'weekly' as const,
+          priority: 0.8,
+        }));
+      }
+    }
+  } catch {}
 
   const staticUrls: MetadataRoute.Sitemap = [
     {

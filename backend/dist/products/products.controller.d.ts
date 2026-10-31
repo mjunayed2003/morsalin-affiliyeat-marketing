@@ -1,3 +1,4 @@
+import type { Response } from 'express';
 import { ProductsService } from './products.service.js';
 import { CreateProductDto, UpdateProductDto } from './dto/create-product.dto.js';
 import { type AuthenticatedUser } from '../auth/decorators/current-user.decorator.js';
@@ -8,19 +9,17 @@ export declare class ProductsController {
     private readonly chatGateway;
     private readonly notificationsService;
     constructor(productsService: ProductsService, chatGateway: ChatGateway, notificationsService: NotificationsService);
-    findAll(category?: string, search?: string): Promise<{
+    findAll(res: Response, category?: string, search?: string): Promise<{
         id: string;
-        image: string;
-        createdAt: Date;
-        updatedAt: Date;
-        price: number;
+        title: string;
         description: string;
         category: string;
-        title: string;
         subCategory: string | null;
+        price: number;
         originalPrice: number;
         commission: string | null;
         commissionAmount: number;
+        image: string;
         gallery: string[];
         affiliateCode: string | null;
         features: string[];
@@ -30,15 +29,17 @@ export declare class ProductsController {
         inStock: boolean;
         store: string | null;
         amazonUrl: string | null;
-    }[]>;
-    getReviews(id: string): Promise<{
-        id: string;
-        productId: string;
         createdAt: Date;
-        userId: string;
         updatedAt: Date;
+    }[]>;
+    getReviews(id: string, res: Response): Promise<{
+        id: string;
         title: string | null;
         rating: number;
+        createdAt: Date;
+        updatedAt: Date;
+        productId: string;
+        userId: string;
         userName: string;
         comment: string;
     }[]>;
@@ -48,12 +49,12 @@ export declare class ProductsController {
         comment: string;
     }): Promise<{
         id: string;
-        productId: string;
-        createdAt: Date;
-        userId: string;
-        updatedAt: Date;
         title: string | null;
         rating: number;
+        createdAt: Date;
+        updatedAt: Date;
+        productId: string;
+        userId: string;
         userName: string;
         comment: string;
     }>;
@@ -61,19 +62,17 @@ export declare class ProductsController {
         success: boolean;
         message: string;
     }>;
-    findOne(id: string): Promise<{
+    findOne(id: string, res: Response): Promise<{
         id: string;
-        image: string;
-        createdAt: Date;
-        updatedAt: Date;
-        price: number;
+        title: string;
         description: string;
         category: string;
-        title: string;
         subCategory: string | null;
+        price: number;
         originalPrice: number;
         commission: string | null;
         commissionAmount: number;
+        image: string;
         gallery: string[];
         affiliateCode: string | null;
         features: string[];
@@ -83,20 +82,20 @@ export declare class ProductsController {
         inStock: boolean;
         store: string | null;
         amazonUrl: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     create(createProductDto: CreateProductDto): Promise<{
         id: string;
-        image: string;
-        createdAt: Date;
-        updatedAt: Date;
-        price: number;
+        title: string;
         description: string;
         category: string;
-        title: string;
         subCategory: string | null;
+        price: number;
         originalPrice: number;
         commission: string | null;
         commissionAmount: number;
+        image: string;
         gallery: string[];
         affiliateCode: string | null;
         features: string[];
@@ -106,20 +105,20 @@ export declare class ProductsController {
         inStock: boolean;
         store: string | null;
         amazonUrl: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     update(id: string, updateProductDto: UpdateProductDto): Promise<{
         id: string;
-        image: string;
-        createdAt: Date;
-        updatedAt: Date;
-        price: number;
+        title: string;
         description: string;
         category: string;
-        title: string;
         subCategory: string | null;
+        price: number;
         originalPrice: number;
         commission: string | null;
         commissionAmount: number;
+        image: string;
         gallery: string[];
         affiliateCode: string | null;
         features: string[];
@@ -129,20 +128,20 @@ export declare class ProductsController {
         inStock: boolean;
         store: string | null;
         amazonUrl: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     remove(id: string): Promise<{
         id: string;
-        image: string;
-        createdAt: Date;
-        updatedAt: Date;
-        price: number;
+        title: string;
         description: string;
         category: string;
-        title: string;
         subCategory: string | null;
+        price: number;
         originalPrice: number;
         commission: string | null;
         commissionAmount: number;
+        image: string;
         gallery: string[];
         affiliateCode: string | null;
         features: string[];
@@ -152,5 +151,7 @@ export declare class ProductsController {
         inStock: boolean;
         store: string | null;
         amazonUrl: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
 }

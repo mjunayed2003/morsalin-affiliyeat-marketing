@@ -44,6 +44,7 @@ export default function ProductsPage() {
   const router = useRouter();
   const { 
     products, 
+    isProductsLoading,
     activeDetailProduct, 
     activeShareProduct, 
     openDetailModal, 
@@ -143,7 +144,7 @@ export default function ProductsPage() {
               <FaMagnifyingGlass className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
               <input
                 type="text"
-                placeholder="Search Amazon products by title, store (e.g. LONG YUE, Lickoon), or category..."
+                placeholder="Search Amazon products by title, store, or category..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-11 pr-10 py-3 bg-stone-50/80 text-slate-900 rounded-2xl text-xs sm:text-sm font-medium border border-stone-200 focus:outline-none focus:ring-2 focus:ring-[#1b3b2b]/30 focus:border-[#1b3b2b] placeholder:text-slate-400 transition-all"
@@ -206,7 +207,19 @@ export default function ProductsPage() {
         {/* PRODUCT CARDS GRID                                                       */}
         {/* ========================================================================= */}
         <div>
-          {filteredProducts.length === 0 ? (
+          {isProductsLoading && products.length === 0 ? (
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-7">
+              {[1, 2, 3, 4, 5, 6].map((n) => (
+                <div key={n} className="bg-white rounded-xl sm:rounded-2xl border border-stone-200/80 p-3 sm:p-5 animate-pulse space-y-3">
+                  <div className="w-full aspect-4/3 rounded-lg bg-stone-200" />
+                  <div className="h-4 bg-stone-200 rounded w-1/3" />
+                  <div className="h-5 bg-stone-200 rounded w-4/5" />
+                  <div className="h-3 bg-stone-200 rounded w-1/2" />
+                  <div className="h-9 bg-stone-200 rounded-xl w-full pt-2" />
+                </div>
+              ))}
+            </div>
+          ) : filteredProducts.length === 0 ? (
             <div className="bg-white rounded-3xl p-12 text-center border border-stone-200/80 shadow-2xs space-y-4">
               <div className="w-16 h-16 rounded-3xl bg-stone-100 text-slate-500 flex items-center justify-center mx-auto text-xl font-black">
                 🔍
@@ -308,22 +321,13 @@ export default function ProductsPage() {
                           rel="noopener noreferrer"
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (!isAuthenticated) {
-                              e.preventDefault();
-                              showToast('Please sign in to view the official Amazon product link.');
-                              openAuthModal('login');
-                            }
                           }}
-                          className={`py-1.5 sm:py-2.5 px-2 sm:px-3 rounded-lg sm:rounded-xl font-bold text-[11px] sm:text-xs border transition-all duration-200 inline-flex items-center justify-center gap-1 shadow-2xs cursor-pointer shrink-0 ${
-                            isAuthenticated
-                              ? 'bg-[#fff8e7] hover:bg-[#ff9900] text-[#92400e] hover:text-slate-950 border-amber-300 hover:border-[#e08500]'
-                              : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-200'
-                          }`}
-                          title={isAuthenticated ? `View on Amazon (${prod.store || 'Amazon'})` : 'Sign in to access Amazon review link'}
+                          className="py-1.5 sm:py-2.5 px-2 sm:px-3 rounded-lg sm:rounded-xl font-bold text-[11px] sm:text-xs border transition-all duration-200 inline-flex items-center justify-center gap-1 shadow-2xs cursor-pointer shrink-0 bg-[#fff8e7] hover:bg-[#ff9900] text-[#92400e] hover:text-slate-950 border-amber-300 hover:border-[#e08500]"
+                          title={`View on Amazon (${prod.store || 'Amazon'})`}
                         >
                           <FaAmazon className="w-3.5 h-3.5 text-[#e08500]" />
-                          <span className="hidden sm:inline">{isAuthenticated ? 'Amazon' : 'Amazon 🔒'}</span>
-                          <span className="sm:hidden">{isAuthenticated ? '' : '🔒'}</span>
+                          <span className="hidden sm:inline">Amazon</span>
+                          <span className="sm:hidden">🛒</span>
                         </a>
                       )}
                     </div>

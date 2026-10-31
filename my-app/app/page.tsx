@@ -51,6 +51,7 @@ export default function Home() {
   const router = useRouter();
   const { 
     products, 
+    isProductsLoading,
     activeDetailProduct, 
     activeShareProduct, 
     openDetailModal, 
@@ -153,7 +154,7 @@ export default function Home() {
 
                 {/* Paragraph Description */}
                 <p className="text-xs sm:text-base text-slate-600 font-normal leading-relaxed max-w-xl">
-                  Looking for free products? Join the FreeProducts.online review club! Test quality items from verified Amazon sellers (LONG YUE, Lickoon, Imps Hair & more). Share your authentic customer feedback and keep every product with zero fees.
+                  Looking for free products? Join the FreeProducts.online review club! Test quality items from verified Amazon partner stores. Share your authentic customer feedback and keep every product with zero fees.
                 </p>
 
                 {/* Action Buttons */}
@@ -304,104 +305,109 @@ export default function Home() {
             <AdvertisementBanner className="mb-6" />
 
             {/* Product Cards Grid (2 Columns on mobile, 3 on desktop) */}
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-7">
-              {displayedProducts.map((prod) => {
-                const badgeStyle = CATEGORY_STYLES[prod.category] || { 
-                  bg: 'bg-stone-100', 
-                  text: 'text-stone-700' 
-                };
+            {isProductsLoading && products.length === 0 ? (
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-7">
+                {[1, 2, 3, 4, 5, 6].map((n) => (
+                  <div key={n} className="bg-white rounded-xl sm:rounded-2xl border border-stone-200/80 p-3 sm:p-5 animate-pulse space-y-3">
+                    <div className="w-full aspect-4/3 rounded-lg bg-stone-200" />
+                    <div className="h-4 bg-stone-200 rounded w-1/3" />
+                    <div className="h-5 bg-stone-200 rounded w-4/5" />
+                    <div className="h-3 bg-stone-200 rounded w-1/2" />
+                    <div className="h-9 bg-stone-200 rounded-xl w-full pt-2" />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-7">
+                {displayedProducts.map((prod) => {
+                  const badgeStyle = CATEGORY_STYLES[prod.category] || { 
+                    bg: 'bg-stone-100', 
+                    text: 'text-stone-700' 
+                  };
 
-                return (
-                  <div
-                    key={prod.id}
-                    className="group bg-white rounded-xl sm:rounded-2xl border border-slate-100/90 hover:border-slate-300 p-2.5 sm:p-5 flex flex-col justify-between shadow-2xs hover:shadow-md transition-all duration-200"
-                  >
-                    <div>
-                      {/* Product Image Link */}
-                      <Link 
-                        href={`/p/${prod.id}`}
-                        className="block relative w-full aspect-4/3 rounded-lg sm:rounded-xl bg-[#f8f7f4] overflow-hidden mb-2 sm:mb-4 cursor-pointer flex items-center justify-center group/img"
-                        title={`View ${prod.title}`}
-                      >
-                        <img 
-                          src={prod.image} 
-                          alt={prod.title}
-                          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 cursor-pointer"
-                          loading="lazy"
-                        />
-                      </Link>
+                  return (
+                    <div
+                      key={prod.id}
+                      className="group bg-white rounded-xl sm:rounded-2xl border border-slate-100/90 hover:border-slate-300 p-2.5 sm:p-5 flex flex-col justify-between shadow-2xs hover:shadow-md transition-all duration-200"
+                    >
+                      <div>
+                        {/* Product Image Link */}
+                        <Link 
+                          href={`/p/${prod.id}`}
+                          className="block relative w-full aspect-4/3 rounded-lg sm:rounded-xl bg-[#f8f7f4] overflow-hidden mb-2 sm:mb-4 cursor-pointer flex items-center justify-center group/img"
+                          title={`View ${prod.title}`}
+                        >
+                          <img 
+                            src={prod.image} 
+                            alt={prod.title}
+                            className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 cursor-pointer"
+                            loading="lazy"
+                          />
+                        </Link>
 
-                      {/* Category Pill & Store Badge */}
-                      <div className="mb-1.5 sm:mb-2 flex items-center gap-1 sm:gap-1.5 flex-wrap">
-                        <span className={`inline-block px-1.5 sm:px-2.5 py-0.5 rounded-full text-[9px] sm:text-[11px] font-bold ${badgeStyle.bg} ${badgeStyle.text} truncate max-w-[85px] sm:max-w-none`}>
-                          {prod.category}
-                        </span>
-                        {prod.store && (
-                          <span className="inline-flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2.5 py-0.5 rounded-full text-[9px] sm:text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200 truncate max-w-[80px] sm:max-w-none">
-                            <FaStore className="w-2 sm:w-2.5 h-2 sm:h-2.5 text-amber-600 shrink-0" />
-                            <span className="truncate">{prod.store}</span>
+                        {/* Category Pill & Store Badge */}
+                        <div className="mb-1.5 sm:mb-2 flex items-center gap-1 sm:gap-1.5 flex-wrap">
+                          <span className={`inline-block px-1.5 sm:px-2.5 py-0.5 rounded-full text-[9px] sm:text-[11px] font-bold ${badgeStyle.bg} ${badgeStyle.text} truncate max-w-[85px] sm:max-w-none`}>
+                            {prod.category}
                           </span>
-                        )}
-                        {prod.badge && (
-                          <span className="inline-block px-1.5 sm:px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold bg-slate-900 text-white">
-                            {prod.badge}
-                          </span>
-                        )}
+                          {prod.store && (
+                            <span className="inline-flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2.5 py-0.5 rounded-full text-[9px] sm:text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200 truncate max-w-[80px] sm:max-w-none">
+                              <FaStore className="w-2 sm:w-2.5 h-2 sm:h-2.5 text-amber-600 shrink-0" />
+                              <span className="truncate">{prod.store}</span>
+                            </span>
+                          )}
+                          {prod.badge && (
+                            <span className="inline-block px-1.5 sm:px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold bg-slate-900 text-white">
+                              {prod.badge}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Product Title */}
+                        <Link 
+                          href={`/p/${prod.id}`}
+                          className="block font-bold text-slate-900 text-xs sm:text-base leading-snug hover:text-[#1b3b2b] transition-colors cursor-pointer line-clamp-2 sm:line-clamp-1"
+                        >
+                          {prod.title}
+                        </Link>
+
+                        {/* Subcategory / Niche */}
+                        <p className="text-[10px] sm:text-xs text-slate-500 font-medium mt-0.5 line-clamp-1">
+                          {prod.subCategory || 'Quality Selection'}
+                        </p>
                       </div>
 
-                      {/* Product Title */}
-                      <Link 
-                        href={`/p/${prod.id}`}
-                        className="block font-bold text-slate-900 text-xs sm:text-base leading-snug hover:text-[#1b3b2b] transition-colors cursor-pointer line-clamp-2 sm:line-clamp-1"
-                      >
-                        {prod.title}
-                      </Link>
-
-                      {/* Subcategory / Niche */}
-                      <p className="text-[10px] sm:text-xs text-slate-500 font-medium mt-0.5 line-clamp-1">
-                        {prod.subCategory || 'Quality Selection'}
-                      </p>
-                    </div>
-
-                    {/* Action Buttons: "Get It Free" + "Amazon" */}
-                    <div className="pt-2.5 sm:pt-5 flex items-center gap-1.5 sm:gap-2">
-                      <Link
-                        href={`/p/${prod.id}`}
-                        className="flex-1 py-1.5 sm:py-2.5 px-2 sm:px-3 rounded-lg sm:rounded-xl font-bold text-[11px] sm:text-sm bg-[#1b3b2b] hover:bg-[#142e20] text-white transition-all duration-200 cursor-pointer shadow-2xs text-center whitespace-nowrap"
-                      >
-                        <span className="sm:hidden">Get Free</span>
-                        <span className="hidden sm:inline">Get It Free</span>
-                      </Link>
-                      {prod.amazonUrl && (
-                        <a
-                          href={prod.amazonUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (!isAuthenticated) {
-                              e.preventDefault();
-                              showToast('Please sign in to view the official Amazon product link.');
-                              openAuthModal('login');
-                            }
-                          }}
-                          className={`py-1.5 sm:py-2.5 px-2 sm:px-3 rounded-lg sm:rounded-xl font-bold text-[11px] sm:text-xs border transition-all duration-200 inline-flex items-center justify-center gap-1 shadow-2xs cursor-pointer shrink-0 ${
-                            isAuthenticated
-                              ? 'bg-[#fff8e7] hover:bg-[#ff9900] text-[#92400e] hover:text-slate-950 border-amber-300 hover:border-[#e08500]'
-                              : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-200'
-                          }`}
-                          title={isAuthenticated ? `View on Amazon (${prod.store || 'Amazon'})` : 'Sign in to access Amazon review link'}
+                      {/* Action Buttons: "Get It Free" + "Amazon" */}
+                      <div className="pt-2.5 sm:pt-5 flex items-center gap-1.5 sm:gap-2">
+                        <Link
+                          href={`/p/${prod.id}`}
+                          className="flex-1 py-1.5 sm:py-2.5 px-2 sm:px-3 rounded-lg sm:rounded-xl font-bold text-[11px] sm:text-sm bg-[#1b3b2b] hover:bg-[#142e20] text-white transition-all duration-200 cursor-pointer shadow-2xs text-center whitespace-nowrap"
                         >
-                          <FaAmazon className="w-3.5 h-3.5 text-[#e08500]" />
-                          <span className="hidden sm:inline">{isAuthenticated ? 'Amazon' : 'Amazon 🔒'}</span>
-                          <span className="sm:hidden">{isAuthenticated ? '' : '🔒'}</span>
-                        </a>
-                      )}
+                          <span className="sm:hidden">Get Free</span>
+                          <span className="hidden sm:inline">Get It Free</span>
+                        </Link>
+                        {prod.amazonUrl && (
+                          <a
+                            href={prod.amazonUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                            }}
+                            className="py-1.5 sm:py-2.5 px-2 sm:px-3 rounded-lg sm:rounded-xl font-bold text-[11px] sm:text-xs border transition-all duration-200 inline-flex items-center justify-center gap-1 shadow-2xs cursor-pointer shrink-0 bg-[#fff8e7] hover:bg-[#ff9900] text-[#92400e] hover:text-slate-950 border-amber-300 hover:border-[#e08500]"
+                            title={`View on Amazon (${prod.store || 'Amazon'})`}
+                          >
+                            <FaAmazon className="w-3.5 h-3.5 text-[#e08500]" />
+                            <span className="hidden sm:inline">Amazon</span>
+                            <span className="sm:hidden">🛒</span>
+                          </a>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
 
             {displayedProducts.length === 0 && (
               <div className="text-center py-12 bg-stone-50 rounded-2xl p-8">
@@ -649,7 +655,7 @@ export default function Home() {
               <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-2xs">
                 <h4 className="font-bold text-sm text-slate-900">Are these Amazon products really 100% free?</h4>
                 <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
-                  Yes! Verified partner Amazon stores (such as LONG YUE, Lickoon, and Imps Hair) sponsor these units to gather authentic feedback from real shoppers. There are no hidden fees or subscriptions — every approved product is yours to keep forever.
+                  Yes! Verified partner Amazon stores sponsor these units to gather authentic feedback from real shoppers. There are no hidden fees or subscriptions — every approved product is yours to keep forever.
                 </p>
               </div>
 

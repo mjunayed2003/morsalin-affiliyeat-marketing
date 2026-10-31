@@ -184,10 +184,10 @@ export default function AdminProductsPage() {
           <button
             onClick={() => setConfirmResetOpen(true)}
             className="inline-flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-3 py-2 rounded-xl text-xs font-semibold shadow-2xs transition-colors"
-            title="Restore official Amazon products"
+            title="Refresh latest products directly from database"
           >
             <FaRotate className="w-3 h-3 text-slate-400" />
-            <span className="hidden sm:inline">Reset Defaults</span>
+            <span className="hidden sm:inline">Refresh Catalog</span>
           </button>
 
           <Link
@@ -242,13 +242,13 @@ export default function AdminProductsPage() {
         />
       )}
 
-      {/* Reset Defaults Confirmation Modal */}
+      {/* Refresh Catalog Confirmation Modal */}
       <ConfirmModal
         isOpen={confirmResetOpen}
         onClose={() => setConfirmResetOpen(false)}
-        title="Reset Catalog to Defaults"
-        message="Are you sure you want to restore the official verified Amazon catalog (LONG YUE Doorbell, Lickoon Repellent, IMPS Hair Fibers)? Any custom products created locally will be reset."
-        confirmLabel="Reset Catalog"
+        title="Refresh Product Catalog"
+        message="Are you sure you want to refresh the catalog? This will fetch the latest products directly from the database and clear any stale local browser cache."
+        confirmLabel="Refresh Catalog"
         isDestructive={false}
         onConfirm={() => {
           resetProducts();

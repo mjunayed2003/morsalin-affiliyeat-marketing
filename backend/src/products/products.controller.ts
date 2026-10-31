@@ -8,8 +8,10 @@ import {
   Body, 
   Query, 
   UseGuards,
-  ForbiddenException
+  ForbiddenException,
+  Res
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { ProductsService } from './products.service.js';
 import { CreateProductDto, UpdateProductDto } from './dto/create-product.dto.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
@@ -27,18 +29,28 @@ export class ProductsController {
     private readonly notificationsService: NotificationsService,
   ) {}
 
-  // Public: Browse catalog
+  // Public: Browse catalog (Never cache, always return fresh database products)
   @Get()
   async findAll(
+    @Res({ passthrough: true }) res: Response,
     @Query('category') category?: string,
     @Query('search') search?: string,
   ) {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     return this.productsService.findAll(category, search);
   }
 
   // Public: Get reviews for a product
   @Get(':id/reviews')
-  async getReviews(@Param('id') id: string) {
+  async getReviews(
+    @Param('id') id: string,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     return this.productsService.getReviews(id);
   }
 
@@ -53,7 +65,14 @@ export class ProductsController {
     if (currentUser.role !== 'ADMIN' && !(currentUser as any).canReview) {
       throw new ForbiddenException('Review access restricted: Admin authorization is required.');
     }
-    return this.productsService.addReview(id, currentUser.id, currentUser.name || 'Verified Reviewer', body);
+    const review = await this.productsService.addReview(id, currentUser.id, currentUser.name || 'Verified Reviewer', body);
+    
+    // Broadcast review event
+    if (this.chatGateway.server) {
+      this.chatGateway.server.emit('review:created', { productId: id, review });
+      this.chatGateway.server.emit('products:refresh');
+    }
+    return review;
   }
 
   // Admin Only: Delete review
@@ -61,12 +80,23 @@ export class ProductsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
   async deleteReview(@Param('reviewId') reviewId: string) {
-    return this.productsService.deleteReview(reviewId);
+    const result = await this.productsService.deleteReview(reviewId);
+    if (this.chatGateway.server) {
+      this.chatGateway.server.emit('review:deleted', { reviewId });
+      this.chatGateway.server.emit('products:refresh');
+    }
+    return result;
   }
 
-  // Public: View product details
+  // Public: View product details (No cache)
   @Get(':id')
-  async findOne(@Param('id') id: string) {
+  async findOne(
+    @Param('id') id: string,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     return this.productsService.findOne(id);
   }
 
@@ -106,10 +136,16 @@ export class ProductsController {
         this.chatGateway.server.emit('notification:new', savedNotif);
         this.chatGateway.server.emit('notification:broadcast', savedNotif);
         this.chatGateway.server.emit('notification', savedNotif);
-        this.chatGateway.server.emit('newProductAdded', product);
       }
     } catch (notifErr: any) {
       console.warn('Product notification dispatch notice:', notifErr.message);
+    }
+
+    // 4. Broadcast instant product updates to all connected devices
+    if (this.chatGateway.server) {
+      this.chatGateway.server.emit('newProductAdded', product);
+      this.chatGateway.server.emit('product:created', product);
+      this.chatGateway.server.emit('products:refresh');
     }
 
     return product;
@@ -123,7 +159,12 @@ export class ProductsController {
     @Param('id') id: string,
     @Body() updateProductDto: UpdateProductDto,
   ) {
-    return this.productsService.update(id, updateProductDto);
+    const updated = await this.productsService.update(id, updateProductDto);
+    if (this.chatGateway.server) {
+      this.chatGateway.server.emit('product:updated', updated);
+      this.chatGateway.server.emit('products:refresh');
+    }
+    return updated;
   }
 
   // Admin Only: Remove product
@@ -131,7 +172,11 @@ export class ProductsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
   async remove(@Param('id') id: string) {
-    return this.productsService.remove(id);
+    const result = await this.productsService.remove(id);
+    if (this.chatGateway.server) {
+      this.chatGateway.server.emit('product:deleted', { id });
+      this.chatGateway.server.emit('products:refresh');
+    }
+    return result;
   }
 }
-

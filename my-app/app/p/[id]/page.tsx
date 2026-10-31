@@ -1,21 +1,21 @@
 import type { Metadata } from 'next';
 import { ClientProductView } from './ClientProductView';
-import { INITIAL_PRODUCTS } from '../../data/initialProducts';
+import { Product } from '../../types';
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-async function getProduct(id: string) {
+async function getProduct(id: string): Promise<Product | null> {
   try {
     const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api').replace(/\/$/, '');
-    const res = await fetch(`${apiUrl}/products/${id}`, { cache: 'no-store' });
+    const res = await fetch(`${apiUrl}/products/${id}?_t=${Date.now()}`, { cache: 'no-store' });
     if (res.ok) {
       const data = await res.json();
       if (data && data.id) return data;
     }
   } catch (err) {}
-  return INITIAL_PRODUCTS.find((p) => p.id === id);
+  return null;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -125,7 +125,7 @@ export default async function ProductPageRoute({ params }: PageProps) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
         />
       )}
-      <ClientProductView productId={id} />
+      <ClientProductView productId={id} initialProduct={product || undefined} />
     </>
   );
 }

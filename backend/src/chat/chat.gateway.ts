@@ -538,6 +538,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.server.emit('notification:broadcast', createdNotif || notifPayload);
     this.server.emit('notification', notifPayload);
     this.server.emit('newProductAdded', payload.product);
+    this.server.emit('product:created', payload.product);
+    this.server.emit('products:refresh');
     return { success: true };
   }
 
