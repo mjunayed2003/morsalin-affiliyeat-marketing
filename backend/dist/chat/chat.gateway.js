@@ -505,16 +505,10 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
         const callerRole = (payload.callerRole === 'admin' || user?.role?.toUpperCase() === 'ADMIN') ? 'admin' : 'customer';
         const targetUserId = payload.targetUserId;
         for (const [existingId, activeCall] of this.activeAudioCalls.entries()) {
-            if (activeCall.status === 'connected' || activeCall.status === 'calling' || activeCall.status === 'connecting') {
-                const isTargetBusy = targetUserId && (activeCall.callerId === targetUserId || activeCall.targetUserId === targetUserId);
-                const isCallerBusy = activeCall.callerId === callerId || (activeCall.targetUserId && activeCall.targetUserId === callerId);
-                if (isTargetBusy || isCallerBusy) {
-                    client.emit('audioCallBusy', {
-                        callId: existingId,
-                        reason: 'User is currently on another call.',
-                    });
-                    return { success: false, reason: 'BUSY' };
-                }
+            if (activeCall.callerId === callerId || (targetUserId && activeCall.targetUserId === targetUserId)) {
+                if (activeCall.timeoutTimer)
+                    clearTimeout(activeCall.timeoutTimer);
+                this.activeAudioCalls.delete(existingId);
             }
         }
         const callId = `call_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;

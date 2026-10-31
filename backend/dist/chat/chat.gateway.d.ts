@@ -152,10 +152,6 @@ export declare class ChatGateway implements OnGatewayConnection, OnGatewayDiscon
         sdp?: any;
     }): Promise<{
         success: boolean;
-        reason: string;
-        callData?: undefined;
-    } | {
-        success: boolean;
         callData: {
             callId: string;
             callerId: string;
@@ -166,7 +162,6 @@ export declare class ChatGateway implements OnGatewayConnection, OnGatewayDiscon
             timestamp: string;
             status: "incoming";
         };
-        reason?: undefined;
     }>;
     handleWebrtcOffer(client: Socket, payload: {
         callId: string;
