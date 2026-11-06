@@ -8,10 +8,9 @@ export declare class UsersService {
     constructor(prisma: PrismaService, notificationsService: NotificationsService, chatGateway: ChatGateway);
     findAll(role?: string): Promise<{
         id: string;
-        createdAt: Date;
         phone: string;
-        email: string | null;
         name: string;
+        email: string | null;
         address: string | null;
         city: string | null;
         avatar: string | null;
@@ -26,15 +25,15 @@ export declare class UsersService {
         reviewedBy: string | null;
         rejectionReason: string | null;
         canReview: boolean;
+        createdAt: Date;
         updatedAt: Date;
     }[]>;
     findPendingRegistrations(page?: number, limit?: number, search?: string): Promise<{
         users: {
             id: string;
-            createdAt: Date;
             phone: string;
-            email: string | null;
             name: string;
+            email: string | null;
             address: string | null;
             city: string | null;
             avatar: string | null;
@@ -49,6 +48,7 @@ export declare class UsersService {
             reviewedBy: string | null;
             rejectionReason: string | null;
             canReview: boolean;
+            createdAt: Date;
             updatedAt: Date;
         }[];
         total: number;
@@ -61,10 +61,9 @@ export declare class UsersService {
     }>;
     findOne(id: string): Promise<{
         id: string;
-        createdAt: Date;
         phone: string;
-        email: string | null;
         name: string;
+        email: string | null;
         address: string | null;
         city: string | null;
         avatar: string | null;
@@ -79,21 +78,22 @@ export declare class UsersService {
         reviewedBy: string | null;
         rejectionReason: string | null;
         canReview: boolean;
+        createdAt: Date;
         updatedAt: Date;
         inquiries: ({
             product: {
                 id: string;
-                image: string;
                 createdAt: Date;
                 updatedAt: Date;
-                price: number;
+                title: string;
                 description: string;
                 category: string;
-                title: string;
                 subCategory: string | null;
+                price: number;
                 originalPrice: number;
                 commission: string | null;
                 commissionAmount: number;
+                image: string;
                 gallery: string[];
                 affiliateCode: string | null;
                 features: string[];
@@ -106,11 +106,11 @@ export declare class UsersService {
             };
         } & {
             id: string;
-            productId: string;
-            createdAt: Date;
-            userId: string;
             status: import("../generated/prisma/enums.js").InquiryStatus;
+            createdAt: Date;
             updatedAt: Date;
+            productId: string;
+            userId: string;
             amazonOrderId: string | null;
             reviewUrl: string | null;
             notes: string | null;
@@ -125,11 +125,10 @@ export declare class UsersService {
         message: string;
         user: {
             id: string;
-            createdAt: Date;
             phone: string;
-            email: string | null;
             name: string;
             password: string | null;
+            email: string | null;
             address: string | null;
             city: string | null;
             avatar: string | null;
@@ -145,6 +144,7 @@ export declare class UsersService {
             reviewedBy: string | null;
             rejectionReason: string | null;
             canReview: boolean;
+            createdAt: Date;
             updatedAt: Date;
         };
     }>;
@@ -157,11 +157,10 @@ export declare class UsersService {
         message: string;
         user: {
             id: string;
-            createdAt: Date;
             phone: string;
-            email: string | null;
             name: string;
             password: string | null;
+            email: string | null;
             address: string | null;
             city: string | null;
             avatar: string | null;
@@ -177,16 +176,16 @@ export declare class UsersService {
             reviewedBy: string | null;
             rejectionReason: string | null;
             canReview: boolean;
+            createdAt: Date;
             updatedAt: Date;
         };
     }>;
     updateRole(id: string, role: 'CLIENT' | 'ADMIN'): Promise<{
         id: string;
-        createdAt: Date;
         phone: string;
-        email: string | null;
         name: string;
         password: string | null;
+        email: string | null;
         address: string | null;
         city: string | null;
         avatar: string | null;
@@ -202,6 +201,7 @@ export declare class UsersService {
         reviewedBy: string | null;
         rejectionReason: string | null;
         canReview: boolean;
+        createdAt: Date;
         updatedAt: Date;
     }>;
     updateStatus(id: string, status: 'ACTIVE' | 'PENDING' | 'REJECTED' | 'BLOCKED', adminUser?: {
@@ -209,11 +209,10 @@ export declare class UsersService {
         name?: string;
     }): Promise<{
         id: string;
-        createdAt: Date;
         phone: string;
-        email: string | null;
         name: string;
         password: string | null;
+        email: string | null;
         address: string | null;
         city: string | null;
         avatar: string | null;
@@ -229,15 +228,15 @@ export declare class UsersService {
         reviewedBy: string | null;
         rejectionReason: string | null;
         canReview: boolean;
+        createdAt: Date;
         updatedAt: Date;
     }>;
     updateReviewPermission(id: string, canReview: boolean): Promise<{
         id: string;
-        createdAt: Date;
         phone: string;
-        email: string | null;
         name: string;
         password: string | null;
+        email: string | null;
         address: string | null;
         city: string | null;
         avatar: string | null;
@@ -253,15 +252,15 @@ export declare class UsersService {
         reviewedBy: string | null;
         rejectionReason: string | null;
         canReview: boolean;
+        createdAt: Date;
         updatedAt: Date;
     }>;
     updateSelfie(id: string, selfieImage: string): Promise<{
         id: string;
-        createdAt: Date;
         phone: string;
-        email: string | null;
         name: string;
         password: string | null;
+        email: string | null;
         address: string | null;
         city: string | null;
         avatar: string | null;
@@ -277,15 +276,15 @@ export declare class UsersService {
         reviewedBy: string | null;
         rejectionReason: string | null;
         canReview: boolean;
+        createdAt: Date;
         updatedAt: Date;
     }>;
     updateFcmToken(id: string, fcmToken: string): Promise<{
         id: string;
-        createdAt: Date;
         phone: string;
-        email: string | null;
         name: string;
         password: string | null;
+        email: string | null;
         address: string | null;
         city: string | null;
         avatar: string | null;
@@ -301,6 +300,7 @@ export declare class UsersService {
         reviewedBy: string | null;
         rejectionReason: string | null;
         canReview: boolean;
+        createdAt: Date;
         updatedAt: Date;
     }>;
 }

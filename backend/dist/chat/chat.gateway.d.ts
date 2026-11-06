@@ -72,7 +72,7 @@ export declare class ChatGateway implements OnGatewayConnection, OnGatewayDiscon
         userId?: string;
         token?: string;
     }): Promise<{
-        ids: never[] | string[];
+        ids: string[] | never[];
         userId: string | undefined;
         status: "SEEN";
         seenAt: string;

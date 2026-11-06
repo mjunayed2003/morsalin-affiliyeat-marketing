@@ -14,9 +14,9 @@ export declare class InquiriesController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            category: string;
             title: string;
             description: string;
+            category: string;
             subCategory: string | null;
             price: number;
             originalPrice: number;
@@ -54,9 +54,9 @@ export declare class InquiriesController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            category: string;
             title: string;
             description: string;
+            category: string;
             subCategory: string | null;
             price: number;
             originalPrice: number;
@@ -89,9 +89,9 @@ export declare class InquiriesController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            category: string;
             title: string;
             description: string;
+            category: string;
             subCategory: string | null;
             price: number;
             originalPrice: number;
