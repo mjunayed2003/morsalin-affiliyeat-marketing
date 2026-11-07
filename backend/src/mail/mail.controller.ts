@@ -7,7 +7,6 @@ import {
   UseGuards 
 } from '@nestjs/common';
 import { MailService } from './mail.service.js';
-import { Public } from '../auth/decorators/public.decorator.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../auth/guards/roles.guard.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
@@ -25,11 +24,12 @@ export class MailController {
 
   /**
    * Test sending an email via Resend
-   * Publicly accessible for quick health checks
+   * Restricted to authenticated administrators to prevent open mail relay abuse
    * Default recipient is 'delivered@resend.dev' (Resend official test sandbox)
    */
   @Post('test-resend')
-  @Public()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @HttpCode(HttpStatus.OK)
   async testResend(@Body() body: TestMailDto) {
     const to = body.to || 'delivered@resend.dev';

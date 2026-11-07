@@ -669,8 +669,24 @@ export default function Home() {
 
           </div>
 
+          {/* Legal Compliance & Affiliate Disclosure */}
+          <div className="pt-6 border-t border-stone-200 text-[11px] text-slate-500 space-y-2">
+            <p className="text-slate-600">
+              <strong>Affiliate Disclosure:</strong> FreeProducts.online is a participant in the Amazon Services LLC Associates Program, an affiliate advertising program designed to provide a means for sites to earn advertising fees by advertising and linking to Amazon.com. As an Amazon Associate, we earn from qualifying purchases.
+            </p>
+            <div className="flex flex-wrap items-center gap-3 pt-1 text-slate-600">
+              <Link href="/privacy" className="hover:text-emerald-800 underline font-medium">Privacy Policy</Link>
+              <span>•</span>
+              <Link href="/terms" className="hover:text-emerald-800 underline font-medium">Terms of Service</Link>
+              <span>•</span>
+              <Link href="/affiliate-disclosure" className="hover:text-emerald-800 underline font-medium">Affiliate Disclosure</Link>
+              <span>•</span>
+              <Link href="/chat" className="hover:text-emerald-800 underline font-medium">Support Desk</Link>
+            </div>
+          </div>
+
           {/* Bottom Copyright & Contact Info */}
-          <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-slate-400">
+          <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-slate-400">
             <div className="flex flex-wrap items-center gap-3">
               <p>© 2026 {settings.platformName || 'FreeProducts.online'}. All rights reserved.</p>
               <span className="hidden sm:inline text-slate-300">•</span>

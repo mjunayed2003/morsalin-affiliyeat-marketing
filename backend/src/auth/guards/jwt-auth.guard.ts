@@ -35,7 +35,7 @@ export class JwtAuthGuard implements CanActivate {
 
     try {
       const payload = await this.jwtService.verifyAsync(token, {
-        secret: process.env.JWT_SECRET || 'morsalin_affiliate_super_secure_jwt_token_secret_key_2026_x87123',
+        secret: process.env.JWT_SECRET || 'dev_secret_key_change_in_production_f72a91b4c3e8',
       });
 
       const userId = (payload.sub || payload.id) as string;

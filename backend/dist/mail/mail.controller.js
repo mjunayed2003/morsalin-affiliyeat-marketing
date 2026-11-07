@@ -12,7 +12,6 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 import { Controller, Post, Body, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
 import { MailService } from './mail.service.js';
-import { Public } from '../auth/decorators/public.decorator.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../auth/guards/roles.guard.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
@@ -55,7 +54,8 @@ let MailController = class MailController {
 };
 __decorate([
     Post('test-resend'),
-    Public(),
+    UseGuards(JwtAuthGuard, RolesGuard),
+    Roles('ADMIN'),
     HttpCode(HttpStatus.OK),
     __param(0, Body()),
     __metadata("design:type", Function),

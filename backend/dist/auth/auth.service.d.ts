@@ -12,6 +12,7 @@ export declare class AuthService {
     private readonly mailService;
     private readonly notificationsService;
     private readonly chatGateway;
+    private readonly logger;
     constructor(prisma: PrismaService, jwtService: JwtService, mailService: MailService, notificationsService: NotificationsService, chatGateway: ChatGateway);
     private normalizePhone;
     sendRegisterOtp(dto: SendRegisterOtpDto): Promise<{

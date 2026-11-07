@@ -13,10 +13,12 @@ import {
   FaPaperPlane
 } from 'react-icons/fa6';
 import { useApp } from '@/app/context/AppContext';
+import { useAuth } from '@/app/context/AuthContext';
 import { API_BASE_URL } from '@/lib/socket';
 
 export default function AdminSettingsPage() {
   const { settings, updateSettings, showToast } = useApp();
+  const { getAuthHeaders } = useAuth();
 
   const [amazonTag, setAmazonTag] = useState(settings.amazonTag || 'bwbh00-20');
   const [platformName, setPlatformName] = useState(settings.platformName || 'FreeProducts.online');
@@ -70,7 +72,10 @@ export default function AdminSettingsPage() {
     try {
       const res = await fetch(`${API_BASE_URL}/mail/test-resend`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
         body: JSON.stringify({
           to: testEmail.trim(),
           subject: `Test Resend Dispatch from ${platformName}`,

@@ -7,8 +7,25 @@ export async function createNestApp() {
     const app = await NestFactory.create(AppModule, { bodyParser: false });
     app.use(express.json({ limit: '50mb' }));
     app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+    const allowedOrigins = [
+        'https://freeproducts.online',
+        'https://www.freeproducts.online',
+        'http://localhost:3000',
+        'http://localhost:3001',
+        ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL.replace(/\/+$/, '')] : []),
+        ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim()) : []),
+    ];
     app.enableCors({
-        origin: true,
+        origin: (requestOrigin, callback) => {
+            if (!requestOrigin)
+                return callback(null, true);
+            if (allowedOrigins.includes(requestOrigin) ||
+                requestOrigin.endsWith('.freeproducts.online') ||
+                process.env.NODE_ENV !== 'production') {
+                return callback(null, true);
+            }
+            return callback(new Error('Cross-Origin Request Blocked by Security Policy'), false);
+        },
         methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
         credentials: true,
     });

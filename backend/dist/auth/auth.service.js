@@ -10,7 +10,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-import { Injectable, BadRequestException, UnauthorizedException, Inject, forwardRef } from '@nestjs/common';
+var AuthService_1;
+import { Injectable, BadRequestException, UnauthorizedException, Inject, forwardRef, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { MailService } from '../mail/mail.service.js';
@@ -18,12 +19,13 @@ import { NotificationsService } from '../notifications/notifications.service.js'
 import { ChatGateway } from '../chat/chat.gateway.js';
 import { validateAndFormatUsaPhone, formatUsaPhoneDisplay } from './utils/phone.util.js';
 import bcrypt from 'bcryptjs';
-let AuthService = class AuthService {
+let AuthService = AuthService_1 = class AuthService {
     prisma;
     jwtService;
     mailService;
     notificationsService;
     chatGateway;
+    logger = new Logger(AuthService_1.name);
     constructor(prisma, jwtService, mailService, notificationsService, chatGateway) {
         this.prisma = prisma;
         this.jwtService = jwtService;
@@ -87,7 +89,13 @@ let AuthService = class AuthService {
                 expiresAt,
             },
         });
-        await this.mailService.sendRegisterOtp(cleanEmail, otpCode, dto.name);
+        try {
+            await this.mailService.sendRegisterOtp(cleanEmail, otpCode, dto.name);
+        }
+        catch (mailErr) {
+            this.logger.error(`❌ Failed to send registration OTP to ${cleanEmail}: ${mailErr.message}`);
+            throw new BadRequestException('Unable to deliver verification code to this email. Please ensure your email is correct or contact support.');
+        }
         return {
             success: true,
             message: `A 6-digit verification code has been sent to ${cleanEmail}. Please check your inbox or spam folder.`,
@@ -378,7 +386,7 @@ let AuthService = class AuthService {
         }
         if (user.password) {
             const isMatch = bcrypt.compareSync(dto.password, user.password);
-            if (!isMatch && dto.password !== user.password) {
+            if (!isMatch) {
                 throw new UnauthorizedException('Incorrect password. Please try again or use Forgot Password.');
             }
         }
@@ -566,7 +574,7 @@ let AuthService = class AuthService {
         };
     }
 };
-AuthService = __decorate([
+AuthService = AuthService_1 = __decorate([
     Injectable(),
     __param(4, Inject(forwardRef(() => ChatGateway))),
     __metadata("design:paramtypes", [PrismaService,

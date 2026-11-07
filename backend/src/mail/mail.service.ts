@@ -38,31 +38,36 @@ export class MailService {
       this.logger.warn('⚠️ RESEND_API_KEY is not defined in environment variables.');
     }
 
-    // SMTP Fallback Configuration
+    // SMTP Fallback Configuration (Loaded securely from environment variables)
     const host = process.env.SMTP_HOST || 'smtp.gmail.com';
     const port = Number(process.env.SMTP_PORT) || 465;
     const secure = process.env.SMTP_SECURE === 'true' || port === 465;
-    const user = process.env.SMTP_USER || 'morsalinislam8234@gmail.com';
-    const pass = (process.env.SMTP_PASS || 'zikklagqxbnwecxx').replace(/\s+/g, '');
+    const user = process.env.SMTP_USER;
+    const pass = process.env.SMTP_PASS ? process.env.SMTP_PASS.replace(/\s+/g, '') : undefined;
 
-    try {
-      this.transporter = nodemailer.createTransport({
-        host,
-        port,
-        secure,
-        auth: {
-          user,
-          pass,
-        },
-      });
-    } catch (e: any) {
-      this.logger.warn(`Could not initialize secondary SMTP transporter: ${e.message}`);
+    if (user && pass) {
+      try {
+        this.transporter = nodemailer.createTransport({
+          host,
+          port,
+          secure,
+          auth: {
+            user,
+            pass,
+          },
+        });
+        this.logger.log('✅ Secondary SMTP transporter initialized from environment variables.');
+      } catch (e: any) {
+        this.logger.warn(`Could not initialize secondary SMTP transporter: ${e.message}`);
+      }
+    } else {
+      this.logger.log('ℹ️ Secondary SMTP credentials not set in environment (using Resend SDK primary).');
     }
   }
 
   private getSender() {
     const appName = process.env.APP_NAME || process.env.SMTP_FROM_NAME || 'FreeProducts.online';
-    const email = process.env.SMTP_USER || 'morsalinislam8234@gmail.com';
+    const email = process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER || 'support@freeproducts.online';
     return {
       name: appName,
       address: email,

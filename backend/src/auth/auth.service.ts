@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, UnauthorizedException, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, BadRequestException, UnauthorizedException, Inject, forwardRef, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { MailService } from '../mail/mail.service.js';
@@ -17,6 +17,8 @@ import bcrypt from 'bcryptjs';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
@@ -108,8 +110,15 @@ export class AuthService {
       },
     });
 
-    // Send the email via Gmail SMTP
-    await this.mailService.sendRegisterOtp(cleanEmail, otpCode, dto.name);
+    // Send the email via Resend / SMTP
+    try {
+      await this.mailService.sendRegisterOtp(cleanEmail, otpCode, dto.name);
+    } catch (mailErr: any) {
+      this.logger.error(`❌ Failed to send registration OTP to ${cleanEmail}: ${mailErr.message}`);
+      throw new BadRequestException(
+        'Unable to deliver verification code to this email. Please ensure your email is correct or contact support.'
+      );
+    }
 
     return {
       success: true,
@@ -478,7 +487,7 @@ export class AuthService {
 
     if (user.password) {
       const isMatch = bcrypt.compareSync(dto.password, user.password);
-      if (!isMatch && dto.password !== user.password) {
+      if (!isMatch) {
         throw new UnauthorizedException('Incorrect password. Please try again or use Forgot Password.');
       }
     }
