@@ -41,7 +41,7 @@ export class ProductsService {
     const productId = dto.id && dto.id.trim() ? dto.id.trim() : `prod-${Date.now()}`;
     const productData = {
       title: dto.title.trim(),
-      description: dto.description?.trim() || 'Verified quality Amazon perk product for testers.',
+      description: dto.description?.trim() || 'Featured Amazon product with verified ratings and Prime delivery.',
       category: dto.category.trim(),
       subCategory: dto.subCategory?.trim() || null,
       price: typeof dto.price === 'number' ? dto.price : parseFloat(String(dto.price || '0')) || 0,
@@ -51,7 +51,7 @@ export class ProductsService {
       image: dto.image.trim(),
       gallery: Array.isArray(dto.gallery) && dto.gallery.length > 0 ? dto.gallery : [dto.image.trim()],
       affiliateCode: dto.affiliateCode || `AFF-${Date.now().toString().slice(-4)}`,
-      features: Array.isArray(dto.features) ? dto.features : ['100% Free Testing Perk'],
+      features: Array.isArray(dto.features) ? dto.features : ['Verified Amazon Product', 'Prime Fast Shipping'],
       rating: typeof dto.rating === 'number' ? dto.rating : 5.0,
       reviewsCount: typeof dto.reviewsCount === 'number' ? dto.reviewsCount : 0,
       badge: dto.badge || null,

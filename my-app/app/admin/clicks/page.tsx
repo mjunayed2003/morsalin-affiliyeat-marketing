@@ -89,7 +89,7 @@ export default function AdminClicksPage() {
     },
     {
       key: 'commission',
-      header: 'Reviewer Reward Perk',
+      header: 'Promotional Discount Offer',
       render: (p) => (
         <span className="font-bold text-emerald-700 text-xs">
           {p.commission}

@@ -56,7 +56,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     `Hello! I want to order/review: ${product.title}\nProduct: ${productPageUrl}`
   )}`;
   const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(productPageUrl)}&text=${encodeURIComponent(
-    `🔥 Free Amazon Review Perk: ${product.title}`
+    `Featured Amazon Deal: ${product.title}`
   )}`;
 
   const handleAmazonClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -190,11 +190,11 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   )}
                   <span className="ml-auto text-xs bg-emerald-100 text-emerald-800 font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">
                     <FaAmazon className="w-3 h-3 text-[#ff9900]" />
-                    <span>Amazon Review Perk</span>
+                    <span>Featured Deal</span>
                   </span>
                 </div>
                 <p className="text-xs text-slate-500">
-                  Availability: <span className="text-emerald-700 font-semibold">Available for Review & Keep on Amazon</span>
+                  Availability: <span className="text-emerald-700 font-semibold">In Stock on Amazon</span>
                 </p>
 
                 {product.amazonUrl && (
@@ -399,7 +399,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             </div>
             <div className="flex flex-col items-center gap-1 text-slate-700">
               <FaShieldHalved className="w-4 h-4 text-emerald-600" />
-              <span className="font-semibold">100% Genuine</span>
+              <span className="font-semibold">Verified Genuine</span>
               <span className="text-[10px] text-slate-500">Quality Checked</span>
             </div>
             <div className="flex flex-col items-center gap-1 text-slate-700">

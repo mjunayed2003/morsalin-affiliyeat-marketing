@@ -139,19 +139,12 @@ export default function AdminUsersPage() {
         <div className="text-[11px] space-y-1">
           <p className="text-emerald-700 font-bold flex items-center gap-1">
             <FaCheck className="w-2.5 h-2.5 text-emerald-600" />
-            <span>Phone Verified</span>
+            <span>Phone & Email Verified</span>
           </p>
-          {u.selfieImage ? (
-            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-              <FaCamera className="w-2.5 h-2.5 text-emerald-600" />
-              <span>Selfie Verified</span>
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1 text-[10px] text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-200">
-              <FaCamera className="w-2.5 h-2.5 text-slate-300" />
-              <span>No Selfie</span>
-            </span>
-          )}
+          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+            <FaCheck className="w-2.5 h-2.5 text-emerald-600" />
+            <span>Active Member</span>
+          </span>
         </div>
       ),
     },

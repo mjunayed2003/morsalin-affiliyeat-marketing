@@ -57,11 +57,11 @@ export const MaintenanceScreen: React.FC<MaintenanceScreenProps> = ({
         </div>
 
         <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight mb-4">
-          We are upgrading our review perk catalog
+          We are upgrading our product deals catalog
         </h1>
 
         <p className="text-sm sm:text-base text-emerald-100/80 leading-relaxed mb-8">
-          {platformName} is temporarily undergoing system maintenance while our merchants sync fresh, 100% free Amazon product campaigns. We will be back online shortly!
+          {platformName} is temporarily undergoing scheduled system maintenance while we update our product catalog and verified deals. We will be back online shortly!
         </p>
 
         {/* Feature Cards */}
@@ -69,10 +69,10 @@ export const MaintenanceScreen: React.FC<MaintenanceScreenProps> = ({
           <div className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xs">
             <div className="flex items-center gap-2 text-emerald-300 font-bold text-xs mb-1">
               <FaAmazon className="w-3.5 h-3.5 text-[#ff9900]" />
-              <span>Amazon Review Club</span>
+              <span>Curated Amazon Deals</span>
             </div>
             <p className="text-[11px] text-stone-300">
-              Active test campaigns and orders are securely preserved in the cloud database.
+              Active accounts and preferences are securely preserved in the cloud database.
             </p>
           </div>
 
@@ -82,7 +82,7 @@ export const MaintenanceScreen: React.FC<MaintenanceScreenProps> = ({
               <span>Zero Downtime Data</span>
             </div>
             <p className="text-[11px] text-stone-300">
-              Reviewer desks and approved inquiries remain fully safe and verified.
+              Member accounts and support desks remain fully safe and verified.
             </p>
           </div>
         </div>

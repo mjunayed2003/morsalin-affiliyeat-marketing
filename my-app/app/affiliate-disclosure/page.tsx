@@ -66,7 +66,7 @@ export default function AffiliateDisclosurePage() {
               1. What Are Affiliate Links?
             </h2>
             <p>
-              Some of the outbound links available on our platform are affiliate links. This means that if you click on the link and purchase the item or test the item through Amazon, FreeProducts.online may receive a small affiliate commission from Amazon at absolutely no extra cost to you.
+              Some of the outbound links available on our platform are affiliate links. This means that if you click on a link and make a purchase through Amazon, FreeProducts.online may receive a small affiliate commission from Amazon at absolutely no extra cost to you.
             </p>
           </section>
 

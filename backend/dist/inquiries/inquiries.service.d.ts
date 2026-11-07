@@ -4,11 +4,6 @@ export declare class InquiriesService {
     private readonly prisma;
     constructor(prisma: PrismaService);
     create(dto: CreateInquiryDto): Promise<{
-        user: {
-            id: string;
-            phone: string;
-            name: string;
-        };
         product: {
             id: string;
             createdAt: Date;
@@ -31,6 +26,11 @@ export declare class InquiriesService {
             inStock: boolean;
             store: string | null;
             amazonUrl: string | null;
+        };
+        user: {
+            id: string;
+            phone: string;
+            name: string;
         };
     } & {
         id: string;
@@ -44,11 +44,6 @@ export declare class InquiriesService {
         notes: string | null;
     }>;
     findAll(userId?: string): Promise<({
-        user: {
-            id: string;
-            phone: string;
-            name: string;
-        };
         product: {
             id: string;
             createdAt: Date;
@@ -71,6 +66,11 @@ export declare class InquiriesService {
             inStock: boolean;
             store: string | null;
             amazonUrl: string | null;
+        };
+        user: {
+            id: string;
+            phone: string;
+            name: string;
         };
     } & {
         id: string;

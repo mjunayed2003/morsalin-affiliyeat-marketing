@@ -53,13 +53,12 @@ export default function PrivacyPolicyPage() {
               1. Information We Collect
             </h2>
             <p>
-              FreeProducts.online (&quot;we&quot;, &quot;our&quot;, or &quot;the Platform&quot;) collects information to facilitate product testing, community moderation, and order tracking. We only collect information that you knowingly and voluntarily provide:
+              FreeProducts.online (&quot;we&quot;, &quot;our&quot;, or &quot;the Platform&quot;) collects information to provide curated Amazon product deals, community reviews, and customer support. We only collect information that you knowingly and voluntarily provide:
             </p>
             <ul className="list-disc pl-6 space-y-1.5 text-slate-600">
-              <li><strong>Contact Information:</strong> Full name, verified USA telephone number, and email address for account authorization and password recovery.</li>
-              <li><strong>Profile Information:</strong> Public Amazon reviewer profile link and optional verification selfie image used strictly to verify authentic reviewer status and prevent bot abuse.</li>
-              <li><strong>Reimbursement Coordinates:</strong> PayPal email address or relevant payment identifiers supplied for product testing reimbursements.</li>
-              <li><strong>Inquiry &amp; Support Messages:</strong> Direct chat messages, inquiries, order confirmation numbers, and feedback submitted through our live chat desk.</li>
+              <li><strong>Contact Information:</strong> Full name, verified USA telephone number, and email address for account authorization, security verification, and password recovery.</li>
+              <li><strong>Profile Information:</strong> Optional public profile details. We do NOT collect payment methods, credit card numbers, PayPal credentials, bank accounts, or sensitive financial identifiers.</li>
+              <li><strong>Inquiry &amp; Support Messages:</strong> Direct chat messages, inquiries, feedback, and customer support queries submitted through our contact desk.</li>
             </ul>
           </section>
 
@@ -72,10 +71,10 @@ export default function PrivacyPolicyPage() {
               Your data is never sold, rented, or traded to third-party data brokers. We utilize your information exclusively to:
             </p>
             <ul className="list-disc pl-6 space-y-1.5 text-slate-600">
-              <li>Verify your reviewer identity and approve platform membership.</li>
-              <li>Facilitate product testing allocations and deliver relevant product links.</li>
-              <li>Process review reimbursements through secure electronic payment channels (such as PayPal).</li>
-              <li>Notify you of support responses, application status changes, and testing announcements.</li>
+              <li>Verify account registration and provide access to community deal alerts.</li>
+              <li>Deliver curated product recommendations, discount offers, and deal updates.</li>
+              <li>Facilitate customer service inquiries and support requests.</li>
+              <li>Notify you of security updates, password resets, and account status changes.</li>
             </ul>
             <p className="text-xs text-slate-500 bg-stone-50 p-4 rounded-xl border border-stone-200">
               <strong>Data Security:</strong> All account passwords are encrypted using one-way cryptographic bcrypt hashing. Network communications are secured with TLS/SSL encryption across all endpoints.

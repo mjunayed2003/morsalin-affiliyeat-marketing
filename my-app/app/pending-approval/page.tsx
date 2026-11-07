@@ -168,7 +168,7 @@ function PendingApprovalContent() {
               </h1>
 
               <p className="mt-2 text-xs sm:text-sm text-stone-200 max-w-md mx-auto leading-relaxed">
-                {status === 'ACTIVE' && 'Congratulations! Your account has been approved by our review team. You can now log in and claim 100% free Amazon products.'}
+                {status === 'ACTIVE' && 'Congratulations! Your account has been approved by our review team. You can now log in to explore curated deals and share product reviews.'}
                 {status === 'REJECTED' && 'Your account registration was not approved during administrative verification.'}
                 {status === 'PENDING' && 'Your registration has been submitted and is awaiting admin review.'}
               </p>
@@ -226,7 +226,7 @@ function PendingApprovalContent() {
                         </div>
                         <div>
                           <p className="text-xs font-bold text-slate-900">1. Registration & Verification Code</p>
-                          <p className="text-[11px] text-slate-500">Your email, USA phone number, and identity selfie were securely received.</p>
+                          <p className="text-[11px] text-slate-500">Your email, USA phone number, and account details were securely received.</p>
                         </div>
                       </div>
 
@@ -236,7 +236,7 @@ function PendingApprovalContent() {
                         </div>
                         <div>
                           <p className="text-xs font-bold text-amber-900">2. Administrator Review (Current)</p>
-                          <p className="text-[11px] text-slate-500">An administrator is reviewing your profile and verification selfie. This typically takes 15–30 minutes during business hours.</p>
+                          <p className="text-[11px] text-slate-500">An administrator is reviewing your registration profile. This typically takes 15–30 minutes during business hours.</p>
                         </div>
                       </div>
 

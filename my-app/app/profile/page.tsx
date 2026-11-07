@@ -114,7 +114,7 @@ export default function ProfilePage() {
               <div>
                 <div className="flex items-center gap-1.5">
                   <span className="font-black text-2xl text-slate-900 tracking-tight">
-                    Product<span className="text-[#1b3b2b]">Perks</span>
+                    FreeProducts<span className="text-[#1b3b2b]">.online</span>
                   </span>
                   <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-200">
                     Reviewer Portal

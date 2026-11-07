@@ -138,7 +138,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     const productPayload: Product = {
       id: initialProduct?.id || `prod-${Date.now().toString().slice(-6)}`,
       title: title.trim(),
-      description: description.trim() || 'Verified quality Amazon perk product for testers.',
+      description: description.trim() || 'Verified quality Amazon promotional deal.',
       category: category.trim(),
       subCategory: subCategory.trim() || undefined,
       store: store.trim() || 'Amazon Partner Store',
@@ -149,7 +149,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       commissionAmount: parseFloat(commissionAmount) || 0,
       image: image.trim(),
       gallery: gallery.length > 0 ? gallery : [image.trim()],
-      features: featureList.length > 0 ? featureList : ['100% Free Testing Perk', 'Prime Fast Shipping'],
+      features: featureList.length > 0 ? featureList : ['Curated Deal', 'Prime Fast Shipping'],
       badge: badge.trim() || undefined,
       inStock: inStock,
       rating: initialProduct?.rating || 4.8,
@@ -196,7 +196,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               {isEditMode ? `Edit Product: ${initialProduct?.title}` : 'Add New Amazon Product'}
             </h1>
             <p className="text-xs text-slate-500 mt-0.5">
-              Fill in product information, Amazon store details, and perk incentives.
+              Fill in product information, Amazon store details, and pricing.
             </p>
           </div>
         </div>
@@ -330,7 +330,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-800 mb-1">Perk Reviewer Price ($)</label>
+              <label className="block text-xs font-bold text-slate-800 mb-1">Promotional Deal Price ($)</label>
               <input
                 type="number"
                 step="0.01"

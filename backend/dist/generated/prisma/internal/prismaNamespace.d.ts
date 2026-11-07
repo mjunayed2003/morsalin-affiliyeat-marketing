@@ -968,7 +968,6 @@ export declare const UserScalarFieldEnum: {
     readonly avatar: "avatar";
     readonly selfieImage: "selfieImage";
     readonly amazonProfileUrl: "amazonProfileUrl";
-    readonly paypalEmail: "paypalEmail";
     readonly fcmToken: "fcmToken";
     readonly verified: "verified";
     readonly verifiedAt: "verifiedAt";

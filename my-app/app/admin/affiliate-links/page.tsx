@@ -50,10 +50,10 @@ export default function AdminAffiliateLinksPage() {
       render: (p) => (
         <div className="flex items-center gap-2">
           <code className="text-[11px] font-mono font-bold bg-slate-100 px-2 py-0.5 rounded-md text-emerald-800">
-            {p.affiliateCode || 'AFF-PERK'}
+            {p.affiliateCode || 'AFF-DEAL'}
           </code>
           <button
-            onClick={() => handleCopy(p.affiliateCode || 'AFF-PERK', 'Affiliate code')}
+            onClick={() => handleCopy(p.affiliateCode || 'AFF-DEAL', 'Affiliate code')}
             className="p-1 rounded text-slate-400 hover:text-slate-600"
             title="Copy Code"
           >

@@ -27,8 +27,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!product) {
     return {
       metadataBase: new URL(siteUrl),
-      title: 'Free Amazon Review Perk | FreeProducts.online',
-      description: 'Verified Amazon Review Product available on FreeProducts.online.',
+      title: 'Amazon Product Deal | FreeProducts.online',
+      description: 'Curated Amazon deal and customer reviews on FreeProducts.online.',
       alternates: {
         canonical: `${siteUrl}/products`,
       },
@@ -40,16 +40,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   return {
     metadataBase: new URL(siteUrl),
-    title: `${product.title} - Free Amazon Review Perk | FreeProducts.online`,
-    description: `Test this ${product.title} from verified Amazon store ${product.store || 'Amazon'}. Est. Retail: $${product.originalPrice}. Claim 100% Free on FreeProducts.online!`,
+    title: `${product.title} - Amazon Deals & Reviews | FreeProducts.online`,
+    description: `Explore ${product.title} from verified Amazon seller ${product.store || 'Amazon'}. Verified retail: $${product.originalPrice}. Read community reviews and discover current deals.`,
     alternates: {
       canonical: pageUrl,
     },
     openGraph: {
-      title: `${product.title} - 100% Free Amazon Review Perk`,
-      description: `Test this ${product.title} for FREE! Est. Retail: $${product.originalPrice}. Verified seller ${product.store || 'Amazon'}.`,
+      title: `${product.title} - Curated Amazon Product Deal`,
+      description: `Explore ${product.title} from verified seller ${product.store || 'Amazon'}. Verified retail: $${product.originalPrice}. Read community reviews and deal details.`,
       url: pageUrl,
-      siteName: 'FreeProducts.online Amazon Review Club',
+      siteName: 'FreeProducts.online',
       images: [
         {
           url: imageUrl,
@@ -61,7 +61,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
           url: `${siteUrl}/og-image.jpg`,
           width: 1200,
           height: 630,
-          alt: 'FreeProducts.online Free Testing Club',
+          alt: 'FreeProducts.online Product Deals and Reviews',
         },
         {
           url: `${siteUrl}/logo.jpeg`,
@@ -74,8 +74,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${product.title} - Free Amazon Review Perk`,
-      description: `Claim this free review item from ${product.store || 'Amazon'}. Est. Retail: $${product.originalPrice}.`,
+      title: `${product.title} - Amazon Deals & Reviews`,
+      description: `Explore this curated deal on ${product.title} from ${product.store || 'Amazon'}. Verified retail: $${product.originalPrice}.`,
       images: [imageUrl],
       creator: '@onlinefreeproducts',
     },
@@ -88,6 +88,8 @@ export default async function ProductPageRoute({ params }: PageProps) {
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://freeproducts.online';
   const pageUrl = `${siteUrl}/p/${id}`;
+
+  const productPrice = product?.price ? String(product.price) : (product?.originalPrice ? String(product.originalPrice) : '0.00');
 
   const productJsonLd = product
     ? {
@@ -105,7 +107,7 @@ export default async function ProductPageRoute({ params }: PageProps) {
           '@type': 'Offer',
           url: pageUrl,
           priceCurrency: 'USD',
-          price: '0.00',
+          price: productPrice,
           priceValidUntil: '2027-12-31',
           itemCondition: 'https://schema.org/NewCondition',
           availability: 'https://schema.org/InStock',

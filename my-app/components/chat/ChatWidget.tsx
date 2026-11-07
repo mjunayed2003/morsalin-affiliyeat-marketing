@@ -427,7 +427,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
                   {inquiryProduct.title}
                 </p>
                 <p className="text-xs font-bold text-[#1b3b2b]">
-                  {inquiryProduct.price === 0 ? 'FREE Review Perk' : `$${inquiryProduct.price.toLocaleString()}`}
+                  {inquiryProduct.price === 0 ? 'Featured Deal' : `$${inquiryProduct.price.toLocaleString()}`}
                 </p>
               </div>
               <button
@@ -475,7 +475,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
                             {msg.productInfo.title}
                           </p>
                           <p className="font-bold text-[11px] opacity-90">
-                            {msg.productInfo.price === 0 ? 'FREE Perk' : `$${msg.productInfo.price.toLocaleString()}`}
+                            {msg.productInfo.price === 0 ? 'Featured Deal' : `$${msg.productInfo.price.toLocaleString()}`}
                           </p>
                         </div>
                       </div>
@@ -552,10 +552,10 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
               How It Works?
             </button>
             <button
-              onClick={() => handleQuickQuestion('Are these Amazon products really 100% free?')}
+              onClick={() => handleQuickQuestion('How do curated Amazon product deals work?')}
               className="shrink-0 bg-stone-100 hover:bg-[#1b3b2b] hover:text-white text-slate-700 px-2.5 py-1 rounded-full transition-colors cursor-pointer"
             >
-              100% Free Items?
+              How Deals Work
             </button>
             <button
               onClick={() => handleQuickQuestion('Can you send the Amazon order link and instructions?')}

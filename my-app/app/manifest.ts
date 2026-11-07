@@ -2,9 +2,9 @@ import { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Free Products Online - Amazon Product Reviews & Free Testing Club',
+    name: 'FreeProducts.online - Curated Amazon Deals & Reviews',
     short_name: 'FreeProducts',
-    description: 'Get 100% free Amazon products to test and review with FreeProducts.online.',
+    description: 'Discover curated Amazon deals, discounts, and verified customer reviews with FreeProducts.online.',
     start_url: '/',
     display: 'standalone',
     background_color: '#ffffff',

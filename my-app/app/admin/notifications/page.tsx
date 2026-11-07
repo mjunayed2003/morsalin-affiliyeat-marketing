@@ -272,8 +272,8 @@ export default function AdminBroadcastNotificationsPage() {
                 <button
                   type="button"
                   onClick={() => applyTemplate({
-                    title: 'New Review Club Perk Available! 🎁',
-                    body: 'A limited-batch Amazon USA test product has just been listed. Grab your 100% free sample link now!',
+                    title: 'New Featured Amazon Deal! 🏷️',
+                    body: 'A top-rated Amazon deal has just been added. Check out the latest discounts and verified reviews!',
                     link: '/products',
                   })}
                   className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer"
@@ -284,7 +284,7 @@ export default function AdminBroadcastNotificationsPage() {
                   type="button"
                   onClick={() => applyTemplate({
                     title: 'System Notice: Live Audio Support Active 📞',
-                    body: 'Need help claiming your test product? You can now start a direct live audio call with our support team.',
+                    body: 'Need help finding the right product deal? You can now start a direct live audio call with our support team.',
                     link: '/chat',
                   })}
                   className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer"
@@ -365,7 +365,7 @@ export default function AdminBroadcastNotificationsPage() {
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. New Product Perks Dropped! 🎁"
+                  placeholder="e.g. New Amazon Deals Dropped! 🎁"
                   maxLength={100}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-[#1b3b2b]/20 focus:border-[#1b3b2b] transition"
                   required

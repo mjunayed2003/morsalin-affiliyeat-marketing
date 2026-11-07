@@ -55,7 +55,7 @@ export default function TermsOfServicePage() {
               By accessing or using FreeProducts.online (&quot;the Service&quot;), you agree to comply with and be bound by these Terms of Service. If you do not agree to these terms, please discontinue using the platform immediately.
             </p>
             <p className="text-slate-600">
-              To be eligible for product testing membership:
+              To be eligible to register an account and participate in community features:
             </p>
             <ul className="list-disc pl-6 space-y-1 text-slate-600">
               <li>You must be at least 18 years of age.</li>
@@ -74,7 +74,7 @@ export default function TermsOfServicePage() {
             </p>
             <ul className="list-disc pl-6 space-y-1.5 text-slate-600">
               <li><strong>No Coerced Ratings:</strong> You are under no obligation to leave a positive star rating. Honest assessments highlighting both pros and cons are strictly required.</li>
-              <li><strong>No Fraudulent Orders:</strong> Claiming reimbursements with fake order IDs, canceled orders, or returned products is strictly prohibited and results in immediate account termination.</li>
+              <li><strong>Fair Participation:</strong> Submitting falsified reviews, invalid order IDs, or violating merchant community standards is strictly prohibited and results in immediate account termination.</li>
               <li><strong>Compliance with Merchant Rules:</strong> You agree to follow all community guidelines of the merchant platform where products are ordered.</li>
             </ul>
           </section>
@@ -86,7 +86,7 @@ export default function TermsOfServicePage() {
             </h2>
             <div className="bg-amber-50/80 border border-amber-200 p-4 rounded-xl text-amber-900 text-xs sm:text-sm">
               <p>
-                <strong>Independent Status:</strong> FreeProducts.online is an independent testing and affiliate marketing directory. We are <strong>not</strong> an official subsidiary, agent, or joint venture of Amazon.com, Inc. All trademarks, service marks, and brand logos (including Amazon, Prime, and brand partners) are the property of their respective trademark holders.
+                <strong>Independent Status:</strong> FreeProducts.online is an independent product deal discovery and affiliate marketing directory. We are <strong>not</strong> an official subsidiary, agent, or joint venture of Amazon.com, Inc. All trademarks, service marks, and brand logos (including Amazon, Prime, and brand partners) are the property of their respective trademark holders.
               </p>
             </div>
           </section>

@@ -39,7 +39,7 @@ export declare class NotificationsService implements OnModuleInit {
         id: string;
         title: string;
         body: string;
-        type: "MESSAGE" | "PRODUCT" | "ANNOUNCEMENT" | "SYSTEM" | "CALL";
+        type: "SYSTEM" | "MESSAGE" | "PRODUCT" | "ANNOUNCEMENT" | "CALL";
         recipientId: string | null;
         sender: string | null;
         image: string | null;

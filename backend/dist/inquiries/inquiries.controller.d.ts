@@ -5,11 +5,6 @@ export declare class InquiriesController {
     private readonly inquiriesService;
     constructor(inquiriesService: InquiriesService);
     create(dto: CreateInquiryDto, currentUser: AuthenticatedUser): Promise<{
-        user: {
-            id: string;
-            phone: string;
-            name: string;
-        };
         product: {
             id: string;
             createdAt: Date;
@@ -32,6 +27,11 @@ export declare class InquiriesController {
             inStock: boolean;
             store: string | null;
             amazonUrl: string | null;
+        };
+        user: {
+            id: string;
+            phone: string;
+            name: string;
         };
     } & {
         id: string;
@@ -45,11 +45,6 @@ export declare class InquiriesController {
         notes: string | null;
     }>;
     findAll(currentUser: AuthenticatedUser, queryUserId?: string): Promise<({
-        user: {
-            id: string;
-            phone: string;
-            name: string;
-        };
         product: {
             id: string;
             createdAt: Date;
@@ -72,6 +67,11 @@ export declare class InquiriesController {
             inStock: boolean;
             store: string | null;
             amazonUrl: string | null;
+        };
+        user: {
+            id: string;
+            phone: string;
+            name: string;
         };
     } & {
         id: string;

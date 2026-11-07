@@ -125,26 +125,25 @@ export default function Home() {
                 <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                   <span className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-900 border border-amber-200/90 px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold tracking-wide uppercase shadow-2xs">
                     <FaAmazon className="w-3 h-3 text-[#ff9900]" />
-                    <span>Amazon Reviewer Club</span>
+                    <span>Curated Amazon Deals</span>
                   </span>
                   <span className="inline-flex items-center bg-emerald-50 text-emerald-800 border border-emerald-200/80 px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold tracking-wide uppercase">
-                    100% Free Products
+                    Verified Sellers
                   </span>
                   <span className="inline-flex items-center bg-stone-100 text-stone-700 border border-stone-200 px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold tracking-wide uppercase">
-                    Verified Sellers
+                    Community Reviews
                   </span>
                 </div>
 
                 {/* Main Headline */}
                 <h1 className="font-headline text-2xl sm:text-4xl lg:text-[54px] text-slate-900 font-extrabold leading-[1.2] sm:leading-[1.14] tracking-tight">
-                  Get Free Products Online.<br className="hidden sm:inline" />{' '}
-                  Test Top Amazon Items.<br className="hidden sm:inline" />{' '}
-                  <span className="text-[#1b3b2b]">Keep Them 100% Free.</span>
+                  Discover Top Amazon Products.<br className="hidden sm:inline" />{' '}
+                  Honest Reviews &amp; Exclusive Deals.
                 </h1>
 
                 {/* Paragraph Description */}
                 <p className="text-xs sm:text-base text-slate-600 font-normal leading-relaxed max-w-xl">
-                  Looking for free products? Join the FreeProducts.online review club! Test quality items from verified Amazon partner stores. Share your authentic customer feedback and keep every product with zero fees.
+                  Explore top-rated products from verified Amazon partner brands. Discover curated deals, read genuine community feedback, and share your authentic product reviews.
                 </p>
 
                 {/* Action Buttons */}
@@ -156,7 +155,7 @@ export default function Home() {
                     }}
                     className="w-full sm:w-auto justify-center bg-[#1b3b2b] hover:bg-[#142e20] active:scale-95 text-white font-semibold text-xs sm:text-sm px-6 sm:px-7 py-3.5 rounded-full inline-flex items-center gap-2.5 shadow-sm transition-all cursor-pointer"
                   >
-                    <span>Claim Free Products</span>
+                    <span>Explore Featured Deals</span>
                     <FaArrowRight className="w-3.5 h-3.5" />
                   </button>
 
@@ -171,14 +170,14 @@ export default function Home() {
                 {/* Value Propositions / Trust Badges (4 Columns) */}
                 <div className="pt-5 sm:pt-8 border-t border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-5">
                   
-                  {/* Badge 1: 100% Free Items */}
+                  {/* Badge 1: Curated Deals */}
                   <div className="flex items-start gap-2 sm:gap-2.5 p-2 sm:p-0 rounded-xl bg-slate-50/60 sm:bg-transparent">
                     <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-800 shrink-0 mt-0.5 border border-emerald-100">
                       <FaBoxOpen className="w-3.5 h-3.5 text-emerald-700" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[11px] sm:text-xs font-bold text-slate-900 leading-tight truncate">100% Free Items</p>
-                      <p className="text-[10px] sm:text-[11px] text-slate-500 font-medium leading-tight mt-0.5 truncate">Zero cost to reviewer</p>
+                      <p className="text-[11px] sm:text-xs font-bold text-slate-900 leading-tight truncate">Curated Deals</p>
+                      <p className="text-[10px] sm:text-[11px] text-slate-500 font-medium leading-tight mt-0.5 truncate">Verified special offers</p>
                     </div>
                   </div>
 
@@ -189,18 +188,18 @@ export default function Home() {
                     </div>
                     <div className="min-w-0">
                       <p className="text-[11px] sm:text-xs font-bold text-slate-900 leading-tight truncate">Verified Sellers</p>
-                      <p className="text-[10px] sm:text-[11px] text-slate-500 font-medium leading-tight mt-0.5 truncate">LONG YUE & more</p>
+                      <p className="text-[10px] sm:text-[11px] text-slate-500 font-medium leading-tight mt-0.5 truncate">Top-rated brands</p>
                     </div>
                   </div>
 
-                  {/* Badge 3: Keep Forever */}
+                  {/* Badge 3: Authentic Reviews */}
                   <div className="flex items-start gap-2 sm:gap-2.5 p-2 sm:p-0 rounded-xl bg-slate-50/60 sm:bg-transparent">
                     <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-700 shrink-0 mt-0.5">
                       <FaAward className="w-3.5 h-3.5 text-slate-700" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[11px] sm:text-xs font-bold text-slate-900 leading-tight truncate">Keep Forever</p>
-                      <p className="text-[10px] sm:text-[11px] text-slate-500 font-medium leading-tight mt-0.5 truncate">Tested items yours</p>
+                      <p className="text-[11px] sm:text-xs font-bold text-slate-900 leading-tight truncate">Authentic Reviews</p>
+                      <p className="text-[10px] sm:text-[11px] text-slate-500 font-medium leading-tight mt-0.5 truncate">Real customer insights</p>
                     </div>
                   </div>
 
@@ -278,7 +277,7 @@ export default function Home() {
                   Featured Amazon Products
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
-                  Active testing campaigns from top verified Amazon sellers. Claim your free unit today!
+                  Curated promotional deals and reviews from verified Amazon sellers. Find your next favorite product today!
                 </p>
               </div>
 
@@ -346,20 +345,20 @@ export default function Home() {
               <div className="mb-8 sm:mb-12">
                 <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#1b3b2b] bg-emerald-50 border border-emerald-200/80 px-3 py-1 rounded-full mb-2">
                   <FaCheck className="w-3 h-3 text-[#1b3b2b]" />
-                  <span>Simple 4-Step Review Process</span>
+                  <span>How Our Community Works</span>
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-                  How The Amazon Review Program Works
+                  How To Explore Deals &amp; Share Reviews
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
-                  Just 4 simple steps to start receiving free Amazon products at your doorstep.
+                  4 simple steps to discover curated Amazon products and participate in verified reviews.
                 </p>
               </div>
 
               {/* 4 Steps Timeline */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 relative">
                 
-                {/* Step 1: Pick An Amazon Item */}
+                {/* Step 1: Browse Curated Deals */}
                 <div className="flex flex-col space-y-3 relative">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-[#1b3b2b] text-white font-bold text-xs flex items-center justify-center shrink-0">
@@ -371,15 +370,15 @@ export default function Home() {
                   </div>
                   <div>
                     <h4 className="font-bold text-slate-900 text-sm sm:text-base">
-                      Pick An Amazon Item
+                      Browse Curated Deals
                     </h4>
                     <p className="text-xs text-slate-500 font-medium mt-1 leading-relaxed">
-                      Select any product from verified partner sellers like LONG YUE, Lickoon & Imps Hair.
+                      Explore our hand-picked collection from verified Amazon partner brands.
                     </p>
                   </div>
                 </div>
 
-                {/* Step 2: Apply & Order On Amazon */}
+                {/* Step 2: View On Amazon */}
                 <div className="flex flex-col space-y-3 relative">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-[#1b3b2b] text-white font-bold text-xs flex items-center justify-center shrink-0">
@@ -391,15 +390,15 @@ export default function Home() {
                   </div>
                   <div>
                     <h4 className="font-bold text-slate-900 text-sm sm:text-base">
-                      Order On Amazon
+                      View On Amazon
                     </h4>
                     <p className="text-xs text-slate-500 font-medium mt-1 leading-relaxed">
-                      Click &ldquo;Get It Free&rdquo; or message admin live to claim and order directly with Prime.
+                      Click through to Amazon to view verified pricing, customer ratings, and Prime delivery options.
                     </p>
                   </div>
                 </div>
 
-                {/* Step 3: Test & Review On Amazon */}
+                {/* Step 3: Test & Experience */}
                 <div className="flex flex-col space-y-3 relative">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-[#1b3b2b] text-white font-bold text-xs flex items-center justify-center shrink-0">
@@ -411,15 +410,15 @@ export default function Home() {
                   </div>
                   <div>
                     <h4 className="font-bold text-slate-900 text-sm sm:text-base">
-                      Test & Post Review
+                      Test &amp; Experience
                     </h4>
                     <p className="text-xs text-slate-500 font-medium mt-1 leading-relaxed">
-                      Receive your package, test the product thoroughly, and publish your honest Amazon review.
+                      Receive your package at home, test the product thoroughly, and evaluate its features.
                     </p>
                   </div>
                 </div>
 
-                {/* Step 4: Keep It 100% Free! */}
+                {/* Step 4: Share Honest Feedback */}
                 <div className="flex flex-col space-y-3 relative">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-[#1b3b2b] text-white font-bold text-xs flex items-center justify-center shrink-0">
@@ -431,10 +430,10 @@ export default function Home() {
                   </div>
                   <div>
                     <h4 className="font-bold text-slate-900 text-sm sm:text-base">
-                      Keep It 100% Free!
+                      Share Honest Feedback
                     </h4>
                     <p className="text-xs text-slate-500 font-medium mt-1 leading-relaxed">
-                      Confirm your review with admin. The product is 100% yours to keep at zero expense!
+                      Share your genuine review to help other shoppers in our community make informed decisions.
                     </p>
                   </div>
                 </div>
@@ -459,7 +458,7 @@ export default function Home() {
                   About Us Experience
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
-                  Real shoppers who test, review, and keep top Amazon seller products.
+                  Real shoppers who discover, review, and evaluate top Amazon products.
                 </p>
               </div>
 
@@ -506,14 +505,14 @@ export default function Home() {
                     />
                     <div>
                       <h4 className="text-xs sm:text-sm font-bold text-slate-900">Brian S.</h4>
-                      <p className="text-[11px] text-emerald-800 font-semibold">Prime Member • Home & Garden</p>
+                      <p className="text-[11px] text-emerald-800 font-semibold">Prime Member • Home &amp; Garden</p>
                       <div className="flex items-center text-amber-400 gap-0.5 text-xs mt-0.5">
                         <FaStar /><FaStar /><FaStar /><FaStar /><FaStar />
                       </div>
                     </div>
                   </div>
                   <p className="text-xs sm:text-[13px] text-slate-600 font-normal leading-relaxed italic">
-                    &ldquo;Got the Lickoon 24-pouch mouse repellent for our garage. 100% genuine sealed pack, natural peppermint scent works great. Getting brand-name Amazon items to test and keep is fantastic!&rdquo;
+                    &ldquo;Got the Lickoon 24-pouch mouse repellent for our garage. Genuine sealed pack, natural peppermint scent works great. Discovering top-rated Amazon items and sharing real feedback is fantastic!&rdquo;
                   </p>
                 </div>
               </div>
@@ -536,7 +535,7 @@ export default function Home() {
                     </div>
                   </div>
                   <p className="text-xs sm:text-[13px] text-slate-600 font-normal leading-relaxed italic">
-                    &ldquo;The IMPS hair building fibers powder was a perfect match for my electric applicator. Testing top-rated Amazon products and keeping them for free has been an incredible experience!&rdquo;
+                    &ldquo;The IMPS hair building fibers powder was a perfect match for my electric applicator. Evaluating top-rated Amazon products and sharing detailed feedback has been a wonderful experience!&rdquo;
                   </p>
                 </div>
               </div>
@@ -556,36 +555,36 @@ export default function Home() {
                 Frequently Asked Questions
               </h2>
               <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
-                Everything you need to know about testing and keeping free products from partner Amazon stores.
+                Everything you need to know about exploring deals and participating in community reviews.
               </p>
             </div>
 
             <div className="space-y-4">
               <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-2xs">
-                <h4 className="font-bold text-sm text-slate-900">Are these Amazon products really 100% free?</h4>
+                <h4 className="font-bold text-sm text-slate-900">How do curated deals work on FreeProducts.online?</h4>
                 <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
-                  Yes! Verified partner Amazon stores sponsor these units to gather authentic feedback from real shoppers. There are no hidden fees or subscriptions — every approved product is yours to keep forever.
+                  We curate top-rated Amazon deals and promotions from verified sellers to help shoppers discover high-quality products at exceptional discounts, paired with genuine community reviews.
                 </p>
               </div>
 
               <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-2xs">
-                <h4 className="font-bold text-sm text-slate-900">How do I order and submit my Amazon review?</h4>
+                <h4 className="font-bold text-sm text-slate-900">How do I participate in product evaluations?</h4>
                 <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
-                  Browse any item, click &ldquo;Get It Free&rdquo; to view its dedicated page or live chat directly with our admin. You will receive the official Amazon link to place your order with Prime, test the item at home, and publish your helpful, honest review on Amazon.
+                  Browse our curated catalog, view the product details on Amazon, and share your feedback with our community. Verified reviewers share insights to help other shoppers make informed buying decisions.
                 </p>
               </div>
 
               <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-2xs">
                 <h4 className="font-bold text-sm text-slate-900">Do I need an active Amazon account?</h4>
                 <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
-                  Yes. This program is designed for active US shoppers with an Amazon account in good standing so you can receive fast Prime delivery and post verified customer reviews.
+                  Yes. Deals link directly to official Amazon product pages where you can purchase directly with Amazon customer protections and Prime shipping.
                 </p>
               </div>
 
               <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-2xs">
-                <h4 className="font-bold text-sm text-slate-900">Do I ever have to return the products?</h4>
+                <h4 className="font-bold text-sm text-slate-900">Are deals updated regularly?</h4>
                 <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
-                  Never! Every single item you test through FreeProducts.online is 100% yours to keep permanently.
+                  Yes, our team updates featured deals and promotional offers daily to provide the most current pricing and discounts.
                 </p>
               </div>
             </div>

@@ -345,11 +345,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         const lower = (payload.text || '').toLowerCase();
 
         if (lower.includes('free') || lower.includes('cost') || lower.includes('price')) {
-          replyText = 'Yes! All review club items on FreeProducts.online are 100% free for verified Amazon reviewers. Zero hidden fees!';
+          replyText = 'Welcome to FreeProducts.online! We feature curated Amazon deals and product review opportunities. Pricing, discounts, and promotional offers are outlined on each product page.';
         } else if (lower.includes('link') || lower.includes('order') || lower.includes('buy')) {
-          replyText = 'Please click the "View on Amazon" button on the product details card or share your Amazon profile to receive the direct test link.';
+          replyText = 'You can browse products and click "View on Amazon" on any product card to see live pricing, Prime shipping, and verified Amazon customer reviews.';
         } else if (lower.includes('work') || lower.includes('program') || lower.includes('how')) {
-          replyText = 'It is simple: 1) Pick any available Amazon product. 2) Receive the order link. 3) Test the item and share honest feedback. 4) Keep the item 100% free!';
+          replyText = 'Our platform connects shoppers with curated Amazon deals. 1) Browse featured items. 2) Check verified specs and community reviews. 3) Order directly on Amazon with Prime delivery. 4) Share your honest customer feedback!';
         }
 
         const autoAdminMessage = await this.chatService.createMessage({

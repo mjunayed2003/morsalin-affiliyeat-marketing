@@ -213,7 +213,7 @@ let MailService = MailService_1 = class MailService {
                 <tr>
                   <td style="background: #f8fafc; border-top: 1px solid #f1f5f9; padding: 20px 32px; text-align: center;">
                     <p style="margin: 0; font-size: 12px; color: #94a3b8;">
-                      © ${new Date().getFullYear()} FreeProducts.online Review Club. All rights reserved.
+                      © ${new Date().getFullYear()} FreeProducts.online. All rights reserved.
                     </p>
                   </td>
                 </tr>
@@ -306,7 +306,7 @@ let MailService = MailService_1 = class MailService {
                 <tr>
                   <td style="background: #f8fafc; border-top: 1px solid #f1f5f9; padding: 20px 32px; text-align: center;">
                     <p style="margin: 0; font-size: 12px; color: #94a3b8;">
-                      © ${new Date().getFullYear()} FreeProducts.online Review Club. All rights reserved.
+                      © ${new Date().getFullYear()} FreeProducts.online. All rights reserved.
                     </p>
                   </td>
                 </tr>

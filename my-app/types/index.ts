@@ -69,7 +69,6 @@ export interface User {
   avatar?: string;
   selfieImage?: string;
   amazonProfileUrl?: string;
-  paypalEmail?: string;
   verified: boolean;
   verifiedAt?: string;
   createdAt: string;

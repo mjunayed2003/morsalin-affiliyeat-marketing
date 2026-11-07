@@ -542,7 +542,7 @@ export default function ChatPage() {
                               {msg.productInfo.title}
                             </p>
                             <p className="text-xs font-bold">
-                              {msg.productInfo.price === 0 ? 'FREE Review Perk' : `$${msg.productInfo.price.toLocaleString()}`}
+                              {msg.productInfo.price === 0 ? 'Featured Deal' : `$${msg.productInfo.price.toLocaleString()}`}
                             </p>
                           </div>
                         </div>
@@ -641,10 +641,10 @@ export default function ChatPage() {
                 How It Works?
               </button>
               <button
-                onClick={() => handleQuickQuestion('Are these Amazon products really 100% free?')}
+                onClick={() => handleQuickQuestion('How do curated Amazon product deals work?')}
                 className="shrink-0 bg-stone-100 hover:bg-[#1b3b2b] hover:text-white text-slate-700 px-3 py-1 rounded-full border border-stone-200/80 transition-colors cursor-pointer"
               >
-                100% Free Items?
+                How Deals Work
               </button>
               <button
                 onClick={() => handleQuickQuestion('Can you send the Amazon order link and instructions?')}
@@ -831,7 +831,7 @@ export default function ChatPage() {
                       {p.title}
                     </p>
                     <p className="text-xs font-bold text-[#1b3b2b] mt-0.5">
-                      {p.price === 0 ? 'FREE Review Perk' : `$${p.price.toLocaleString()}`}
+                      {p.price === 0 ? 'Featured Deal' : `$${p.price.toLocaleString()}`}
                     </p>
                   </div>
                   <span className="text-xs font-bold text-[#1b3b2b] bg-emerald-50 group-hover:bg-[#1b3b2b] group-hover:text-white px-3 py-1.5 rounded-xl shrink-0 transition-colors">

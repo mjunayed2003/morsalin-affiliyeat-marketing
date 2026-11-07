@@ -79,11 +79,11 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 
   // Copy Formatted Post (Caption + Link)
   const handleCopyFormattedPost = () => {
-    let text = `🔥 Free Amazon Review Perk: ${product.title}\n\n`;
-    if (product.store) text += `🏪 Amazon Store: ${product.store}\n`;
-    text += `💰 Deal: 100% Free / Rebate (Amazon Retail: $${product.originalPrice.toLocaleString()})\n✨ Highlights: ${product.features.join(', ')}\n\n👉 Claim free unit to test & review:\n${shareableUrl}`;
+    let text = `Featured Amazon Product: ${product.title}\n\n`;
+    if (product.store) text += `🏪 Store: ${product.store}\n`;
+    text += `🏷️ Verified Price: $${product.price} (Retail: $${product.originalPrice.toLocaleString()})\n✨ Highlights: ${product.features.join(', ')}\n\n👉 View product details & reviews:\n${shareableUrl}`;
     if (product.amazonUrl) {
-      text += `\n\n🛒 Official Amazon Listing:\n${product.amazonUrl}`;
+      text += `\n\n🛒 Amazon Listing:\n${product.amazonUrl}`;
     }
     navigator.clipboard.writeText(text);
     onShowToast('Caption and links copied! Paste into Messenger or WhatsApp.');
@@ -208,13 +208,13 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                 {/* Social Snippet Details */}
                 <div className="p-3.5 bg-white">
                   <p className="text-[10px] text-emerald-700 uppercase font-bold tracking-wider">
-                    FREEPRODUCTS.ONLINE • AMAZON REVIEW PERK
+                    FREEPRODUCTS.ONLINE • FEATURED DEAL
                   </p>
                   <h4 className="font-bold text-slate-900 text-sm leading-snug line-clamp-2 mt-0.5">
                     {product.title}
                   </h4>
                   <p className="text-xs text-slate-600 line-clamp-1 mt-1">
-                    100% Free Amazon Review Item • Est. Retail: ${product.originalPrice.toLocaleString()} • Tested & Kept Free
+                    Curated Amazon Deal • Retail: ${product.originalPrice.toLocaleString()} • Verified Community Reviews
                   </p>
                 </div>
               </div>

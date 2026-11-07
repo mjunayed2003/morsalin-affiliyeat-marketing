@@ -230,7 +230,7 @@ export const ClientProductView: React.FC<ClientProductViewProps> = ({ productId,
     `Hello! I am inquiring about: ${product.title} (Price: $${product.price})\nStore: ${product.store || 'FreeProducts.online'}\nProduct Page: ${currentUrl}`
   )}`;
   const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(currentUrl)}&text=${encodeURIComponent(
-    `🔥 Free Amazon Review Perk: ${product.title} (Est. Amazon Retail: $${product.originalPrice})`
+    `Featured Amazon Deal: ${product.title} (Est. Amazon Retail: $${product.originalPrice})`
   )}`;
 
   // Review calculations & handlers
@@ -295,7 +295,7 @@ export const ClientProductView: React.FC<ClientProductViewProps> = ({ productId,
   const handleAmazonLinkClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     if (!isAuthenticated) {
       e.preventDefault();
-      showToast('Please sign in or create an account to view and claim the Amazon review perk.');
+      showToast('Please sign in or create an account to view the Amazon deal.');
       openAuthModal('login');
     }
   };
@@ -321,7 +321,7 @@ export const ClientProductView: React.FC<ClientProductViewProps> = ({ productId,
               if (navigator.canShare({ files: [file] })) {
                 await navigator.share({
                   title: product.title,
-                  text: `🔥 Free Amazon Review Perk: ${product.title}\nEst. Retail: $${product.originalPrice}\nClaim free unit: ${currentUrl}`,
+                  text: `Featured Amazon Deal: ${product.title}\nEst. Retail: $${product.originalPrice}\nView product details: ${currentUrl}`,
                   files: [file],
                 });
                 showToast('Product shared with image successfully!');
@@ -334,7 +334,7 @@ export const ClientProductView: React.FC<ClientProductViewProps> = ({ productId,
         }
         await navigator.share({
           title: product.title,
-          text: `🔥 Free Amazon Review Perk: ${product.title}\nEst. Retail: $${product.originalPrice}\nClaim free unit: ${currentUrl}`,
+          text: `Featured Amazon Deal: ${product.title}\nEst. Retail: $${product.originalPrice}\nView product details: ${currentUrl}`,
           url: currentUrl,
         });
         showToast('Product link shared successfully!');
@@ -461,7 +461,7 @@ export const ClientProductView: React.FC<ClientProductViewProps> = ({ productId,
                   )}
                   <span className="bg-[#1b3b2b] text-white text-[11px] font-bold px-3 py-1 rounded-full shadow-sm flex items-center gap-1">
                     <FaAmazon className="w-3 h-3 text-[#ff9900]" />
-                    <span>Amazon Review Perk</span>
+                    <span>Curated Amazon Deal</span>
                   </span>
                 </div>
 
@@ -549,7 +549,7 @@ export const ClientProductView: React.FC<ClientProductViewProps> = ({ productId,
                     {product.inStock ? (
                       <span className="ml-auto text-xs bg-emerald-100 text-emerald-800 font-bold px-3 py-1 rounded-full flex items-center gap-1">
                         <FaAmazon className="w-3 h-3 text-[#ff9900]" />
-                        <span>In Stock • 100% Free Amazon Review Perk</span>
+                        <span>In Stock • Verified Amazon Deal</span>
                       </span>
                     ) : (
                       <span className="ml-auto text-xs bg-rose-100 text-rose-800 border border-rose-300 font-bold px-3 py-1 rounded-full flex items-center gap-1">
@@ -559,7 +559,7 @@ export const ClientProductView: React.FC<ClientProductViewProps> = ({ productId,
                   </div>
 
                   <p className="text-xs text-slate-600 font-medium leading-relaxed">
-                    Test this product at zero cost, share your honest review on Amazon, and keep the item forever.
+                    Explore this featured product from verified Amazon seller {product.store || 'Amazon Partner'}, check community ratings, and share your review.
                   </p>
 
                   {/* Amazon, WhatsApp & Telegram Action Buttons */}
@@ -651,7 +651,7 @@ export const ClientProductView: React.FC<ClientProductViewProps> = ({ productId,
                           {product.title}
                         </h4>
                         <p className="text-[11px] text-slate-500 font-medium">
-                          100% Free Amazon Review Perk • Est. ${product.originalPrice}
+                          Featured Amazon Deal • Est. ${product.originalPrice}
                         </p>
                       </div>
                     </div>
@@ -775,7 +775,7 @@ export const ClientProductView: React.FC<ClientProductViewProps> = ({ productId,
                     <FaShieldHalved className="w-3.5 h-3.5" />
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-slate-900 leading-tight">100% Genuine</p>
+                    <p className="text-xs font-bold text-slate-900 leading-tight">Verified Genuine</p>
                     <p className="text-[10px] text-slate-500 mt-0.5">Original sealed</p>
                   </div>
                 </div>
@@ -852,7 +852,7 @@ export const ClientProductView: React.FC<ClientProductViewProps> = ({ productId,
                 <div className="flex-1 min-w-0 text-xs font-semibold">
                   <p className="font-bold text-slate-900 truncate">{product.title}</p>
                   <p className="text-[#1b3b2b] font-bold">
-                    {product.price === 0 ? 'FREE Member Perk' : `$${product.price}`}
+                    {product.price === 0 ? 'Featured Deal' : `$${product.price}`}
                   </p>
                 </div>
                 <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-md shrink-0">
@@ -1052,7 +1052,7 @@ export const ClientProductView: React.FC<ClientProductViewProps> = ({ productId,
                   Based on {totalReviewsCount} verified review{totalReviewsCount === 1 ? '' : 's'}
                 </p>
                 <span className="mt-2 text-[11px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
-                  100% Verified Reviewers
+                  Verified Reviewers
                 </span>
               </div>
 

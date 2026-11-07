@@ -103,7 +103,7 @@ export default function ProductsPage() {
                 <span>Featured Amazon Products</span>
               </h1>
               <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
-                Explore verified partner Amazon products available to test, share an honest review, and keep 100% free.
+                Explore verified Amazon products, exclusive deals, and honest customer reviews across top categories.
               </p>
             </div>
 

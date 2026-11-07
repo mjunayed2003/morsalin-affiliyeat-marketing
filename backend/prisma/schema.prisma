@@ -35,7 +35,6 @@ model User {
   avatar           String?
   selfieImage      String?
   amazonProfileUrl String?
-  paypalEmail      String?
   fcmToken         String?
   verified         Boolean       @default(false)
   verifiedAt       DateTime?

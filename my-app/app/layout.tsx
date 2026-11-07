@@ -5,8 +5,8 @@ import Script from "next/script";
 
 const siteUrl = "https://freeproducts.online";
 const siteName = "FreeProducts.online";
-const defaultTitle = "Free Products Online - Get 100% Free Amazon Products to Test & Keep";
-const defaultDescription = "Looking for free products? Join FreeProducts.online! Test brand-new items from verified Amazon sellers, share authentic reviews, and keep every item with zero cost. 100% free with Prime shipping in the USA.";
+const defaultTitle = "FreeProducts.online - Curated Amazon Deals & Verified Product Reviews";
+const defaultDescription = "Discover top-rated Amazon products, exclusive promotional deals, and honest customer reviews. Join our verified reviewer community today.";
 
 export const viewport: Viewport = {
   themeColor: [
@@ -39,21 +39,15 @@ export const metadata: Metadata = {
   creator: siteName,
   publisher: siteName,
   keywords: [
-    "free product",
-    "free products",
-    "free products online",
-    "freeproducts.online",
-    "free amazon products",
-    "amazon product testing",
-    "amazon review club",
-    "test amazon products for free",
-    "free items for review",
-    "amazon rebate club usa",
-    "verified amazon reviewer",
-    "free stuff",
-    "free product testing usa",
-    "get free products",
-    "keep free products"
+    "amazon deals",
+    "curated amazon products",
+    "product reviews",
+    "amazon discounts",
+    "verified reviewer community",
+    "electronics deals",
+    "home goods deals",
+    "honest product reviews",
+    "freeproducts.online"
   ],
   alternates: {
     canonical: siteUrl,
@@ -81,7 +75,7 @@ export const metadata: Metadata = {
         url: `${siteUrl}/og-image.jpg`,
         width: 1200,
         height: 630,
-        alt: "FreeProducts.online Logo & Social Preview Banner - 100% Free Amazon Products",
+        alt: "FreeProducts.online - Curated Amazon Deals and Product Reviews",
         type: "image/jpeg",
       },
       {
@@ -124,10 +118,10 @@ const jsonLd = {
         "Free Products",
         "Free Products Online",
         "FreeProduct",
-        "Free Amazon Products Club",
+        "Amazon Deals & Reviews",
         "FreeProducts"
       ],
-      "description": "Amazon Product Reviews & Free Testing Club USA. Get 100% free products to test and keep forever.",
+      "description": "Curated Amazon Deals & Community Reviews. Discover verified product discounts and authentic shopper insights.",
       "potentialAction": {
         "@type": "SearchAction",
         "target": {
@@ -164,18 +158,18 @@ const jsonLd = {
       "mainEntity": [
         {
           "@type": "Question",
-          "name": "Are these Amazon products really 100% free?",
+          "name": "How do curated deals work on FreeProducts.online?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Yes! Verified partner Amazon stores sponsor these units to gather authentic feedback from real shoppers. There are no hidden fees or subscriptions — every approved product is yours to keep forever."
+            "text": "We curate top-rated Amazon deals and promotions from verified sellers to help shoppers discover high-quality products at exceptional discounts, paired with genuine community reviews."
           }
         },
         {
           "@type": "Question",
-          "name": "How do I order and submit my Amazon review?",
+          "name": "How do I participate in product evaluations?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Browse any item on FreeProducts.online, click 'Get It Free' or live chat directly with our admin. You will receive the official Amazon link to place your order with Prime, test the item at home, and publish your helpful, honest review on Amazon."
+            "text": "Browse our curated catalog, view the product details on Amazon, and share your feedback with our community. Verified reviewers share insights to help other shoppers make informed buying decisions."
           }
         },
         {
@@ -183,15 +177,15 @@ const jsonLd = {
           "name": "Do I need an active Amazon account?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Yes. This program is designed for active US shoppers with an Amazon account in good standing so you can receive fast Prime delivery and post verified customer reviews."
+            "text": "Yes. Deals link directly to official Amazon product pages where you can purchase directly with Amazon customer protections and Prime shipping."
           }
         },
         {
           "@type": "Question",
-          "name": "Do I ever have to return the products?",
+          "name": "Are deals updated regularly?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Never! Every single item you test through FreeProducts.online is 100% yours to keep permanently."
+            "text": "Yes, our team updates featured deals and promotional offers daily to provide the most current pricing and discounts."
           }
         }
       ]

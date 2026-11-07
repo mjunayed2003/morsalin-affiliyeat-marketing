@@ -81,7 +81,7 @@ export default function AdminCampaignsPage() {
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500">Reviewer Perk</span>
+                <span className="text-slate-500">Promotional Deal</span>
                 <span className="font-bold text-emerald-700">{p.commission}</span>
               </div>
               <div className="flex items-center justify-between pt-1">

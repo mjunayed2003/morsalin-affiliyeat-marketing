@@ -6,14 +6,12 @@ export class SendRegisterOtpDto {
     address;
     city;
     amazonProfileUrl;
-    paypalEmail;
 }
 export class VerifyRegisterOtpDto {
     email;
     code;
     selfieImage;
     amazonProfileUrl;
-    paypalEmail;
 }
 export class SendForgotPasswordOtpDto {
     email;

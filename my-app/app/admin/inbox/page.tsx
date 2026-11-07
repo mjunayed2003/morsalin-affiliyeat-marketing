@@ -656,7 +656,7 @@ export default function AdminInboxPage() {
                             {msg.productInfo.title}
                           </p>
                           <p className="text-[11px] text-emerald-700 font-bold">
-                            Price: ${msg.productInfo.price} (Free Perk)
+                            Price: ${msg.productInfo.price} (Featured Deal)
                           </p>
                         </div>
                       </div>

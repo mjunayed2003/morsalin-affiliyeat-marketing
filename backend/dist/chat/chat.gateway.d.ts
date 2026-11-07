@@ -156,7 +156,7 @@ export declare class ChatGateway implements OnGatewayConnection, OnGatewayDiscon
             callId: string;
             callerId: string;
             callerName: string;
-            callerRole: "customer" | "admin";
+            callerRole: "admin" | "customer";
             targetUserId: string | undefined;
             sdp: any;
             timestamp: string;

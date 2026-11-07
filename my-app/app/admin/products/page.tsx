@@ -94,13 +94,13 @@ export default function AdminProductsPage() {
     },
     {
       key: 'originalPrice',
-      header: 'Retail & Perk',
+      header: 'Retail & Deal Price',
       sortable: true,
       render: (p) => (
         <div>
           <p className="font-bold text-slate-900">${p.originalPrice.toFixed(2)}</p>
           <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded-full">
-            100% Free / Perk
+            Featured Deal
           </span>
         </div>
       ),

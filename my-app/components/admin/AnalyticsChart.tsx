@@ -122,7 +122,7 @@ export const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ metrics }) => {
             <span>Chats</span>
           </div>
         </div>
-        <span className="text-[11px] text-emerald-700 font-bold">100% Genuine Data Synced</span>
+        <span className="text-[11px] text-emerald-700 font-bold">Real-time Data Synced</span>
       </div>
     </div>
   );

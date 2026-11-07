@@ -37,7 +37,6 @@ export const UserScalarFieldEnum = {
     avatar: 'avatar',
     selfieImage: 'selfieImage',
     amazonProfileUrl: 'amazonProfileUrl',
-    paypalEmail: 'paypalEmail',
     fcmToken: 'fcmToken',
     verified: 'verified',
     verifiedAt: 'verifiedAt',

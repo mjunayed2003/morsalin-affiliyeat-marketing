@@ -15,7 +15,6 @@ import {
   FaPhone, 
   FaLocationDot, 
   FaAmazon, 
-  FaPaypal, 
   FaCamera, 
   FaTriangleExclamation,
   FaShieldHalved,
@@ -211,7 +210,7 @@ export default function AdminPendingRegistrationsPage() {
               className="w-9 h-9 rounded-full object-cover shrink-0 border border-slate-200"
             />
             {u.selfieImage && (
-              <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-600 text-white rounded-full flex items-center justify-center text-[9px] shadow-2xs" title="Live Selfie Photo Available">
+              <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-600 text-white rounded-full flex items-center justify-center text-[9px] shadow-2xs" title="Profile Photo Available">
                 <FaCamera className="w-2.5 h-2.5" />
               </span>
             )}
@@ -322,7 +321,7 @@ export default function AdminPendingRegistrationsPage() {
             )}
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Review new applicant accounts, inspect identity selfies, and grant or deny platform access.
+            Review new applicant accounts and grant or deny platform access.
           </p>
         </div>
 
@@ -444,11 +443,11 @@ export default function AdminPendingRegistrationsPage() {
               </button>
             </div>
 
-            {/* Selfie Section */}
+            {/* Profile Photo Section */}
             <div>
               <p className="text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5">
                 <FaCamera className="w-3.5 h-3.5 text-emerald-700" />
-                Live Camera Selfie Verification:
+                Profile Photo / Avatar:
               </p>
               {selectedUserForDetails.selfieImage ? (
                 <div className="relative group rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 aspect-video max-h-56 flex items-center justify-center">
@@ -468,7 +467,7 @@ export default function AdminPendingRegistrationsPage() {
                 </div>
               ) : (
                 <div className="p-4 rounded-2xl bg-stone-50 border border-stone-200 text-center text-xs text-slate-400">
-                  No selfie photograph provided
+                  Standard avatar used
                 </div>
               )}
             </div>
@@ -519,17 +518,6 @@ export default function AdminPendingRegistrationsPage() {
                 ) : (
                   <p className="text-slate-400 mt-0.5 italic">Not submitted at registration</p>
                 )}
-              </div>
-
-              {/* PayPal Email */}
-              <div className="p-3 rounded-xl bg-blue-50/50 border border-blue-200/60 sm:col-span-2">
-                <p className="text-[10px] uppercase font-bold text-blue-900 flex items-center gap-1">
-                  <FaPaypal className="w-3 h-3 text-blue-700" />
-                  PayPal Payout Email
-                </p>
-                <p className="font-semibold text-slate-800 mt-0.5">
-                  {selectedUserForDetails.paypalEmail || 'Not submitted'}
-                </p>
               </div>
 
               <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 sm:col-span-2 text-[11px] text-slate-500">
@@ -624,7 +612,7 @@ export default function AdminPendingRegistrationsPage() {
                 className="w-full text-xs p-2.5 rounded-xl border border-slate-300 bg-white font-medium focus:ring-2 focus:ring-rose-500/20"
               >
                 <option value="Identity verification criteria not met">Identity verification criteria not met</option>
-                <option value="Selfie photograph does not match or is blurry">Selfie photograph does not match or is blurry</option>
+                <option value="Registration details could not be verified">Registration details could not be verified</option>
                 <option value="Amazon profile URL is invalid or inaccessible">Amazon profile URL is invalid or inaccessible</option>
                 <option value="Applicant must reside within the United States">Applicant must reside within the United States</option>
                 <option value="Duplicate account detected">Duplicate account detected</option>

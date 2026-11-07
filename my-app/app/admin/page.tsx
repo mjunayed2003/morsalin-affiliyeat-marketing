@@ -26,7 +26,7 @@ export default function AdminOverviewPage() {
   const { products, messages } = useApp();
   const { users } = useAuth();
 
-  // 100% Real Metrics from active state & database
+  // Real-time Metrics from active state & database
   const totalProducts = products.length;
   const inStockProducts = products.filter((p) => p.inStock).length;
   const totalUsers = users.length;
@@ -207,7 +207,7 @@ export default function AdminOverviewPage() {
           <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
             <div>
               <h3 className="text-sm font-bold text-slate-900">Verified Amazon Products in Storefront</h3>
-              <p className="text-xs text-slate-500 mt-0.5">Original partner items with Amazon listing ratings and perks</p>
+              <p className="text-xs text-slate-500 mt-0.5">Original partner items with Amazon listing ratings and verified deals</p>
             </div>
             <Link
               href="/admin/products"
@@ -226,7 +226,7 @@ export default function AdminOverviewPage() {
                   <th className="py-2.5 px-3">Store</th>
                   <th className="py-2.5 px-3">Retail Price</th>
                   <th className="py-2.5 px-3">Amazon Rating</th>
-                  <th className="py-2.5 px-3">Reviewer Perk</th>
+                  <th className="py-2.5 px-3">Deal Offer</th>
                   <th className="py-2.5 px-3">Status</th>
                 </tr>
               </thead>

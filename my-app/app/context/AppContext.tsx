@@ -427,7 +427,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           {
             id: 'notif-welcome',
             title: `Welcome to FreeProducts.online${user?.name ? `, ${user.name.split(' ')[0]}` : ''}! 🎁`,
-            body: 'Test high-value Amazon products for 100% free with verified USA sellers. Keep every item you review!',
+            body: 'Explore curated Amazon products and verified deals with top USA sellers. Discover deals and share reviews!',
             type: 'system',
             timestamp: 'Just now',
             read: false,
@@ -2150,7 +2150,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (res === 'granted') {
       showToast('Push Notifications enabled successfully!');
       showBrowserNotification('FreeProducts.online Notifications', {
-        body: 'You will receive real-time alerts when messages or order perks arrive.',
+        body: 'You will receive real-time alerts when messages or new deals arrive.',
       });
     } else {
       showToast('Notification permission was dismissed or blocked in browser settings.');

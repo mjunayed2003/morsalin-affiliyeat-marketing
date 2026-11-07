@@ -27,7 +27,6 @@ export declare class AuthController {
             avatar: string | null;
             selfieImage: string | null;
             amazonProfileUrl: string | null;
-            paypalEmail: string | null;
             verified: boolean;
             role: import("../generated/prisma/enums.js").Role;
             status: string;
@@ -76,7 +75,6 @@ export declare class AuthController {
             avatar: string | null;
             selfieImage: string | null;
             amazonProfileUrl: string | null;
-            paypalEmail: string | null;
             canReview: boolean;
             verified: boolean;
             role: import("../generated/prisma/enums.js").Role;
@@ -122,7 +120,6 @@ export declare class AuthController {
         avatar: string | null;
         selfieImage: string | null;
         amazonProfileUrl: string | null;
-        paypalEmail: string | null;
         verified: boolean;
         role: import("../generated/prisma/enums.js").Role;
         status: string;

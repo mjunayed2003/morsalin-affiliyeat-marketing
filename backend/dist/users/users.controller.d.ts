@@ -13,7 +13,6 @@ export declare class UsersController {
         avatar: string | null;
         selfieImage: string | null;
         amazonProfileUrl: string | null;
-        paypalEmail: string | null;
         verified: boolean;
         verifiedAt: Date | null;
         role: import("../generated/prisma/enums.js").Role;
@@ -39,7 +38,6 @@ export declare class UsersController {
             avatar: string | null;
             selfieImage: string | null;
             amazonProfileUrl: string | null;
-            paypalEmail: string | null;
             verified: boolean;
             verifiedAt: Date | null;
             role: import("../generated/prisma/enums.js").Role;
@@ -70,7 +68,6 @@ export declare class UsersController {
             avatar: string | null;
             selfieImage: string | null;
             amazonProfileUrl: string | null;
-            paypalEmail: string | null;
             fcmToken: string | null;
             verified: boolean;
             verifiedAt: Date | null;
@@ -98,7 +95,6 @@ export declare class UsersController {
             avatar: string | null;
             selfieImage: string | null;
             amazonProfileUrl: string | null;
-            paypalEmail: string | null;
             fcmToken: string | null;
             verified: boolean;
             verifiedAt: Date | null;
@@ -123,7 +119,6 @@ export declare class UsersController {
         avatar: string | null;
         selfieImage: string | null;
         amazonProfileUrl: string | null;
-        paypalEmail: string | null;
         fcmToken: string | null;
         verified: boolean;
         verifiedAt: Date | null;
@@ -146,7 +141,6 @@ export declare class UsersController {
         avatar: string | null;
         selfieImage: string | null;
         amazonProfileUrl: string | null;
-        paypalEmail: string | null;
         verified: boolean;
         verifiedAt: Date | null;
         role: import("../generated/prisma/enums.js").Role;
@@ -204,7 +198,6 @@ export declare class UsersController {
         avatar: string | null;
         selfieImage: string | null;
         amazonProfileUrl: string | null;
-        paypalEmail: string | null;
         fcmToken: string | null;
         verified: boolean;
         verifiedAt: Date | null;
@@ -228,7 +221,6 @@ export declare class UsersController {
         avatar: string | null;
         selfieImage: string | null;
         amazonProfileUrl: string | null;
-        paypalEmail: string | null;
         fcmToken: string | null;
         verified: boolean;
         verifiedAt: Date | null;
@@ -252,7 +244,6 @@ export declare class UsersController {
         avatar: string | null;
         selfieImage: string | null;
         amazonProfileUrl: string | null;
-        paypalEmail: string | null;
         fcmToken: string | null;
         verified: boolean;
         verifiedAt: Date | null;
@@ -276,7 +267,6 @@ export declare class UsersController {
         avatar: string | null;
         selfieImage: string | null;
         amazonProfileUrl: string | null;
-        paypalEmail: string | null;
         fcmToken: string | null;
         verified: boolean;
         verifiedAt: Date | null;

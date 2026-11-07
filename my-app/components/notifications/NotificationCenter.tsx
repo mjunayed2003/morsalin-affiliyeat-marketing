@@ -207,7 +207,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
                   {filter === 'unread' ? 'No unread notifications' : 'No notifications yet'}
                 </p>
                 <p className="text-[11px] text-slate-400">
-                  You will receive real-time alerts when messages or new product perks arrive.
+                  You will receive real-time alerts when messages or new product deals arrive.
                 </p>
               </div>
             ) : (

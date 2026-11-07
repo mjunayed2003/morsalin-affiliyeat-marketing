@@ -14,16 +14,16 @@ export default function AdminContentPage() {
   const { showToast } = useApp();
 
   const [heroHeadline, setHeroHeadline] = useState(
-    'Test Top Amazon Products. Share Honest Reviews. Keep Them 100% Free.'
+    'Discover Curated Amazon Deals. Verified Discounts. Honest Product Reviews.'
   );
   const [heroSubtitle, setHeroSubtitle] = useState(
-    'Join FreeProducts.online Review Club! Get brand-new items from verified Amazon stores (LONG YUE, Lickoon, Imps Hair Creates & more).'
+    'Explore handpicked products from verified Amazon partner stores (LONG YUE, Lickoon, Imps Hair & more).'
   );
   const [announcementBanner, setAnnouncementBanner] = useState(
-    '🔥 New Spring Review Perks Added! Test pet care, home & beauty gadgets 100% free with Amazon Prime delivery.'
+    '🔥 New Spring Deals Added! Discover pet care, home & beauty gadgets with Amazon Prime delivery.'
   );
   const [seoMetaTitle, setSeoMetaTitle] = useState(
-    'FreeProducts.online - Amazon Product Reviews & Free Testing Club USA'
+    'FreeProducts.online - Curated Amazon Deals & Verified Product Reviews'
   );
 
   const handleSave = (e: React.FormEvent) => {

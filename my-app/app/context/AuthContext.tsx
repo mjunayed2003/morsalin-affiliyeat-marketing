@@ -26,14 +26,12 @@ interface AuthContextType {
     address?: string;
     city?: string;
     amazonProfileUrl?: string;
-    paypalEmail?: string;
   }) => Promise<{ success: boolean; message: string; email?: string; phone?: string }>;
   verifyRegisterOtp: (
     email: string,
     code: string,
     selfieImage?: string,
-    amazonProfileUrl?: string,
-    paypalEmail?: string
+    amazonProfileUrl?: string
   ) => Promise<{ success: boolean; message: string; status?: string; user?: User }>;
   uploadUserSelfie: (selfieImage: string) => Promise<{ success: boolean; message: string }>;
   sendForgotPasswordOtp: (
@@ -120,7 +118,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             avatar: u.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(u.name)}&backgroundColor=1b3b2b`,
             selfieImage: u.selfieImage || undefined,
             amazonProfileUrl: u.amazonProfileUrl || undefined,
-            paypalEmail: u.paypalEmail || undefined,
             verified: u.verified,
             verifiedAt: u.verifiedAt,
             createdAt: u.createdAt,
@@ -214,7 +211,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               avatar: verifiedUser.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(verifiedUser.name)}&backgroundColor=1b3b2b`,
               selfieImage: verifiedUser.selfieImage || undefined,
               amazonProfileUrl: verifiedUser.amazonProfileUrl || undefined,
-              paypalEmail: verifiedUser.paypalEmail || undefined,
               verified: verifiedUser.verified,
               verifiedAt: verifiedUser.verifiedAt,
               createdAt: verifiedUser.createdAt || new Date().toISOString(),
@@ -306,7 +302,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     address?: string;
     city?: string;
     amazonProfileUrl?: string;
-    paypalEmail?: string;
   }) => {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/send-register-otp`, {
@@ -344,14 +339,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     email: string, 
     code: string, 
     selfieImage?: string,
-    amazonProfileUrl?: string,
-    paypalEmail?: string
+    amazonProfileUrl?: string
   ) => {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/verify-register-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, code, selfieImage, amazonProfileUrl, paypalEmail }),
+        body: JSON.stringify({ email, code, selfieImage, amazonProfileUrl }),
       });
 
       const data = await response.json();
@@ -367,7 +361,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           avatar: data.user.avatar || selfieImage || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(data.user.name)}&backgroundColor=1b3b2b`,
           selfieImage: data.user.selfieImage || selfieImage,
           amazonProfileUrl: data.user.amazonProfileUrl || amazonProfileUrl,
-          paypalEmail: data.user.paypalEmail || paypalEmail,
           verified: true,
           verifiedAt: new Date().toISOString(),
           createdAt: data.user.createdAt || new Date().toISOString(),
@@ -515,7 +508,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           avatar: data.user.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(data.user.name)}&backgroundColor=1b3b2b`,
           selfieImage: data.user.selfieImage || undefined,
           amazonProfileUrl: data.user.amazonProfileUrl || undefined,
-          paypalEmail: data.user.paypalEmail || undefined,
           verified: true,
           verifiedAt: new Date().toISOString(),
           createdAt: data.user.createdAt || new Date().toISOString(),

@@ -40,18 +40,18 @@ export const AdvertisementBanner: React.FC<AdvertisementBannerProps> = ({ classN
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-[10px] font-extrabold uppercase tracking-wider bg-amber-400 text-slate-950 px-2 py-0.5 rounded-full font-mono flex items-center gap-1">
                   <FaFire className="w-2.5 h-2.5" />
-                  Sponsored Ad
+                  Featured Deals
                 </span>
                 <span className="text-[11px] text-emerald-300 font-semibold flex items-center gap-1">
                   <FaAmazon className="w-3 h-3 text-amber-400" />
-                  Verified Brand Rebate Club
+                  Curated Amazon Directory
                 </span>
               </div>
               <h4 className="text-sm sm:text-base font-bold text-white mt-0.5 tracking-tight">
-                Get 100% Free Amazon Products in Exchange for Honest Reviews
+                Discover Top-Rated Amazon Products &amp; Verified Deals
               </h4>
               <p className="text-xs text-emerald-100/80 mt-0.5 max-w-xl">
-                Test new top-rated gadgets, home appliances, and accessories with zero upfront risk. Direct PayPal & Amazon reimbursement guaranteed.
+                Explore hand-picked deals on electronics, home goods, and lifestyle products with genuine community reviews and transparent pricing.
               </p>
             </div>
           </div>
