@@ -109,6 +109,14 @@ const getAuthHeaders = (): Record<string, string> => {
   return headers;
 };
 
+// Helper: In-stock products always show top, stock-out products show bottom
+const sortByStock = (items: Product[]): Product[] => {
+  return [...items].sort((a, b) => {
+    if (a.inStock === b.inStock) return 0;
+    return a.inStock ? -1 : 1;
+  });
+};
+
 // Helper to extract numeric epoch time for strict chronological sorting
 const getMessageTime = (m: ChatMessage): number => {
   if (m.createdAt) {
@@ -266,10 +274,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (res.ok) {
         const serverProducts = await res.json();
         if (Array.isArray(serverProducts)) {
-          setProducts(serverProducts);
+          const sorted = sortByStock(serverProducts);
+          setProducts(sorted);
           if (typeof window !== 'undefined') {
             try {
-              localStorage.setItem('products_live_cache_v5', JSON.stringify(serverProducts));
+              localStorage.setItem('products_live_cache_v5', JSON.stringify(sorted));
             } catch {}
           }
         }
@@ -302,7 +311,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (cached) {
           const parsed = JSON.parse(cached);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            setProducts(parsed);
+            setProducts(sortByStock(parsed));
             setIsProductsLoading(false);
           }
         }
@@ -322,7 +331,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (!product || !product.id) return;
       setProducts((prev) => {
         if (prev.some((p) => p.id === product.id)) return prev;
-        const updated = [product, ...prev];
+        const updated = sortByStock([product, ...prev]);
         if (typeof window !== 'undefined') {
           try {
             localStorage.setItem('products_live_cache_v5', JSON.stringify(updated));
@@ -335,7 +344,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const handleProductUpdated = (product: Product) => {
       if (!product || !product.id) return;
       setProducts((prev) => {
-        const updated = prev.map((p) => (p.id === product.id ? product : p));
+        const updated = sortByStock(prev.map((p) => (p.id === product.id ? product : p)));
         if (typeof window !== 'undefined') {
           try {
             localStorage.setItem('products_live_cache_v5', JSON.stringify(updated));
@@ -785,16 +794,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         .then((res) => res.json())
         .then((data) => {
           if (Array.isArray(data) && data.length > 0) {
-            setProducts(data);
-            localStorage.setItem('product_perks_catalog_v4', JSON.stringify(data));
+            const sorted = sortByStock(data);
+            setProducts(sorted);
+            localStorage.setItem('products_live_cache_v5', JSON.stringify(sorted));
           }
         })
         .catch(() => {
-          const storedProds = localStorage.getItem('product_perks_catalog_v4');
+          const storedProds = localStorage.getItem('products_live_cache_v5');
           if (storedProds) {
             try {
               const parsed = JSON.parse(storedProds);
-              if (Array.isArray(parsed) && parsed.length > 0) setProducts(parsed);
+              if (Array.isArray(parsed) && parsed.length > 0) setProducts(sortByStock(parsed));
             } catch (e) {}
           }
         });
@@ -1019,9 +1029,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           if (!newProd || !newProd.id) return;
           setProducts((prev) => {
             if (prev.some((p) => p.id === newProd.id)) {
-              return prev.map((p) => (p.id === newProd.id ? newProd : p));
+              return sortByStock(prev.map((p) => (p.id === newProd.id ? newProd : p)));
             }
-            return [newProd, ...prev];
+            return sortByStock([newProd, ...prev]);
           });
         };
 
@@ -1452,7 +1462,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       const saved = data && data.id ? data : newProd;
       setProducts((prev) => {
-        const updated = [saved, ...prev.filter((p) => p.id !== saved.id)];
+        const updated = sortByStock([saved, ...prev.filter((p) => p.id !== saved.id)]);
         if (typeof window !== 'undefined') {
           try {
             localStorage.setItem('products_live_cache_v5', JSON.stringify(updated));
@@ -1494,7 +1504,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       const saved = data && data.id ? data : updated;
       setProducts((prev) => {
-        const updatedList = prev.map((p) => (p.id === saved.id ? saved : p));
+        const updatedList = sortByStock(prev.map((p) => (p.id === saved.id ? saved : p)));
         if (typeof window !== 'undefined') {
           try {
             localStorage.setItem('products_live_cache_v5', JSON.stringify(updatedList));
@@ -1543,7 +1553,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const toggleProductStock = async (productId: string, inStock: boolean): Promise<{ success: boolean; message?: string }> => {
     // 1. Instant optimistic state and cache update
     setProducts((prev) => {
-      const updatedList = prev.map((p) => (p.id === productId ? { ...p, inStock } : p));
+      const updatedList = sortByStock(prev.map((p) => (p.id === productId ? { ...p, inStock } : p)));
       if (typeof window !== 'undefined') {
         try {
           localStorage.setItem('products_live_cache_v5', JSON.stringify(updatedList));

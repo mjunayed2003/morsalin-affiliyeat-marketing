@@ -110,15 +110,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         </p>
       </div>
 
-      {/* Action Buttons: "Get It Free" + "Amazon" */}
+      {/* Action Buttons: "View Deal" + "Amazon" */}
       <div className="pt-2.5 sm:pt-5 flex items-center gap-1.5 sm:gap-2">
         {product.inStock ? (
           <Link
             href={`/p/${product.id}`}
             className="flex-1 py-1.5 sm:py-2.5 px-2 sm:px-3 rounded-lg sm:rounded-xl font-bold text-[11px] sm:text-sm bg-[#1b3b2b] hover:bg-[#142e20] text-white transition-all duration-200 cursor-pointer shadow-2xs text-center whitespace-nowrap"
           >
-            <span className="sm:hidden">Get Free</span>
-            <span className="hidden sm:inline">Get It Free</span>
+            <span>View Deal</span>
           </Link>
         ) : (
           <Link

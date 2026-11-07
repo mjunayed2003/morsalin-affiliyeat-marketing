@@ -28,7 +28,7 @@ let ProductsService = class ProductsService {
         }
         return this.prisma.product.findMany({
             where,
-            orderBy: { createdAt: 'desc' },
+            orderBy: [{ inStock: 'desc' }, { createdAt: 'desc' }],
         });
     }
     async findOne(id) {
