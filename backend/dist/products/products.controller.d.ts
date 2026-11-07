@@ -11,8 +11,6 @@ export declare class ProductsController {
     constructor(productsService: ProductsService, chatGateway: ChatGateway, notificationsService: NotificationsService);
     findAll(res: Response, category?: string, search?: string): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         title: string;
         description: string;
         category: string;
@@ -31,13 +29,15 @@ export declare class ProductsController {
         inStock: boolean;
         store: string | null;
         amazonUrl: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }[]>;
     getReviews(id: string, res: Response): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         title: string | null;
         rating: number;
+        createdAt: Date;
+        updatedAt: Date;
         productId: string;
         userId: string;
         userName: string;
@@ -49,10 +49,10 @@ export declare class ProductsController {
         comment: string;
     }): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         title: string | null;
         rating: number;
+        createdAt: Date;
+        updatedAt: Date;
         productId: string;
         userId: string;
         userName: string;
@@ -64,8 +64,6 @@ export declare class ProductsController {
     }>;
     findOne(id: string, res: Response): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         title: string;
         description: string;
         category: string;
@@ -84,11 +82,11 @@ export declare class ProductsController {
         inStock: boolean;
         store: string | null;
         amazonUrl: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     create(createProductDto: CreateProductDto): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         title: string;
         description: string;
         category: string;
@@ -107,11 +105,11 @@ export declare class ProductsController {
         inStock: boolean;
         store: string | null;
         amazonUrl: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     update(id: string, updateProductDto: UpdateProductDto): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         title: string;
         description: string;
         category: string;
@@ -130,13 +128,13 @@ export declare class ProductsController {
         inStock: boolean;
         store: string | null;
         amazonUrl: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     toggleStock(id: string, body: {
         inStock: boolean;
     }): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         title: string;
         description: string;
         category: string;
@@ -155,11 +153,11 @@ export declare class ProductsController {
         inStock: boolean;
         store: string | null;
         amazonUrl: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     remove(id: string): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         title: string;
         description: string;
         category: string;
@@ -178,5 +176,7 @@ export declare class ProductsController {
         inStock: boolean;
         store: string | null;
         amazonUrl: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
 }

@@ -66,6 +66,10 @@ export default function ProductsPage() {
         return matchesCat && matchesQuery;
       })
       .sort((a, b) => {
+        // Stock products show top and stock-out products show bottom
+        if (a.inStock !== b.inStock) {
+          return a.inStock ? -1 : 1;
+        }
         if (sortBy === 'rating') return b.rating - a.rating;
         if (sortBy === 'priceLow') return a.price - b.price;
         if (sortBy === 'priceHigh') return b.price - a.price;

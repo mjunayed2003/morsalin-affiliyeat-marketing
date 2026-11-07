@@ -60,16 +60,22 @@ export default function Home() {
   const [directError, setDirectError] = useState('');
   const [showCodeModal, setShowCodeModal] = useState(false);
 
-  // Filtered products based on search
+  // Filtered products based on search (in-stock at top, stock out at bottom)
   const displayedProducts = useMemo(() => {
-    if (!searchQuery.trim()) return products;
-    const q = searchQuery.toLowerCase().trim();
-    return products.filter((p) => 
-      p.title.toLowerCase().includes(q) ||
-      p.category.toLowerCase().includes(q) ||
-      p.description.toLowerCase().includes(q) ||
-      (p.subCategory && p.subCategory.toLowerCase().includes(q))
-    );
+    let list = products;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      list = products.filter((p) => 
+        p.title.toLowerCase().includes(q) ||
+        p.category.toLowerCase().includes(q) ||
+        p.description.toLowerCase().includes(q) ||
+        (p.subCategory && p.subCategory.toLowerCase().includes(q))
+      );
+    }
+    return [...list].sort((a, b) => {
+      if (a.inStock === b.inStock) return 0;
+      return a.inStock ? -1 : 1;
+    });
   }, [products, searchQuery]);
 
   // Handle product click -> navigate directly to dedicated product page

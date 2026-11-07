@@ -194,7 +194,12 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   </span>
                 </div>
                 <p className="text-xs text-slate-500">
-                  Availability: <span className="text-emerald-700 font-semibold">In Stock on Amazon</span>
+                  Availability:{' '}
+                  {product.inStock ? (
+                    <span className="text-emerald-700 font-semibold">In Stock on Amazon</span>
+                  ) : (
+                    <span className="text-rose-600 font-semibold">Stock Out / Currently Unavailable</span>
+                  )}
                 </p>
 
                 {product.amazonUrl && (
